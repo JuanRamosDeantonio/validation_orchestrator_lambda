@@ -827,7 +827,7 @@ class ComponentFactory:
                     logger = logging.getLogger(__name__)
                     logger.debug("🏭 ComponentFactory: Creating REAL RepositoryAccessManager instance")
                     
-                    from repository_access import RepositoryAccessManager
+                    from app.repository_access import RepositoryAccessManager
                     cls._instances['repository_access_manager'] = RepositoryAccessManager()
         
         return cls._instances['repository_access_manager']
@@ -841,7 +841,7 @@ class ComponentFactory:
                     logger = logging.getLogger(__name__)
                     logger.debug("🏭 ComponentFactory: Creating REAL RulesManager instance")
                     
-                    from rules_manager import RulesManager
+                    from app.rules_manager import RulesManager
                     
                     if repository_access_manager is None:
                         repository_access_manager = cls.get_repository_access_manager()
@@ -859,7 +859,7 @@ class ComponentFactory:
                     logger = logging.getLogger(__name__)
                     logger.debug("🏭 ComponentFactory: Creating REAL ValidationEngine instance")
                     
-                    from validation_core import ValidationEngine
+                    from app.validation_core import ValidationEngine
                     
                     if repository_access_manager is None:
                         repository_access_manager = cls.get_repository_access_manager()

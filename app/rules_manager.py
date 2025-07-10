@@ -6,16 +6,14 @@ MEJORAS: ConsolidationStrategy pattern para reducir complejidad ciclomática
 - Mejor separation of concerns
 """
 
-import logging
 import time
 import threading
-from typing import Dict, List, Set, Any, Optional, Tuple
+from typing import Dict, List, Any, Optional
 from collections import defaultdict, Counter
-from dataclasses import asdict
 from abc import ABC, abstractmethod
 
-from shared import (
-    setup_logger, Config, ErrorHandler, S3JsonReader, S3PathHelper,
+from app.shared import (
+    setup_logger, Config, S3PathHelper,
     RuleData, ValidationResult, ConsolidatedResult
 )
 

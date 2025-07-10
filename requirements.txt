@@ -129,7 +129,7 @@ pytz==2024.1
 # TEXT PROCESSING & ANALYSIS - Para reglas semánticas
 # -----------------------------------------------------------------------------
 # Pattern matching avanzado
-regex==2024.3.6
+regex==2024.4.16
 
 # String similarity
 fuzzywuzzy==0.18.0
@@ -195,9 +195,6 @@ better-exceptions==0.3.3
 # Rich terminal output
 rich==13.7.1
 
-# Pretty printing
-pprint==0.1
-
 # -----------------------------------------------------------------------------
 # SERIALIZATION FORMATS - Soporte completo
 # -----------------------------------------------------------------------------
@@ -224,17 +221,6 @@ moto==5.0.5
 # Fake data generation
 faker==24.4.0
 
-# -----------------------------------------------------------------------------
-# NETWORKING & PROTOCOLS - Stack completo
-# -----------------------------------------------------------------------------
-# DNS resolution
-dnspython==2.6.1
-
-# URL parsing enhanced
-urllib3-future==2.0.0a3
-
-# WebSocket support (si se necesita)
-websockets==12.0
 
 # =============================================================================
 # DEPENDENCIAS CONDICIONALES - Descomenta según necesidad

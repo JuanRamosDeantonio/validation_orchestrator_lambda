@@ -6,15 +6,13 @@ MEJORAS: State Pattern para fases de validación
 - Mejor manejo de errores y contexto
 """
 
-import asyncio
-import logging
 import time
-from typing import Dict, List, Any, Optional, Tuple
+from typing import Dict, List, Any
 from abc import ABC, abstractmethod
 
 # IMPORTS LIMPIOS - Sin referencias a mocks
-from shared import (
-    setup_logger, Config, ErrorHandler, S3JsonReader, MetricsCollector, 
+from app.shared import (
+    setup_logger, Config, MetricsCollector, 
     ConfigValidator, S3PathHelper, ComponentFactory, LazyLoadingMonitor,
     ValidationResult, ConsolidatedResult, RepositoryConfig
 )

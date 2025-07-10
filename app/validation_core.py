@@ -16,7 +16,7 @@ import re
 from abc import ABC, abstractmethod
 
 # IMPORTS LIMPIOS - Sin mocks
-from shared import (
+from app.shared import (
     setup_logger, Config, ErrorHandler, estimate_tokens, truncate_content, 
     validate_text_input, RuleData, ValidationResult, ChunkData
 )
