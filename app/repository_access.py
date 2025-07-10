@@ -8,6 +8,7 @@ import boto3
 import os
 import time
 import threading
+import asyncio  # ← FALTABA ESTE IMPORT
 from typing import Dict, List, Any
 from dataclasses import dataclass
 from botocore.exceptions import ClientError
@@ -527,7 +528,7 @@ class RepositoryAccessManager:
                 raise Exception(f"Falló obtener estructura: {structure_result.get('error')}")
             
             # PASO 2: Filtrar archivos que coinciden con patrones requeridos
-            all_files = structure_result['structure'].get('files', [])
+            all_files = structure_result.get('files', [])
             matching_files = self._filter_files_by_patterns(all_files, required_files)
             
             logger.info(f"📁 Archivos: {len(all_files)} totales, {len(matching_files)} coincidentes")
@@ -592,9 +593,9 @@ class RepositoryAccessManager:
             
             # Construir payload para lambda externa
             payload = {
-                "action": "GET_STRUCTURE",
-                "repository_config": {
-                    "provider": config.provider,
+                "operation": "GET_STRUCTURE",
+                "provider": config.provider,
+                "config": {
                     "token": config.token,
                     "owner": config.owner,
                     "repo": config.repo,
@@ -605,25 +606,51 @@ class RepositoryAccessManager:
             # Invocar lambda externa que maneja APIs de repositorios
             response = await self.invoke_lambda_async(Config.GET_REPO_STRUCTURE_LAMBDA, payload)
             
-            if not response.get('success', False):
+            # Validar respuesta HTTP
+            if response.get('statusCode') != 200:
                 raise Exception(f"Lambda reportó fallo: {response.get('error', 'Error desconocido')}")
             
-            structure_data = response.get('structure', {})
-            logger.debug(f"📋 Estructura obtenida: {len(structure_data.get('files', []))} archivos")
+            # Obtener body de la respuesta
+            # Obtener body de la respuesta y parsearlo como JSON
+            body_raw = response.get('body', '{}')
+            if isinstance(body_raw, str):
+                import json
+                body = json.loads(body_raw)
+            else:
+                body = body_raw
+            
+            # Validar éxito en el body
+            if not body.get('success', False):
+                raise Exception(f"Operación fallida: {body.get('mensaje', 'Error desconocido')}")
+            
+            # Extraer datos de estructura
+            markdown = body.get('markdown', "")
+            archivos_lista = body.get('archivos', [])
+            metadatos = body.get('metadatos', {})
+            
+            logger.debug(f"📋 Estructura obtenida: {len(archivos_lista)} archivos, {metadatos.get('total_nodes', 0)} nodos totales")
             
             # Registrar operación exitosa
             self._record_repository_operation('structure_loaded', 1)
             
             return {
                 'success': True,
-                'structure': structure_data,
+                'structure': markdown,
+                'files':archivos_lista,
                 'repository_url': config.get_repository_url(),
-                'branch': config.branch
+                'branch': config.branch,
+                'provider': body.get('proveedor'),
+                'timestamp': body.get('timestamp')
             }
             
         except Exception as e:
-            logger.error(f"❌ Error obteniendo estructura: {str(e)}")
-            return {'success': False, 'error': str(e)}
+            logger.error(f"❌ Error obteniendo estructura del repositorio: {str(e)}")
+            self._record_repository_operation('structure_error', 1)
+            return {
+                'success': False,
+                'error': str(e),
+                'repository_url': config.get_repository_url() if config else 'unknown'
+            }
     
     async def _batch_download_files(self, config, file_paths: List[str]) -> Dict[str, Any]:
         """

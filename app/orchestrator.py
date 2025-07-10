@@ -365,13 +365,14 @@ class ValidationOrchestrator:
                     
                     # Obtener token desde variables de entorno si está disponible
                     github_token = Config.GITHUB_TOKEN if hasattr(Config, 'GITHUB_TOKEN') else ""
+                    github_branch = Config.GITHUB_BRANCH if hasattr(Config, 'GITHUB_BRANCH') else ""
                     
                     config = RepositoryConfig(
                         provider="github",
                         token=github_token,
                         owner=owner,
                         repo=repo,
-                        branch="main"  # Se puede hacer configurable
+                        branch=github_branch
                     )
                     
                     logger.info(f"Configuración creada: {config.provider}:{config.owner}/{config.repo}")

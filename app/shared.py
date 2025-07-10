@@ -231,9 +231,10 @@ class Config:
     
     # S3 Settings
     S3_BUCKET = os.getenv('S3_BUCKET', 'lambda-temporal-documents-ia')
-    RULES_S3_PATH = "rules/rulesmetadata.json"
+    RULES_S3_PATH = "rules/rules_metadata.json"
     
     # Repository Access
+    GITHUB_BRANCH= os.getenv('GITHUB_BRANCH', '')
     GITHUB_TOKEN = os.getenv('GITHUB_TOKEN', '')
     GITLAB_TOKEN = os.getenv('GITLAB_TOKEN', '')
     BITBUCKET_TOKEN = os.getenv('BITBUCKET_TOKEN', '')
