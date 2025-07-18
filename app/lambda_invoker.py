@@ -86,12 +86,12 @@ class LambdaInvoker:
             execution_time= execution_time
         )
     
-    def generate_report(self, validation_results: List[Dict[str, Any]], 
-                       repository_config: Dict[str, Any]) -> LambdaResult:
+    def generate_report(self, report: str, 
+                       repo_url : str) -> LambdaResult:
         """Genera un reporte de validación."""
         payload = {
-            'validation_results': validation_results,
-            'repository_config': repository_config,
+            'report': report,
+            'commit_message': f'Analysis made on repository {repo_url}',
             'timestamp': time.time()
         }
         

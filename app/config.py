@@ -123,7 +123,7 @@ class Config:
     @property
     def REPORT_LAMBDA(self) -> str:
         """Lambda para generar reportes."""
-        return self._get_env_cached('REPORT_LAMBDA', 'report_lambda')
+        return self._get_env_cached('REPORT_LAMBDA', 'repository_lambda')
     
     # =============================================================================
     # REPOSITORY ACCESS

@@ -11,6 +11,7 @@ from app.s3_reader import S3JsonReader
 from app.final_rule_grouping import group_rules
 from app.prompt_formatter import format_prompts
 from app.bedrock_validator import process_prompts_hybrid_optimized as validate_prompts_lambda, generate_report_sync
+from app.lambda_invoker import create_lambda_invoker
 
 # Configurar logging para Lambda (CloudWatch)
 logger = logging.getLogger()
@@ -40,6 +41,7 @@ class ValidationPipeline:
         self.rules: List[RuleData] = []
         self.groups = []
         self.prompts = []
+        self.lambda_invoker  = create_lambda_invoker()
     
     def execute(self) -> Dict[str, Any]:
         """
@@ -68,6 +70,10 @@ class ValidationPipeline:
             
             # 6. Generar reporte final
             report = self._generate_final_report(validation_result)
+
+            response_report = self.lambda_invoker.generate_report(report, self.config.repository_url)
+
+            logger.info("Se ejecuta lambda de reporte con respuesta: %s", response_report)
             
             logger.info("✅ Pipeline ejecutado exitosamente")
             
