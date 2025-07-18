@@ -1,333 +1,518 @@
-"""
-lambda_function.py - ULTRA SIMPLE - Validador de Repositorios
-¿Qué hace? Recibe una URL de repositorio y dice si cumple las reglas o no.
-"""
-
 import json
 import logging
-import asyncio
-from app.shared import setup_logger
-from app.orchestrator import ValidationOrchestrator
+import os
+from typing import List, Dict, Any, Optional
+from dataclasses import dataclass
 
-# 📝 Configurar logs para debug
-logger = setup_logger(__name__)
+from app.markdown_rule_binder import MarkdownRuleBinder
+from app.markdown_provider import MarkdownConsumer
+from app.models import RuleData
+from app.s3_reader import S3JsonReader
+from app.final_rule_grouping import group_rules
+from app.prompt_formatter import format_prompts
+from app.bedrock_validator import process_prompts_hybrid_optimized as validate_prompts_lambda, generate_report_sync
 
-# =============================================================================
-# 🎯 FUNCIÓN PRINCIPAL - PUNTO DE ENTRADA
-# =============================================================================
+# Configurar logging para Lambda (CloudWatch)
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 
-def lambda_handler(event, context):
+
+@dataclass
+class PipelineConfig:
+    """Configuración del pipeline de validación"""
+    repository_url: str
+    branch: str
+    report_title: str = "Reporte de Validación"
+
+
+class ValidationPipeline:
     """
-    🚪 PUNTO DE ENTRADA - Lo que AWS Lambda ejecuta
+    Pipeline principal para validación de repositorios usando IA.
     
-    Recibe: URL de repositorio + datos del usuario
-    Devuelve: ✅ Aprobado o ❌ Rechazado + explicación
-    """
-    
-    # 📋 Log básico
-    logger.info(f"🚀 Nueva validación iniciada - ID: {context.aws_request_id}")
-    
-    try:
-        # 📥 PASO 1: ¿Qué me están pidiendo?
-        request_data = _extract_request_data(event)
-        
-        if request_data['error']:
-            return _send_error_response(400, request_data['message'])
-        
-        # 🔍 PASO 2: ¿Es un health check?
-        if request_data['is_health_check']:
-            return _handle_health_check()
-        
-        # ✅ PASO 3: Validar el repositorio
-        return _validate_repository(
-            request_data['repository_url'],
-            request_data['user_name'], 
-            request_data['user_email'],
-            context.aws_request_id
-        )
-        
-    except Exception as error:
-        logger.error(f"💥 Error inesperado: {error}")
-        return _send_error_response(500, f"Error del sistema: {error}")
-
-# =============================================================================
-# 📥 EXTRACCIÓN DE DATOS - ¿Qué me está pidiendo el usuario?
-# =============================================================================
-
-def _extract_request_data(event):
-    """
-    📥 Extrae los datos del request de forma simple
-    
-    Retorna un diccionario con:
-    - error: True/False
-    - message: mensaje de error si hay
-    - is_health_check: True si es health check
-    - repository_url, user_name, user_email: datos del usuario
+    Este pipeline procesa un repositorio, aplica reglas de validación,
+    genera prompts y obtiene validaciones usando AWS Bedrock.
     """
     
-    # 🔍 ¿Es un health check?
-    if event.get('httpMethod') == 'GET' or 'health' in str(event).lower():
-        return {
-            'error': False,
-            'is_health_check': True,
-            'repository_url': None,
-            'user_name': None,
-            'user_email': None,
-            'message': 'Health check request'
-        }
+    def __init__(self, config: PipelineConfig):
+        self.config = config
+        self.s3_reader = S3JsonReader()
+        self.markdown_provider = MarkdownConsumer()
+        self.rules: List[RuleData] = []
+        self.groups = []
+        self.prompts = []
     
-    # 📦 Extraer datos del body
-    try:
-        # ¿El body es un string JSON?
-        if isinstance(event.get('body'), str):
-            data = json.loads(event['body'])
-        # ¿O ya es un diccionario?
-        elif isinstance(event.get('body'), dict):
-            data = event['body']
-        # ¿O viene directo en el event?
-        elif 'repository_url' in event:
-            data = event
-        else:
+    def execute(self) -> Dict[str, Any]:
+        """
+        Ejecuta el pipeline completo de validación.
+        
+        Returns:
+            Dict con el resultado de la validación y reporte generado
+        """
+        try:
+            logger.info("🚀 Iniciando pipeline de validación")
+            
+            # 1. Cargar configuración y reglas
+            self._load_validation_rules()
+            
+            # 2. Procesar estructura del repositorio
+            repository_structure = self._process_repository_structure()
+            
+            # 3. Vincular reglas con archivos
+            self._bind_rules_to_files(repository_structure)
+            
+            # 4. Agrupar reglas y generar prompts
+            self._generate_validation_prompts(repository_structure)
+            
+            # 5. Ejecutar validación con IA
+            validation_result = self._execute_ai_validation()
+            
+            # 6. Generar reporte final
+            report = self._generate_final_report(validation_result)
+            
+            logger.info("✅ Pipeline ejecutado exitosamente")
+            
             return {
-                'error': True,
-                'message': '❌ No encontré datos en el request',
-                'is_health_check': False,
-                'repository_url': None,
-                'user_name': None,
-                'user_email': None
+                'validation_result': validation_result,
+                'report': report,
+                'prompts_count': len(self.prompts),
+                'rules_count': len(self.rules)
             }
-        
-        # ✅ Verificar que tengo todo lo necesario
-        required_fields = ['repository_url', 'user_name', 'user_email']
-        missing_fields = []
-        
-        for field in required_fields:
-            if not data.get(field) or not str(data.get(field)).strip():
-                missing_fields.append(field)
-        
-        if missing_fields:
-            return {
-                'error': True,
-                'message': f'❌ Faltan estos datos: {", ".join(missing_fields)}',
-                'is_health_check': False,
-                'repository_url': None,
-                'user_name': None,
-                'user_email': None
-            }
-        
-        # 🎉 ¡Todo bien!
-        return {
-            'error': False,
-            'is_health_check': False,
-            'repository_url': data['repository_url'].strip(),
-            'user_name': data['user_name'].strip(),
-            'user_email': data['user_email'].strip(),
-            'message': 'Datos extraídos correctamente'
-        }
-        
-    except json.JSONDecodeError:
-        return {
-            'error': True,
-            'message': '❌ El JSON está mal formateado',
-            'is_health_check': False,
-            'repository_url': None,
-            'user_name': None,
-            'user_email': None
-        }
-    except Exception as error:
-        return {
-            'error': True,
-            'message': f'❌ Error extrayendo datos: {error}',
-            'is_health_check': False,
-            'repository_url': None,
-            'user_name': None,
-            'user_email': None
-        }
-
-# =============================================================================
-# 🏥 HEALTH CHECK - ¿Está funcionando el sistema?
-# =============================================================================
-
-def _handle_health_check():
-    """
-    🏥 Verifica que el sistema esté funcionando
+            
+        except Exception as e:
+            logger.error(f"❌ Error en pipeline: {str(e)}")
+            raise
     
-    Retorna: Status del sistema (healthy/unhealthy)
-    """
-    logger.info("🏥 Ejecutando health check")
+    def _load_validation_rules(self) -> None:
+        """Carga las reglas de validación desde S3"""
+        logger.info("📋 Cargando reglas de validación desde S3")
+        
+        try:
+            s3_response = self.s3_reader.read_rules()
+            self.rules = [RuleData(**item) for item in s3_response.data]
+            
+            logger.info(f"✅ Cargadas {len(self.rules)} reglas de validación")
+            
+        except Exception as e:
+            logger.error(f"❌ Error cargando reglas: {str(e)}")
+            raise
     
-    try:
-        # Crear el orquestador y verificar que funciona
-        orchestrator = ValidationOrchestrator()
+    def _process_repository_structure(self) -> Any:
+        """Procesa la estructura del repositorio objetivo"""
+        logger.info(f"📁 Procesando estructura del repositorio: {self.config.repository_url}")
         
-        # Ejecutar health check de forma simple
-        health_result = _run_simple_async(orchestrator.health_check())
+        try:
+            structure = self.markdown_provider.get_repository_structure_markdown(
+                self.config.repository_url, 
+                self.config.branch
+            )
+            
+            logger.info(f"✅ Estructura procesada - {len(structure.files)} archivos encontrados")
+            return structure
+            
+        except Exception as e:
+            logger.error(f"❌ Error procesando estructura: {str(e)}")
+            raise
+    
+    def _bind_rules_to_files(self, repository_structure: Any) -> None:
+        """Vincula las reglas de validación con los archivos del repositorio"""
+        logger.info("🔗 Vinculando reglas con archivos del repositorio")
         
-        # ¿Está todo bien?
-        if health_result['overall_status'] == 'healthy':
-            status_code = 200
-            message = "✅ Sistema funcionando correctamente"
-        else:
-            status_code = 503
-            message = f"⚠️ Sistema con problemas: {health_result.get('issues', [])}"
+        try:
+            runner = MarkdownRuleBinder(self.markdown_provider)
+            runner.run(self.rules, repository_structure.files, self.config.repository_url)
+            
+            # Contar reglas vinculadas
+            bound_rules = sum(1 for rule in self.rules if hasattr(rule, 'references') and rule.references)
+            logger.info(f"✅ {bound_rules} reglas vinculadas con archivos")
+            
+        except Exception as e:
+            logger.error(f"❌ Error vinculando reglas: {str(e)}")
+            raise
+    
+    def _generate_validation_prompts(self, repository_structure: Any) -> None:
+        """Genera los prompts de validación basados en las reglas agrupadas"""
+        logger.info("📝 Generando prompts de validación")
         
+        try:
+            # Agrupar reglas
+            self.groups = group_rules(self.rules)
+            logger.info(f"📊 Reglas agrupadas en {len(self.groups)} grupos")
+            
+            # Cargar plantillas
+            template = self.s3_reader.read_template().data
+            template_structure = self.s3_reader.read_template_structure().data
+            
+            # Definir reemplazos para las plantillas
+            replacements = self._create_template_replacements(repository_structure)
+            
+            # Generar prompts
+            self.prompts = format_prompts(self.groups, template, replacements, template_structure)
+            
+            logger.info(f"✅ {len(self.prompts)} prompts generados")
+            
+        except Exception as e:
+            logger.error(f"❌ Error generando prompts: {str(e)}")
+            raise
+    
+    def _create_template_replacements(self, repository_structure: Any) -> Dict[str, Any]:
+        """Crea los reemplazos para las plantillas de prompts"""
         return {
-            'statusCode': status_code,
-            'headers': {'Content-Type': 'application/json'},
-            'body': json.dumps({
-                'status': health_result['overall_status'],
-                'message': message,
-                'timestamp': health_result['timestamp'],
-                'details': health_result
-            }, ensure_ascii=False)
+            'ESTRUCTURA': repository_structure.markdown_content,
+            'REGLAS_ESTRUCTURA': lambda g: "\n".join([
+                f"📄 {r.description}" for r in g.rules if not r.references
+            ]),
+            'REGLAS_CONTENIDO': lambda g: "\n".join([
+                f"📄 {r.description}" for r in g.rules if r.references
+            ]),
+            'CONTENIDO_ARCHIVOS': lambda g: "\n".join([
+                f"\n\nTITULO: {mf.path}\n\nCONTENIDO: {mf.content}" 
+                for mf in g.markdownfile if mf
+            ]),
+        }
+    
+    def _execute_ai_validation(self) -> Dict[str, Any]:
+        """Ejecuta la validación usando IA (AWS Bedrock)"""
+        logger.info("🤖 Ejecutando validación con IA")
+        
+        try:
+            # Preparar prompts en formato requerido
+            formatted_prompts = self._prepare_prompts_for_validation()
+            
+            # Ejecutar validación
+            result_id = validate_prompts_lambda(formatted_prompts)
+            
+            logger.info(f"✅ Validación ejecutada - ID: {result_id.get('job_id', 'N/A')}")
+            return result_id
+            
+        except Exception as e:
+            logger.error(f"❌ Error en validación IA: {str(e)}")
+            raise
+    
+    def _prepare_prompts_for_validation(self) -> List[Dict[str, str]]:
+        """
+        Convierte los prompts al formato requerido por validate_prompts_lambda
+        
+        Returns:
+            Lista de prompts en formato: [{"id": "prompt_001", "prompt": "..."}]
+        """
+        return [
+            {"id": f"prompt_{i+1:03d}", "prompt": prompt.strip()} 
+            for i, prompt in enumerate(self.prompts) 
+            if prompt and prompt.strip()
+        ]
+    
+    def _generate_final_report(self, validation_result: Dict[str, Any]) -> str:
+        """Genera el reporte final de validación"""
+        logger.info("📊 Generando reporte final")
+        
+        try:
+            report = generate_report_sync(validation_result, self.config.report_title)
+            logger.info("✅ Reporte generado exitosamente")
+            return report
+            
+        except Exception as e:
+            logger.error(f"❌ Error generando reporte: {str(e)}")
+            raise
+
+
+class ValidationResultAnalyzer:
+    """
+    Analizador de resultados de validación.
+    
+    Proporciona métodos para inspeccionar y mostrar los resultados
+    de manera estructurada y comprensible.
+    """
+    
+    def analyze_results(self, validation_result: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Analiza y muestra los resultados de validación de forma estructurada
+        
+        Args:
+            validation_result: Resultado de la validación desde AWS Bedrock
+            
+        Returns:
+            Resumen estructurado de los resultados
+        """
+        logger.info("🔍 Analizando resultados de validación")
+        
+        analysis = {
+            'basic_info': self._extract_basic_info(validation_result),
+            'performance_metrics': self._extract_performance_metrics(validation_result),
+            'detailed_summary': self._extract_detailed_summary(validation_result),
+            'ai_responses': self.get_ai_responses(validation_result),
+            'error_info': self._extract_error_info(validation_result)
         }
         
-    except Exception as error:
-        logger.error(f"💥 Error en health check: {error}")
-        return {
-            'statusCode': 503,
-            'headers': {'Content-Type': 'application/json'},
-            'body': json.dumps({
-                'status': 'error',
-                'message': f'❌ Health check falló: {error}'
+        self._log_analysis_summary(analysis)
+        return analysis
+    
+    def _extract_basic_info(self, result: Dict[str, Any]) -> Dict[str, Any]:
+        """Extrae información básica del resultado"""
+        basic_info = {
+            'job_id': result.get('job_id', 'N/A'),
+            'status': result.get('status', 'N/A'),
+            'processing_mode': result.get('processing_mode', 'N/A'),
+            'processing_strategy': result.get('processing_strategy', 'N/A'),
+            'used_s3': 's3_info' in result
+        }
+        
+        if 's3_info' in result:
+            s3_info = result['s3_info']
+            basic_info['s3_bucket'] = s3_info.get('bucket', 'N/A')
+            basic_info['s3_input_key'] = s3_info.get('input_key', 'N/A')
+        
+        return basic_info
+    
+    def _extract_performance_metrics(self, result: Dict[str, Any]) -> Dict[str, Any]:
+        """Extrae métricas de rendimiento"""
+        metrics = {}
+        
+        if 'performance_metrics' in result:
+            perf = result['performance_metrics']
+            metrics.update({
+                'prompts_per_second': perf.get('prompts_per_second', 0),
+                'total_time_minutes': perf.get('total_time_minutes', 0)
             })
-        }
-
-# =============================================================================
-# 🔍 VALIDACIÓN PRINCIPAL - El corazón del sistema
-# =============================================================================
-
-def _validate_repository(repository_url, user_name, user_email, request_id):
-    """
-    🔍 VALIDACIÓN PRINCIPAL - Aquí pasa la magia
+        
+        if 'summary' in result:
+            metrics['summary'] = result['summary']
+        
+        return metrics
     
-    Pasos:
-    1. 📥 Descarga el repositorio
-    2. 📋 Carga las reglas de validación
-    3. 🤖 Usa IA para verificar las reglas
-    4. ✅ Decide: ¿Aprueba o rechaza?
-    
-    Retorna: Respuesta final para el usuario
-    """
-    logger.info(f"🔍 Validando repositorio: {repository_url}")
-    logger.info(f"👤 Usuario: {user_name} ({user_email})")
-    
-    try:
-        # 🎯 Crear el orquestador (el cerebro del sistema)
-        orchestrator = ValidationOrchestrator()
+    def _extract_detailed_summary(self, result: Dict[str, Any]) -> Dict[str, Any]:
+        """Extrae resumen detallado de resultados"""
+        if 'results' not in result:
+            return {'total_prompts': 0, 'successful_executions': 0, 'failed_executions': 0}
         
-        # 🚀 Ejecutar la validación completa
-        logger.info("🚀 Iniciando proceso de validación...")
+        total_prompts = len(result['results'])
+        successful = 0
+        failed = 0
         
-        validation_result = _run_simple_async(
-            orchestrator.validate_repository(repository_url, user_name, user_email)
-        )
+        for prompt_result in result['results']:
+            if 'execution' in prompt_result:
+                execution = prompt_result['execution']
+                if execution.get('execution_successful', False):
+                    successful += 1
+                else:
+                    failed += 1
         
-        # 📊 ¿Qué decidió el sistema?
-        if validation_result['passed']:
-            logger.info("✅ REPOSITORIO APROBADO")
-            status_message = "🎉 ¡Repositorio aprobado! Cumple con todas las reglas"
-        else:
-            logger.info("❌ REPOSITORIO RECHAZADO")
-            status_message = f"❌ Repositorio rechazado: {validation_result['message']}"
-        
-        # 📤 Enviar respuesta al usuario
         return {
-            'statusCode': 200,
-            'headers': {
-                'Content-Type': 'application/json',
-                'Access-Control-Allow-Origin': '*'  # Para que funcione desde web
-            },
-            'body': json.dumps({
-                # 🎯 Lo más importante primero
-                'aprobado': validation_result['passed'],
-                'mensaje': status_message,
-                
-                # 📊 Resumen de resultados
-                'resumen': {
-                    'reglas_totales': validation_result['summary']['total_rules'],
-                    'reglas_criticas_fallidas': validation_result['summary']['critical_failures'],
-                    'reglas_medias_fallidas': validation_result['summary']['medium_failures'],
-                    'reglas_bajas_fallidas': validation_result['summary']['low_failures'],
-                    'tiempo_ejecucion_ms': validation_result['summary']['execution_time_ms']
-                },
-                
-                # 🔧 Información técnica (para desarrolladores)
-                'info_tecnica': {
-                    'request_id': request_id,
-                    'repositorio': repository_url,
-                    'usuario': user_name,
-                    'usa_servicios_reales': True,
-                    'detalles': validation_result['metadata']
-                }
-            }, ensure_ascii=False)
+            'total_prompts': total_prompts,
+            'successful_executions': successful,
+            'failed_executions': failed,
+            'success_rate': (successful / total_prompts * 100) if total_prompts > 0 else 0
         }
-        
-    except asyncio.TimeoutError:
-        logger.error("⏰ Validación tomó demasiado tiempo")
-        return _send_error_response(408, "⏰ La validación tomó demasiado tiempo. Intenta con un repositorio más pequeño.")
-        
-    except Exception as error:
-        logger.error(f"💥 Error durante validación: {error}")
-        return _send_error_response(500, f"💥 Error durante la validación: {error}")
-
-# =============================================================================
-# 🔧 UTILIDADES SIMPLES - Funciones de apoyo
-# =============================================================================
-
-def _run_simple_async(coroutine):
-    """
-    🔧 Ejecuta código async de forma simple
     
-    ¿Por qué esta función?
-    AWS Lambda a veces tiene problemas con async/await.
-    Esta función los resuelve automáticamente.
-    """
-    try:
-        # ¿Hay un loop corriendo?
-        loop = asyncio.get_event_loop()
-        if loop.is_running():
-            # Sí, crear uno nuevo en un thread separado
-            import concurrent.futures
-            
-            def run_in_new_thread():
-                new_loop = asyncio.new_event_loop()
-                asyncio.set_event_loop(new_loop)
-                try:
-                    return new_loop.run_until_complete(coroutine)
-                finally:
-                    new_loop.close()
-            
-            with concurrent.futures.ThreadPoolExecutor() as executor:
-                future = executor.submit(run_in_new_thread)
-                return future.result(timeout=840)  # 14 minutos máximo
-        else:
-            # No, usar el loop actual
-            return asyncio.run(coroutine)
-            
-    except AttributeError:
-        # Python viejo, usar método simple
-        return asyncio.run(coroutine)
-
-def _send_error_response(status_code, message):
-    """
-    📤 Envía una respuesta de error al usuario
+    def _extract_error_info(self, result: Dict[str, Any]) -> Optional[str]:
+        """Extrae información de errores si existe"""
+        return result.get('error')
     
-    Formato simple y consistente para todos los errores.
+    def _log_analysis_summary(self, analysis: Dict[str, Any]) -> None:
+        """Registra un resumen del análisis en los logs"""
+        basic = analysis['basic_info']
+        summary = analysis['detailed_summary']
+        
+        logger.info("=" * 60)
+        logger.info(f"Job ID: {basic['job_id']}")
+        logger.info(f"Estado: {basic['status']}")
+        logger.info(f"🚀 Estrategia: {basic['processing_strategy']}")
+        logger.info(f"☁️ Usó S3: {'Sí' if basic['used_s3'] else 'No'}")
+        logger.info(f"📊 Prompts procesados: {summary['total_prompts']}")
+        logger.info(f"✅ Ejecuciones exitosas: {summary['successful_executions']}")
+        logger.info(f"❌ Ejecuciones fallidas: {summary['failed_executions']}")
+        logger.info(f"📈 Tasa de éxito: {summary['success_rate']:.1f}%")
+        
+        if analysis['error_info']:
+            logger.error(f"❌ Error: {analysis['error_info']}")
+        
+        logger.info("=" * 60)
+    
+    def get_ai_responses(self, validation_result: Dict[str, Any]) -> List[Dict[str, str]]:
+        """
+        Extrae todas las respuestas de IA de los resultados
+        
+        Returns:
+            Lista de respuestas con su ID correspondiente
+        """
+        responses = []
+        
+        if 'results' not in validation_result:
+            return responses
+        
+        for prompt_result in validation_result['results']:
+            prompt_id = prompt_result.get('prompt_id', 'unknown')
+            
+            if 'execution' in prompt_result:
+                execution = prompt_result['execution']
+                response = execution.get('response', '')
+                
+                if response:
+                    responses.append({
+                        'prompt_id': prompt_id,
+                        'response': response,
+                        'tokens_used': execution.get('tokens_used', 0),
+                        'successful': execution.get('execution_successful', False)
+                    })
+        
+        return responses
+
+
+def _extract_config_from_event(event: Dict[str, Any]) -> PipelineConfig:
     """
-    logger.error(f"📤 Enviando error {status_code}: {message}")
+    Extrae la configuración del pipeline desde el evento de Lambda
+    
+    Args:
+        event: Evento de Lambda conteniendo los parámetros
+        
+    Returns:
+        PipelineConfig configurado
+        
+    Raises:
+        ValueError: Si faltan parámetros requeridos
+    """
+    # Intentar obtener configuración del evento
+    repository_url = event.get('repository_url')
+    branch = event.get('branch', 'main')
+    report_title = event.get('report_title', 'Reporte de Validación')
+    
+    # Si no está en el evento, intentar variables de entorno
+    if not repository_url:
+        repository_url = os.environ.get('REPOSITORY_URL')
+        branch = os.environ.get('BRANCH', branch)
+        report_title = os.environ.get('REPORT_TITLE', report_title)
+    
+    # Validar parámetros requeridos
+    if not repository_url:
+        raise ValueError("repository_url es requerido en el evento o variable de entorno REPOSITORY_URL")
+    
+    return PipelineConfig(
+        repository_url=repository_url,
+        branch=branch,
+        report_title=report_title
+    )
+
+
+def _create_lambda_response(status_code: int, body: Dict[str, Any], headers: Optional[Dict[str, str]] = None) -> Dict[str, Any]:
+    """
+    Crea una respuesta HTTP estándar para Lambda
+    
+    Args:
+        status_code: Código de estado HTTP
+        body: Cuerpo de la respuesta
+        headers: Headers opcionales
+        
+    Returns:
+        Respuesta formateada para Lambda
+    """
+    default_headers = {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'Content-Type',
+        'Access-Control-Allow-Methods': 'POST, GET, OPTIONS'
+    }
+    
+    if headers:
+        default_headers.update(headers)
     
     return {
         'statusCode': status_code,
-        'headers': {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*'
-        },
-        'body': json.dumps({
-            'aprobado': False,
-            'mensaje': message,
-            'error': True,
-            'codigo_error': status_code
-        }, ensure_ascii=False)
+        'headers': default_headers,
+        'body': json.dumps(body, ensure_ascii=False, indent=2, default=_json_fallback)
+
     }
 
+
+def lambda_handler(event, context):
+    """
+    Handler principal de la función Lambda
+    
+    Args:
+        event: Evento de Lambda con parámetros de configuración
+        context: Contexto de ejecución de Lambda
+        
+    Returns:
+        Respuesta HTTP con los resultados del pipeline
+    """
+    # Información del contexto de Lambda
+    request_id = context.aws_request_id
+    function_name = context.function_name
+    
+    logger.info(f"🚀 Iniciando Lambda {function_name} - Request ID: {request_id}")
+    logger.info(f"📋 Evento recibido: {json.dumps(event, ensure_ascii=False)}")
+    
+    try:
+        # 1. Extraer configuración del evento
+        config = _extract_config_from_event(event)
+        logger.info(f"⚙️ Configuración: {config}")
+        
+        # 2. Ejecutar pipeline de validación
+        pipeline = ValidationPipeline(config)
+        pipeline_result = pipeline.execute()
+        
+        # 3. Analizar resultados
+        analyzer = ValidationResultAnalyzer()
+        analysis = analyzer.analyze_results(pipeline_result['validation_result'])
+        
+        # 4. Preparar respuesta exitosa
+        response_body = {
+            'success': True,
+            'request_id': request_id,
+            'message': 'Pipeline de validación ejecutado exitosamente',
+            'pipeline_summary': {
+                'prompts_count': pipeline_result['prompts_count'],
+                'rules_count': pipeline_result['rules_count'],
+                'job_id': analysis['basic_info']['job_id'],
+                'success_rate': analysis['detailed_summary']['success_rate']
+            },
+            'validation_result': pipeline_result['validation_result'],
+            'report': pipeline_result['report'],
+            'analysis': analysis,
+            'config_used': {
+                'repository_url': config.repository_url,
+                'branch': config.branch,
+                'report_title': config.report_title
+            }
+        }
+        
+        logger.info(f"✅ Pipeline completado exitosamente:")
+        logger.info(f"   - {pipeline_result['prompts_count']} prompts procesados")
+        logger.info(f"   - {pipeline_result['rules_count']} reglas aplicadas")
+        logger.info(f"   - {len(analysis['ai_responses'])} respuestas de IA generadas")
+        logger.info(f"   - Tasa de éxito: {analysis['detailed_summary']['success_rate']:.1f}%")
+        
+        return _create_lambda_response(200, response_body)
+        
+    except ValueError as ve:
+        # Error de configuración/parámetros
+        error_message = f"Error de configuración: {str(ve)}"
+        logger.error(f"⚙️ {error_message}")
+        
+        return _create_lambda_response(400, {
+            'success': False,
+            'request_id': request_id,
+            'error_type': 'ConfigurationError',
+            'error_message': error_message,
+            'help': 'Verifica que repository_url esté presente en el evento o variable de entorno'
+        })
+        
+    except Exception as e:
+        # Error general del pipeline
+        error_message = f"Error en pipeline: {str(e)}"
+        logger.error(f"💥 {error_message}")
+        logger.exception("Detalles del error:")
+        
+        return _create_lambda_response(500, {
+            'success': False,
+            'request_id': request_id,
+            'error_type': 'PipelineError',
+            'error_message': error_message,
+            'function_name': function_name
+        })
+    
+def _json_fallback(obj):
+    if hasattr(obj, "model_dump"):  # Si es Pydantic
+        return obj.model_dump()
+    elif hasattr(obj, "__dict__"):  # Si es clase normal
+        return obj.__dict__
+    else:
+        return str(obj)
