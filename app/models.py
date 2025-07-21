@@ -1,9 +1,9 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
-from pydantic import BaseModel, Field, ConfigDict, field_validator
 
 
-class LambdaResult(BaseModel):
+@dataclass
+class LambdaResult:
     """
     Resultado de una invocación de Lambda.
     """
@@ -14,16 +14,16 @@ class LambdaResult(BaseModel):
     lambda_name: Optional[str] = None
 
 
-class MarkdownDocument(BaseModel):
+@dataclass
+class MarkdownDocument:
     """
     Representa un archivo Markdown con su ruta y contenido.
     """
     path: str
     content: str
-
+    
     def contains(self, value: str) -> bool:
         return value in self.content
-
 
 
 @dataclass
@@ -34,7 +34,7 @@ class MarkdownResponse:
     error: Optional[str] = None
     execution_time: Optional[float] = None
     source: Optional[str] = None  # 'structure' o 'file'
-    files: Optional[list[str]] = None
+    files: Optional[List[str]] = None
 
 
 @dataclass
@@ -46,32 +46,27 @@ class S3Result:
     execution_time: Optional[float] = None
 
 
-class RuleData(BaseModel):
+@dataclass
+class RuleData:
     """
     Modelo que representa una regla de validación semántica o estructural.
     """
-
-    id: str = Field(..., description="Identificador único de la regla.")
-    documentation: Optional[str] = Field(default=None, description="nombre de la regla.")
-    type: Optional[str] = Field(default=None, description="Tipo de regla (estructura, contenido, semántica, etc.).")  # ✅ CAMBIO: Permite None
-    description: str = Field(..., description="Descripción general de la regla.")
-    criticality: Optional[str] = Field(default=None, description="Criticidad o severidad de la regla.")  # ✅ CAMBIO: Permite None
-    references: Optional[str] = Field(default=None, description="Cadena de referencias separadas por coma (ej: 'patron1,valor,patron2').")
-    markdownfiles: List["MarkdownDocument"] = Field(default_factory=list, description="Archivos Markdown relacionados con la regla.")
-    explanation: Optional[str] = Field(default=None, description="Explicación adicional sobre la lógica de la regla.")
-    tags: List[str] = Field(default_factory=list, description="Etiquetas asociadas para filtrado o agrupación.")
-
-    model_config = ConfigDict(arbitrary_types_allowed=True)
-
-    @field_validator('explanation', mode='before')  # ✅ NUEVO: Convierte integers a strings
-    @classmethod
-    def convert_explanation_to_string(cls, v):
-        if v is None:
-            return None
-        if isinstance(v, int):
-            return str(v)
-        return v
-
+    id: str  # Identificador único de la regla
+    description: str  # Descripción general de la regla
+    documentation: Optional[str] = None  # nombre de la regla
+    type: Optional[str] = None  # Tipo de regla (estructura, contenido, semántica, etc.)
+    criticality: Optional[str] = None  # Criticidad o severidad de la regla
+    references: Optional[str] = None  # Cadena de referencias separadas por coma (ej: 'patron1,valor,patron2')
+    markdownfiles: List[MarkdownDocument] = field(default_factory=list)  # Archivos Markdown relacionados con la regla
+    explanation: Optional[str] = None  # Explicación adicional sobre la lógica de la regla
+    tags: List[str] = field(default_factory=list)  # Etiquetas asociadas para filtrado o agrupación
+    
+    def __post_init__(self):
+        """Validación y conversión de tipos después de la inicialización."""
+        # Convierte integers a strings para explanation (equivalente al field_validator)
+        if self.explanation is not None and isinstance(self.explanation, int):
+            self.explanation = str(self.explanation)
+    
     @property
     def parsed_references(self) -> List[str]:
         """
