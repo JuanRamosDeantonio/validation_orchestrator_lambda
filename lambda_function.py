@@ -129,6 +129,7 @@ class ValidationPipeline:
             
             # Contar reglas vinculadas
             bound_rules = sum(1 for rule in self.rules if hasattr(rule, 'references') and rule.references)
+            runner.get_unique_markdown_paths(self.rules)
             logger.info(f"✅ {bound_rules} reglas vinculadas con archivos")
             
         except Exception as e:
@@ -160,7 +161,7 @@ class ValidationPipeline:
             logger.error(f"❌ Error generando prompts: {str(e)}")
             raise
     
-    def _create_template_replacements(self, repository_structure: Any) -> Dict[str, Any]:
+    def     _create_template_replacements(self, repository_structure: Any) -> Dict[str, Any]:
         """Crea los reemplazos para las plantillas de prompts"""
         return {
             'ESTRUCTURA': repository_structure.markdown_content,
