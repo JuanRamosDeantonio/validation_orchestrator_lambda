@@ -11,6 +11,7 @@ from app.s3_reader import S3JsonReader
 from app.final_rule_grouping import group_rules
 from app.prompt_formatter import format_prompts
 from app.bedrock_validator import process_prompts_hybrid_optimized as validate_prompts_lambda, generate_report_sync
+from app.bedrock_client import run_bedrock_prompt
 from app.lambda_invoker import create_lambda_invoker
 
 # Configurar logging para Lambda (CloudWatch)
@@ -75,6 +76,8 @@ class ValidationPipeline:
 
             #logger.info("Se ejecuta lambda de reporte con respuesta: %s", response_report)
             
+            #run_bedrock_prompt("prompt")
+
             logger.info("✅ Pipeline ejecutado exitosamente")
             
             return {
