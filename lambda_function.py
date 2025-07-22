@@ -69,17 +69,17 @@ class ValidationPipeline:
             validation_result = self._execute_ai_validation()
             
             # 6. Generar reporte final
-            report = self._generate_final_report(validation_result)
+            #report = self._generate_final_report(validation_result)
 
-            response_report = self.lambda_invoker.generate_report(report, self.config.repository_url)
+            #response_report = self.lambda_invoker.generate_report(report, self.config.repository_url)
 
-            logger.info("Se ejecuta lambda de reporte con respuesta: %s", response_report)
+            #logger.info("Se ejecuta lambda de reporte con respuesta: %s", response_report)
             
             logger.info("✅ Pipeline ejecutado exitosamente")
             
             return {
                 'validation_result': validation_result,
-                'report': report,
+                'report': 'NPS',
                 'prompts_count': len(self.prompts),
                 'rules_count': len(self.rules)
             }

@@ -2321,9 +2321,9 @@ async def process_prompts_hybrid_async_optimized(
 
 def process_prompts_hybrid_optimized(
     prompts: List[Dict[str, str]], 
-    mode: str = "both",
+    mode: str = "execute_only",
     s3_enabled: bool = True,
-    max_concurrent: int = 8,
+    max_concurrent: int = 4,
     job_id: Optional[str] = None,
     aws_region: str = "us-east-2",
     bucket_name: Optional[str] = None,
