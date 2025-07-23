@@ -904,6 +904,16 @@ def group_rules(rules: List['RuleData'], batch_size: int = 20, load_file_content
         service._markdown_processor.auto_load_files = True
     
     groups = service.group_rules(rules, batch_size)
+
+    # incluir id en la descripción de las reglas para que salgan en el informe
+    for rule_group in groups:
+
+        for rule in rule_group.rules:
+
+            rule_id = rule.id
+            rule_description = rule.description
+            new_rule_description = f'{rule_id} {rule_description}'
+            rule.description = new_rule_description
     
     # Información sobre content vacío
     empty_content_count = 0
