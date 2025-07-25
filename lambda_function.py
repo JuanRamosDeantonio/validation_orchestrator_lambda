@@ -13,6 +13,7 @@ from app.prompt_formatter import format_prompts
 from app.bedrock_validator import process_prompts_hybrid_optimized as validate_prompts_lambda, generate_report_sync
 from app.bedrock_client import run_bedrock_prompt
 from app.lambda_invoker import create_lambda_invoker
+from app.report_producer import produce_report, produce_report_to_lambda
 
 # Configurar logging para Lambda (CloudWatch)
 logger = logging.getLogger()
@@ -68,6 +69,11 @@ class ValidationPipeline:
             
             # 5. Ejecutar validación con IA
             validation_result = self._execute_ai_validation()
+
+            #produce_report(validation_result)
+            produce_report_to_lambda(validation_result, self.config.repository_url)
+
+            #print(f'RESULTADOS DE PROMPTS >>>> {validation_result['results']}')
             
             # 6. Generar reporte final
             #report = self._generate_final_report(validation_result)
