@@ -94,17 +94,17 @@ class Config:
     @property
     def RULES_S3_PATH(self) -> str:
         """Ruta en S3 donde están las reglas de validación."""
-        return "rules/rules_metadata.json"
+        return self._get_env_cached('RULES_S3_PATH', '')
     
     @property
     def TEMPLATE_PROMPT_S3_PATH(self) -> str:
         """Ruta en S3 donde esta el prompt que se usa con la IA."""
-        return "template_prompt_files.md"
+        return self._get_env_cached('TEMPLATE_PROMPT_S3_PATH', '')
     
     @property
     def TEMPLATE_PROMPT_S3_PATH_STRUCTURE(self) -> str:
         """Ruta en S3 donde esta el prompt que se usa con la IA."""
-        return "template_prompt_structure.md"
+        return self._get_env_cached('TEMPLATE_PROMPT_S3_PATH_STRUCTURE', '')
     
     # =============================================================================
     # LAMBDA FUNCTIONS
@@ -113,17 +113,17 @@ class Config:
     @property
     def GET_REPO_STRUCTURE_LAMBDA(self) -> str:
         """Lambda para obtener estructura de repositorio."""
-        return self._get_env_cached('GET_REPO_STRUCTURE_LAMBDA', 'get_repository_info_lambda')
+        return self._get_env_cached('GET_REPO_STRUCTURE_LAMBDA', '')
     
     @property
     def FILE_READER_LAMBDA(self) -> str:
         """Lambda para leer archivos."""
-        return self._get_env_cached('FILE_READER_LAMBDA', 'file_reader_lambda')
+        return self._get_env_cached('FILE_READER_LAMBDA', '')
     
     @property
     def REPORT_LAMBDA(self) -> str:
         """Lambda para generar reportes."""
-        return self._get_env_cached('REPORT_LAMBDA', 'repository_lambda')
+        return self._get_env_cached('REPORT_LAMBDA', '')
     
     # =============================================================================
     # REPOSITORY ACCESS

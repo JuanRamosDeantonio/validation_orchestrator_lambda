@@ -42,39 +42,38 @@ from botocore.config import Config
 # =====================================
 
 # Límites de procesamiento - AUMENTADOS
-MAX_PROMPT_SIZE = 2_000_000  # 2MB por prompt (era 500KB)
-MAX_TOTAL_BATCH_SIZE = 50_000_000  # 50MB total batch
-MAX_LAMBDA_TIMEOUT = 900  # 15 minutos
-MAX_LAMBDA_MEMORY = 10240  # 10GB
+MAX_PROMPT_SIZE = int(os.environ.get('MAX_PROMPT_SIZE', ''))  # 2MB por prompt (era 500KB)
+MAX_TOTAL_BATCH_SIZE = int(os.environ.get('MAX_TOTAL_BATCH_SIZE', ''))  # 50MB total batch
+MAX_LAMBDA_TIMEOUT = int(os.environ.get('MAX_LAMBDA_TIMEOUT', ''))  # 15 minutos
 
 # Thresholds S3
-DEFAULT_S3_SIZE_THRESHOLD = 5_000_000  # 5MB
-DEFAULT_S3_PROMPT_THRESHOLD = 1_000_000  # 1MB (era 200KB)
-DEFAULT_S3_TIME_THRESHOLD = 12  # 12 minutos
-DEFAULT_S3_COUNT_THRESHOLD = 150  # 150 prompts
+DEFAULT_S3_SIZE_THRESHOLD = int(os.environ.get('DEFAULT_S3_SIZE_THRESHOLD', ''))  # 5MB
+DEFAULT_S3_PROMPT_THRESHOLD = int(os.environ.get('DEFAULT_S3_PROMPT_THRESHOLD', ''))  # 1MB (era 200KB)
+DEFAULT_S3_TIME_THRESHOLD = int(os.environ.get('DEFAULT_S3_TIME_THRESHOLD', ''))  # 12 minutos
+DEFAULT_S3_COUNT_THRESHOLD = int(os.environ.get('DEFAULT_S3_COUNT_THRESHOLD', ''))  # 150 prompts
 
 # Tiempos de procesamiento (segundos)
-SMALL_PROMPT_VALIDATION_TIME = 3
-MEDIUM_PROMPT_VALIDATION_TIME = 9
-LARGE_PROMPT_VALIDATION_TIME = 30
-SMALL_PROMPT_EXECUTION_TIME = 6
-MEDIUM_PROMPT_EXECUTION_TIME = 18
-LARGE_PROMPT_EXECUTION_TIME = 60
+SMALL_PROMPT_VALIDATION_TIME = int(os.environ.get('SMALL_PROMPT_VALIDATION_TIME', ''))
+MEDIUM_PROMPT_VALIDATION_TIME = int(os.environ.get('MEDIUM_PROMPT_VALIDATION_TIME', ''))
+LARGE_PROMPT_VALIDATION_TIME = int(os.environ.get('LARGE_PROMPT_VALIDATION_TIME', ''))
+SMALL_PROMPT_EXECUTION_TIME = int(os.environ.get('SMALL_PROMPT_EXECUTION_TIME', ''))
+MEDIUM_PROMPT_EXECUTION_TIME = int(os.environ.get('MEDIUM_PROMPT_EXECUTION_TIME', ''))
+LARGE_PROMPT_EXECUTION_TIME = int(os.environ.get('LARGE_PROMPT_EXECUTION_TIME', ''))
 
 # Tamaños de prompt
-SMALL_PROMPT_SIZE = 10_000
-MEDIUM_PROMPT_SIZE = 50_000
+SMALL_PROMPT_SIZE = int(os.environ.get('SMALL_PROMPT_SIZE', ''))
+MEDIUM_PROMPT_SIZE = int(os.environ.get('MEDIUM_PROMPT_SIZE', ''))
 
 # Scores de calidad
-MIN_VALID_SCORE = 8.0
-MIN_REVISION_SCORE = 6.0
-BASE_QUALITY_SCORE = 5.0
-MAX_QUALITY_SCORE = 10.0
+MIN_VALID_SCORE = float(os.environ.get('MIN_VALID_SCORE', ''))
+MIN_REVISION_SCORE = float(os.environ.get('MIN_REVISION_SCORE', ''))
+BASE_QUALITY_SCORE = float(os.environ.get('BASE_QUALITY_SCORE', ''))
+MAX_QUALITY_SCORE = float(os.environ.get('MAX_QUALITY_SCORE', ''))
 
 # AWS Configuration
-AWS_MAX_RETRIES = 3
-AWS_RETRY_DELAY = 1.0
-BEDROCK_MODEL_ID = "us.anthropic.claude-3-5-sonnet-20240620-v1:0"
+AWS_MAX_RETRIES = int(os.environ.get('AWS_MAX_RETRIES', ''))
+AWS_RETRY_DELAY = float(os.environ.get('AWS_RETRY_DELAY', ''))
+BEDROCK_MODEL_ID = os.environ.get('BEDROCK_MODEL_ID', '')
 
 # Configurar logging optimizado para Lambda
 logging.basicConfig(
