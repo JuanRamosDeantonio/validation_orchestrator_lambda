@@ -44,6 +44,7 @@ class ValidationPipeline:
         self.groups = []
         self.prompts = []
         self.lambda_invoker  = create_lambda_invoker()
+        self.bedrock_region = os.environ.get('BEDROCK_REGION', '')
     
     def execute(self) -> Dict[str, Any]:
         """
@@ -195,7 +196,7 @@ class ValidationPipeline:
             formatted_prompts = self._prepare_prompts_for_validation()
             
             # Ejecutar validación
-            result_id = validate_prompts_lambda(formatted_prompts)
+            result_id = validate_prompts_lambda(formatted_prompts, aws_region=self.bedrock_region)
             
             logger.info(f"✅ Validación ejecutada - ID: {result_id.get('job_id', 'N/A')}")
             return result_id

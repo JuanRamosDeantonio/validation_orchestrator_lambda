@@ -159,7 +159,7 @@ def run_bedrock_prompt(prompt: str) -> Optional[str]:
         Optional[str]: Resultado generado por el modelo, o None si ocurre un error.
     """
     # Configura aquí el modelo y entorno por defecto
-    DEFAULT_MODEL_ID = "us.anthropic.claude-opus-4-20250514-v1:0"
+    DEFAULT_MODEL_ID = os.environ.get("BEDROCK_REPORT_MODEL_ID", "")
     DEFAULT_ENVIRONMENT = os.environ.get("EXECUTION_ENVIRONMENT", "lambda")  # usa env si está definida
 
     try:
