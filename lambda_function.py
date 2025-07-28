@@ -14,6 +14,7 @@ from app.bedrock_validator import process_prompts_hybrid_optimized as validate_p
 from app.bedrock_client import run_bedrock_prompt
 from app.lambda_invoker import create_lambda_invoker
 from app.report_producer import produce_report, report_to_lambda, gather_prompt_results
+from app.config import Config
 
 # Configurar logging para Lambda (CloudWatch)
 logger = logging.getLogger()
@@ -202,7 +203,12 @@ class ValidationPipeline:
             formatted_prompts = self._prepare_prompts_for_validation()
             
             # Ejecutar validación
-            result_id = validate_prompts_lambda(formatted_prompts, aws_region=self.bedrock_region)
+            if Config.TEMPORAL_BEDROCK_CONFIG:
+                result_id = validate_prompts_lambda(formatted_prompts, aws_region=self.bedrock_region,
+                                                aws_access_key=Config.BEDROCK_ACCESS_KEY_ID,
+                                                aws_secret_key=Config.BEDROCK_SECRET_ACCESS_KEY)
+            else:
+                result_id = validate_prompts_lambda(formatted_prompts, aws_region=Config.AWS_REGION)
             
             logger.info(f"✅ Validación ejecutada - ID: {result_id.get('job_id', 'N/A')}")
             return result_id

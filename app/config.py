@@ -82,6 +82,31 @@ class Config:
         """Secret Access Key de AWS."""
         return self._get_env_cached('AWS_SECRET_ACCESS_KEY', '')
     
+    
+    @property
+    def BEDROCK_REGION(self) -> str:
+        """Región de AWS - usa BEDROCK_DEFAULT_REGION como fallback."""
+        # Prioridad: AWS_REGION -> AWS_DEFAULT_REGION -> default
+        region = self._get_env_cached('AWS_REGION', '')
+        if not region:
+            region = self._get_env_cached('BEDROCK_DEFAULT_REGION', 'us-east-1')
+        return region
+    
+    @property
+    def BEDROCK_ACCESS_KEY_ID(self) -> str:
+        """Access Key ID de BEDROCK."""
+        return self._get_env_cached('BEDROCK_ACCESS_KEY_ID', '')
+    
+    @property
+    def BEDROCK_SECRET_ACCESS_KEY(self) -> str:
+        """Secret Access Key de BEDROCK."""
+        return self._get_env_cached('BEDROCK_SECRET_ACCESS_KEY', '')
+    
+    @property
+    def TEMPORAL_BEDROCK_CONFIG(self) -> bool:
+        """Secret Access Key de BEDROCK."""
+        return bool(self._get_env_cached('TEMPORAL_BEDROCK_CONFIG', False))
+    
     # =============================================================================
     # S3 SETTINGS
     # =============================================================================
