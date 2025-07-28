@@ -106,6 +106,11 @@ class Config:
         """Ruta en S3 donde esta el prompt que se usa con la IA."""
         return self._get_env_cached('TEMPLATE_PROMPT_S3_PATH_STRUCTURE', '')
     
+    @property
+    def TEMPLATE_PROMPT_S3_PATH_REPORT(self) -> str:
+        """Ruta en S3 donde esta el prompt que se usa con la IA."""
+        return self._get_env_cached('TEMPLATE_PROMPT_S3_PATH_REPORT', '')
+    
     # =============================================================================
     # LAMBDA FUNCTIONS
     # =============================================================================

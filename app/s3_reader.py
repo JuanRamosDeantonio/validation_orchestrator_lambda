@@ -62,6 +62,10 @@ class S3JsonReader:
         """Lee el archivo de reglas desde S3."""
         return self.read_content(self.config.S3_BUCKET, self.config.TEMPLATE_PROMPT_S3_PATH_STRUCTURE)
     
+    def read_template_report(self) -> str:
+        """Lee el archivo de reglas desde S3."""
+        return self.read_content(self.config.S3_BUCKET, self.config.TEMPLATE_PROMPT_S3_PATH_REPORT)
+    
     def read_content(self, bucket: str, key: str) -> S3Result:
         """
         Lee un archivo JSON desde S3.

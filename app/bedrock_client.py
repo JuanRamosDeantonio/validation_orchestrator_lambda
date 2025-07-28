@@ -102,12 +102,29 @@ class BedrockClient(metaclass=SingletonMeta):
         Returns:
             dict: Estructura lista para serializar y enviar a Bedrock.
         """
+
+        messages = [{"role": "user", "content": prompt}]
         return {
-            "prompt": prompt,
-            "max_tokens_to_sample": max_tokens,
+            "anthropic_version": "bedrock-2023-05-31",
+            "max_tokens": max_tokens,  # Límite de seguridad
+            "messages": messages,
             "temperature": temperature,
-            "stop_sequences": ["\n\nHuman:"]
+            "top_p": 0.9
         }
+    def _format_prompt(self, raw_prompt: str) -> str:
+        """
+        Formatea el prompt según el modelo configurado.
+        Actualmente, los modelos Claude requieren que el prompt comience con 'Human:'.
+    
+        Args:
+            raw_prompt (str): Texto base sin formato.
+    
+        Returns:
+            str: Prompt con estructura adecuada para el modelo.
+        """
+        if self.model_id.startswith("anthropic"):
+            return f"\n\nHuman: {raw_prompt}\n\nAssistant:"
+        return raw_prompt
 
     def generate_report(self, prompt: str, temperature: float = 0.7, max_tokens: int = 2048) -> Optional[str]:
         """
@@ -167,6 +184,42 @@ def run_bedrock_prompt(prompt: str) -> Optional[str]:
             model_id=DEFAULT_MODEL_ID,
             environment=DEFAULT_ENVIRONMENT
         )
+        prompt = """Genera un informe profesional en formato Markdown a partir de los siguientes resultados de validación. El informe debe:
+ 
+- Incluir un encabezado con fecha y estado general.
+- Listar todas las reglas incumplidas, una por una.
+- Para cada regla: muestra tipo, criticidad, archivo afectado, descripción y referencia.
+- Finaliza con un apartado de recomendaciones si es posible.
+- Usa íconos o etiquetas para facilitar la lectura (ej: ❌, ✅, ⚠️).
+- Mantén el lenguaje técnico, claro y conciso.
+- No incluyas reglas que fueron cumplidas.
+ 
+Aquí están las reglas incumplidas:
+ 
+1. Regla 03: Falta de sección obligatoria "Objetivos"
+   - Tipo: Contenido
+   - Criticidad: Alta
+   - Archivo: bp02-requerimientos.docx
+   - Descripción: El documento no incluye la sección de objetivos, necesaria para contextualizar el propósito del entregable.
+   - Referencia esperada: Encabezado "2. Objetivos"
+ 
+2. Regla 05: Formato incorrecto de campos clave
+   - Tipo: Semántica
+   - Criticidad: Media
+   - Archivo: bp03-plan-proyecto.docx
+   - Descripción: El campo "Fecha de Inicio" no presenta un formato válido (esperado: dd/mm/aaaa).
+   - Referencia: Planificación > Cronograma
+ 
+3. Regla 07: Ausencia de referencias cruzadas
+   - Tipo: Estructura
+   - Criticidad: Media
+   - Archivo: bp05-especificaciones-funcionales.md
+   - Descripción: No se encontraron referencias cruzadas hacia el documento de arquitectura técnica (bp01-arquitectura.md).
+   - Referencia: Módulo de integración
+ 
+Genera el informe completo ahora.
+ 
+Assistant:"""
         return client.generate_report(prompt)
 
     except Exception as e:
