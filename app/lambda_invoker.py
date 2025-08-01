@@ -63,14 +63,14 @@ class LambdaInvoker:
         owner, repo = self._extract_owner_repo(repository_url)
 
         # 1. Descargar archivo en base64
-        base64_content = self._download_file_base64(file_path, owner, repo, branch)
-        if not base64_content:
+        file_location = self._download_file_base64(file_path, owner, repo, branch)
+        if not file_location:
             error_msg = f"No se pudo obtener el contenido del archivo '{file_path}'"
             self.logger.error(f"❌ {error_msg}")
             return MarkdownResponse(success=False, error=error_msg, source="get_file")
 
         # 2. Convertir a markdown
-        markdown_content = self._convert_file_to_markdown(file_path, base64_content)
+        markdown_content = self._convert_file_to_markdown(file_path, file_location)
         if not markdown_content:
             error_msg = f"El archivo '{file_path}' no pudo ser convertido a Markdown"
             self.logger.error(f"❌ {error_msg}")
@@ -101,7 +101,7 @@ class LambdaInvoker:
     # MÉTODOS DE PROCESAMIENTO DE ARCHIVOS
     # =============================================================================
     
-    def _download_file_base64(self, file_path: str, owner: str, repo: str, branch: str) -> Optional[str]:
+    def _download_file_base64(self, file_path: str, owner: str, repo: str, branch: str) -> Optional[Dict[str,Any]]:
         """
         Descarga el archivo desde GitHub y extrae el contenido codificado en base64.
 
@@ -130,13 +130,31 @@ class LambdaInvoker:
             return None
 
         try:
-            raw_content = self._extract_content_from_result(result.data)
+            raw_content = self._get_file_s3_location(result.data)
             return raw_content
         except Exception as e:
             self.logger.error(f"❌ Error procesando respuesta de descarga: {e}")
             return None
+    
+    def _get_file_s3_location(self, lambda_data: dict) -> Dict[str, Any]:
+        """
+        Extrae el contenido de la respuesta de la lambda.
+        
+        Args:
+            lambda_data: Datos retornados por la lambda
+            
+        Returns:
+            Contenido como string
+        """
+        if not lambda_data:
+            return ""
+        
+        # Buscar contenido en diferentes ubicaciones posibles
+        obj_file_location = lambda_data["body"]
+        
+        return obj_file_location
 
-    def _convert_file_to_markdown(self, file_path: str, base64_content: str) -> Optional[str]:
+    def _convert_file_to_markdown(self, file_path: str, file_location: Dict[str,Any]) -> Optional[str]:
         """
         Convierte un archivo en base64 a formato Markdown utilizando una Lambda especializada.
 
@@ -144,11 +162,18 @@ class LambdaInvoker:
             Contenido Markdown extraído, None si ocurre un error
         """
 
+        print(f"file location -> {file_location}")
+        print(f"tipe of file location -> {type(file_location)}")
+
+        file_location = json.loads(file_location)
+
         
         file_name = Path(file_path).name
         payload = {
             "file_name": file_name,
-            "file_content": base64_content,
+            "s3_path": file_location['s3_path'],
+            "bucket_name": file_location['bucket_name'],
+            "region": Config.AWS_REGION,
             "output_format": "markdown",
             "ai_optimized": "true"
         }

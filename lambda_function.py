@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from app.markdown_rule_binder import MarkdownRuleBinder
 from app.markdown_provider import MarkdownConsumer
 from app.models import RuleData
-from app.s3_reader import S3JsonReader
+from app.s3_reader import S3JsonReader, create_s3_reader
 from app.final_rule_grouping import group_rules
 from app.prompt_formatter import format_prompts
 from app.bedrock_validator import process_prompts_hybrid_optimized as validate_prompts_lambda, generate_report_sync
@@ -91,6 +91,12 @@ class ValidationPipeline:
             #logger.info("Se ejecuta lambda de reporte con respuesta: %s", response_report)
             
             #run_bedrock_prompt("prompt")
+
+            delete_temporal_data = True
+
+            if delete_temporal_data:
+                delete_response = create_s3_reader().delete_temporal_data()
+                logger.info(f'Datos temporales eliminados -> {delete_response}')
 
             logger.info("✅ Pipeline ejecutado exitosamente")
             

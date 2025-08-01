@@ -66,6 +66,41 @@ class S3JsonReader:
         """Lee el archivo de reglas desde S3."""
         return self.read_content(self.config.S3_BUCKET, self.config.TEMPLATE_PROMPT_S3_PATH_REPORT)
     
+    def delete_temporal_data(self) -> S3Result:
+        """Elimina data temporal de los archivos en el s3"""
+        return self.delete_folder_data_temporal(self.config.S3_BUCKET, 'temporal_data/base64_data')
+
+    def delete_folder_data_temporal(self, bucket: str, folder: str) -> S3Result:
+
+        start_time = time.time()
+
+        try:
+            response_objects = self.s3_client.list_objects(Bucket=bucket, Prefix=folder)
+            content_response_objects = response_objects['Contents']
+            objects_list = list(map(lambda obj : {'Key': obj['Key']}, 
+                                    content_response_objects))
+            request_obj_delete = {'Objects': objects_list}
+            print(f'request para eliminar -> {request_obj_delete}')
+            response_delete = self.s3_client.delete_objects(Bucket=bucket, Delete=request_obj_delete)
+
+            execution_time = time.time() - start_time
+
+            return S3Result(
+                success=True,
+                data=response_delete,
+                execution_time=execution_time
+            )
+        except Exception as e:
+            error_msg = self._format_error(e, bucket, key='several')
+            self.logger.error(f"❌ {error_msg}")
+            
+            return S3Result(
+                success=False,
+                error=error_msg,
+                execution_time=time.time() - start_time
+            )
+
+    
     def read_content(self, bucket: str, key: str) -> S3Result:
         """
         Lee un archivo JSON desde S3.
