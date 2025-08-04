@@ -136,6 +136,16 @@ class Config:
         """Ruta en S3 donde esta el prompt que se usa con la IA."""
         return self._get_env_cached('TEMPLATE_PROMPT_S3_PATH_REPORT', '')
     
+    @property
+    def FOLDER_TEMPORAL_DATA_S3(self) -> str:
+        """Ruta en S3 donde esta el prompt que se usa con la IA."""
+        return self._get_env_cached('FOLDER_TEMPORAL_DATA_S3', '')
+    
+    @property
+    def DELETE_TEMPORAL_DATA_FOLDER(self) -> str:
+        """Ruta en S3 donde esta el prompt que se usa con la IA."""
+        return self._get_env_bool('DELETE_TEMPORAL_DATA_FOLDER', True)
+    
     # =============================================================================
     # LAMBDA FUNCTIONS
     # =============================================================================

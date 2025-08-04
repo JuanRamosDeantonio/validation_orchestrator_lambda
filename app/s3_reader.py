@@ -68,7 +68,7 @@ class S3JsonReader:
     
     def delete_temporal_data(self) -> S3Result:
         """Elimina data temporal de los archivos en el s3"""
-        return self.delete_folder_data_temporal(self.config.S3_BUCKET, 'temporal_data/base64_data')
+        return self.delete_folder_data_temporal(self.config.S3_BUCKET, self.config.FOLDER_TEMPORAL_DATA_S3)
 
     def delete_folder_data_temporal(self, bucket: str, folder: str) -> S3Result:
 

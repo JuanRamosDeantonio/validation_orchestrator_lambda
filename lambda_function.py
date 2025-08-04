@@ -92,7 +92,7 @@ class ValidationPipeline:
             
             #run_bedrock_prompt("prompt")
 
-            delete_temporal_data = True
+            delete_temporal_data = Config.DELETE_TEMPORAL_DATA_FOLDER
 
             if delete_temporal_data:
                 delete_response = create_s3_reader().delete_temporal_data()
