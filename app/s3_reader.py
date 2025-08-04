@@ -80,7 +80,6 @@ class S3JsonReader:
             objects_list = list(map(lambda obj : {'Key': obj['Key']}, 
                                     content_response_objects))
             request_obj_delete = {'Objects': objects_list}
-            print(f'request para eliminar -> {request_obj_delete}')
             response_delete = self.s3_client.delete_objects(Bucket=bucket, Delete=request_obj_delete)
 
             execution_time = time.time() - start_time

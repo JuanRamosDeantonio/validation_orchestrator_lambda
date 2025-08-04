@@ -96,7 +96,7 @@ class ValidationPipeline:
 
             if delete_temporal_data:
                 delete_response = create_s3_reader().delete_temporal_data()
-                logger.info(f'Datos temporales eliminados -> {delete_response}')
+                logger.info(f'Operación de eliminación se ejecuta con status code -> {delete_response.data['ResponseMetadata']['HTTPStatusCode']}')
 
             logger.info("✅ Pipeline ejecutado exitosamente")
             
