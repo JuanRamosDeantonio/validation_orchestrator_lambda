@@ -118,12 +118,24 @@ class ValidationPipeline:
         try:
             s3_response = self.s3_reader.read_rules()
             self.rules = [RuleData(**item) for item in s3_response.data]
+            project_type = self._extract_project_type_from_url(self.config.repository_url)
+
+            if project_type:
+                self.rules = [rule for rule in self.rules if project_type in rule.projects.split(',')]
             
             logger.info(f"✅ Cargadas {len(self.rules)} reglas de validación")
             
         except Exception as e:
             logger.error(f"❌ Error cargando reglas: {str(e)}")
             raise
+    
+    def _extract_project_type_from_url(self, url: str) -> str:
+    # Ejemplo, se asume que el nombre del repo está al final después del último slash
+        repo_name = url.rstrip('/').split('/')[-1]
+        parts = repo_name.split('-')
+        if len(parts) > 2:
+            return parts[2]  # tercer fragmento
+        return ''
     
     def _process_repository_structure(self) -> Any:
         """Procesa la estructura del repositorio objetivo"""

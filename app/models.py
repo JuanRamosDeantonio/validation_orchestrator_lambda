@@ -59,6 +59,7 @@ class RuleData:
     references: Optional[str] = None  # Cadena de referencias separadas por coma (ej: 'patron1,valor,patron2')
     markdownfiles: List[MarkdownDocument] = field(default_factory=list)  # Archivos Markdown relacionados con la regla
     explanation: Optional[str] = None  # Explicación adicional sobre la lógica de la regla
+    projects: Optional[str] = None
     tags: List[str] = field(default_factory=list)  # Etiquetas asociadas para filtrado o agrupación
     
     def __post_init__(self):
