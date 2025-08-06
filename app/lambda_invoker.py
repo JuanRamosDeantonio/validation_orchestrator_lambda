@@ -111,6 +111,7 @@ class LambdaInvoker:
         """
         
         clean_path = file_path.removeprefix(f"{repo}/")
+        clean_path, ismarkdown = self._parse_wiki_marker(clean_path)
         payload = {
             "operation": "DOWNLOAD_FILE",
             "provider": "github",
@@ -120,7 +121,8 @@ class LambdaInvoker:
                 "repo": repo,
                 "branch": branch
             },
-            "path": clean_path
+            "path": clean_path,
+            "ismarkdown": ismarkdown
         }
 
         result = self._invoke_lambda(self.config.GET_REPO_STRUCTURE_LAMBDA, payload)
@@ -135,6 +137,16 @@ class LambdaInvoker:
         except Exception as e:
             self.logger.error(f"❌ Error procesando respuesta de descarga: {e}")
             return None
+        
+    def _parse_wiki_marker(path: str) :
+        """
+        Devuelve el path limpio y si es de wiki usando prefijo '(wiki) '
+        """
+        path = path.strip()
+        if path.lower().startswith("(wiki) "):
+            clean_path = path[len("(wiki) "):].strip()
+            return clean_path, True
+        return path, False
     
     def _get_file_s3_location(self, lambda_data: dict) -> Dict[str, Any]:
         """
