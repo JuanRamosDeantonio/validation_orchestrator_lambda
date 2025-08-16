@@ -95,14 +95,13 @@ class ValidationPipeline:
             delete_temporal_data = Config.DELETE_TEMPORAL_DATA_FOLDER
 
             if delete_temporal_data:
-                delete_response = create_s3_reader().delete_temporal_data()
-                logger.info(f'Operación de eliminación se ejecuta con status code -> {delete_response.data['ResponseMetadata']['HTTPStatusCode']}')
+                create_s3_reader().delete_temporal_data()
 
             logger.info("✅ Pipeline ejecutado exitosamente")
             
             return {
                 'validation_result': validation_result,
-                'report': 'NPS',
+                'report': prompt_results,
                 'prompts_count': len(self.prompts),
                 'rules_count': len(self.rules)
             }
@@ -143,8 +142,7 @@ class ValidationPipeline:
         
         try:
             structure = self.markdown_provider.get_repository_structure_markdown(
-                self.config.repository_url, 
-                self.config.branch
+                self.config.repository_url
             )
             
             logger.info(f"✅ Estructura procesada - {len(structure.files)} archivos encontrados")
