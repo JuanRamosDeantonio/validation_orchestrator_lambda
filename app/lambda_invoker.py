@@ -27,9 +27,9 @@ class LambdaInvoker:
     # MÉTODOS PRINCIPALES
     # =============================================================================
     
-    def get_repository_structure(self, repository_url: str, branch: str = None) -> LambdaResult:
+    def get_repository_structure(self, repository_url: str) -> LambdaResult:
         """Obtiene la estructura de un repositorio."""
-        branch = branch or self.config.GITHUB_BRANCH
+
         owner, repo = self._extract_owner_repo(repository_url)
 
         payload = {
@@ -39,13 +39,13 @@ class LambdaInvoker:
                 "token": self.config.GITHUB_TOKEN,
                 "owner": owner,
                 "repo": repo,
-                "branch": branch
+                "branch": self.config.GITHUB_BRANCH
             }
         }
         
         return self._invoke_lambda(self.config.GET_REPO_STRUCTURE_LAMBDA, payload)
     
-    def read_files(self, file_path: str, repository_url: str, branch: str = None) -> MarkdownResponse:
+    def read_files(self, file_path: str, repository_url: str) -> MarkdownResponse:
         """
         Lee y procesa un archivo específico desde un repositorio GitHub y retorna su contenido en Markdown.
 
@@ -59,11 +59,11 @@ class LambdaInvoker:
         """
         start_time = time.time()
 
-        branch = branch or self.config.GITHUB_BRANCH
+        
         owner, repo = self._extract_owner_repo(repository_url)
 
         # 1. Descargar archivo en base64
-        file_location = self._get_file_reference(file_path, owner, repo, branch)
+        file_location = self._get_file_reference(file_path, owner, repo)
         if not file_location:
             error_msg = f"No se pudo obtener el contenido del archivo '{file_path}'"
             self.logger.error(f"❌ {error_msg}")
@@ -101,7 +101,7 @@ class LambdaInvoker:
     # MÉTODOS DE PROCESAMIENTO DE ARCHIVOS
     # =============================================================================
     
-    def _get_file_reference(self, file_path: str, owner: str, repo: str, branch: str) -> Optional[Dict[str,Any]]:
+    def _get_file_reference(self, file_path: str, owner: str, repo: str) -> Optional[Dict[str,Any]]:
         """
         Descarga el archivo desde GitHub y extrae el contenido codificado en base64.
 
@@ -111,25 +111,30 @@ class LambdaInvoker:
         """
         
         clean_path = file_path.removeprefix(f"{repo}/")
-        clean_path, ismarkdown = self._parse_wiki_marker(clean_path)
-        payload = {
-            "operation": "DOWNLOAD_FILE",
-            "provider": "github",
-            "config": {
-                "token": self.config.GITHUB_TOKEN,
-                "owner": owner,
-                "repo": repo,
-                "branch": branch
-            },
-            "path": clean_path,
-            "ismarkdown": ismarkdown
-        }
+        #clean_path, ismarkdown = self._parse_wiki_marker(clean_path)
+        succesful = False
+        iswiki = False
+        while not succesful:
+            payload = {
+                "operation": "DOWNLOAD_FILE",
+                "provider": "github",
+                "config": {
+                    "token": self.config.GITHUB_TOKEN,
+                    "owner": owner,
+                    "repo": repo,
+                    "branch": self.config.GITHUB_BRANCH
+                },
+                "path": clean_path,
+                "iswiki": iswiki 
+            }
 
-        result = self._invoke_lambda(self.config.GET_REPO_STRUCTURE_LAMBDA, payload)
+            result = self._invoke_lambda(self.config.GET_REPO_STRUCTURE_LAMBDA, payload)
+            iswiki = not iswiki 
+            succesful = result.success or iswiki
 
-        if not result.success:
-            self.logger.error(f"❌ Error al descargar archivo desde GitHub: {result.error}")
-            return None
+            if not result.success:
+                self.logger.error(f"❌ Error al descargar archivo desde GitHub: {result.error}")
+                return None
 
         try:
             raw_content = self._get_file_s3_location(result.data)
