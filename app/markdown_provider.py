@@ -33,8 +33,7 @@ class MarkdownConsumer:
         
         self.logger.info("🚀 MarkdownConsumer inicializado")
     
-    def get_repository_structure_markdown(self, repository_url: str, 
-                                        branch: str = None) -> MarkdownResponse:
+    def get_repository_structure_markdown(self, repository_url: str) -> MarkdownResponse:
         """
         Obtiene el markdown de la estructura del repositorio.
         
@@ -48,14 +47,13 @@ class MarkdownConsumer:
         Returns:
             MarkdownResponse: Respuesta con el markdown de la estructura
         """
-        branch = branch or self.config.GITHUB_BRANCH
+
         
         self.logger.info(f"📂 Obteniendo estructura markdown de {repository_url}")
         
         # Invocar lambda que retorna markdown de estructura
         lambda_result = self.lambda_invoker.get_repository_structure(
-            repository_url=repository_url,
-            branch=branch
+            repository_url=repository_url
         )
         
         if lambda_result.success:
@@ -87,8 +85,7 @@ class MarkdownConsumer:
                 source="structure"
             )
     
-    def get_file_markdown(self, file_path: str, repository_url: str, 
-                         branch: str = None) -> MarkdownResponse:
+    def get_file_markdown(self, file_path: str, repository_url: str) -> MarkdownResponse:
         """
         Obtiene el markdown de un archivo específico.
         
@@ -103,7 +100,7 @@ class MarkdownConsumer:
         Returns:
             MarkdownResponse: Respuesta con el markdown del archivo
         """
-        branch = branch or self.config.GITHUB_BRANCH
+    
         
         self.logger.info(f"📄 Obteniendo markdown del archivo {file_path}")
         
@@ -111,7 +108,6 @@ class MarkdownConsumer:
         result = self.lambda_invoker.read_files(
             file_path,  # Lista con un solo archivo
             repository_url=repository_url,
-            branch=branch
         )
         
         if result.success:
