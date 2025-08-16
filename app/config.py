@@ -144,7 +144,7 @@ class Config:
     @property
     def DELETE_TEMPORAL_DATA_FOLDER(self) -> str:
         """Ruta en S3 donde esta el prompt que se usa con la IA."""
-        return self._get_env_bool('DELETE_TEMPORAL_DATA_FOLDER', True)
+        return self._get_env_bool('DELETE_TEMPORAL_DATA_FOLDER', False)
     
     # =============================================================================
     # LAMBDA FUNCTIONS

@@ -77,6 +77,9 @@ class S3JsonReader:
         try:
             response_objects = self.s3_client.list_objects(Bucket=bucket, Prefix=folder)
             content_response_objects = response_objects['Contents']
+            if not content_response_objects:
+                self.logger.info(f'No existe archivos en {folder}. Nada para eliminar')
+                return S3Result(success=True, data={'message': 'No files to delete'})
             objects_list = list(map(lambda obj : {'Key': obj['Key']}, 
                                     content_response_objects))
             request_obj_delete = {'Objects': objects_list}
