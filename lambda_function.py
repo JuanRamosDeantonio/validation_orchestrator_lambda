@@ -65,6 +65,10 @@ class ValidationPipeline:
             
             # 3. Vincular reglas con archivos
             self._bind_rules_to_files(repository_structure)
+
+            if not (repository_structure.markdown_content and repository_structure.markdown_content.strip()) \
+               and not repository_structure.files:
+                raise ValueError("No hay contenido de estructura.")
             
             # 4. Agrupar reglas y generar prompts
             self._generate_validation_prompts(repository_structure)

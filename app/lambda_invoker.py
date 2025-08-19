@@ -9,7 +9,7 @@ from typing import Dict, Any, List, Optional, Tuple
 from urllib.parse import urlparse
 
 import boto3
-from app.models import LambdaResult, MarkdownResponse
+from app.models import FileEntry, LambdaResult, MarkdownResponse
 
 
 from app.config import Config, setup_logger
@@ -45,7 +45,7 @@ class LambdaInvoker:
         
         return self._invoke_lambda(self.config.GET_REPO_STRUCTURE_LAMBDA, payload)
     
-    def read_files(self, file_path: str, repository_url: str) -> MarkdownResponse:
+    def read_files(self, file_path: FileEntry, repository_url: str) -> MarkdownResponse:
         """
         Lee y procesa un archivo específico desde un repositorio GitHub y retorna su contenido en Markdown.
 
@@ -101,7 +101,7 @@ class LambdaInvoker:
     # MÉTODOS DE PROCESAMIENTO DE ARCHIVOS
     # =============================================================================
     
-    def _get_file_reference(self, file_path: str, owner: str, repo: str) -> Optional[Dict[str,Any]]:
+    def _get_file_reference(self, file_path_key: FileEntry, owner: str, repo: str) -> Optional[Dict[str,Any]]:
         """
         Descarga el archivo desde GitHub y extrae el contenido codificado en base64.
 
@@ -109,49 +109,48 @@ class LambdaInvoker:
             Contenido base64 del archivo si fue exitoso, None en caso de error
             
         """
-        
+        (file_path, iswiki) = file_path_key
+
         clean_path = file_path.removeprefix(f"{repo}/")
-        #clean_path, ismarkdown = self._parse_wiki_marker(clean_path)
-        succesful = False
-        iswiki = False
-        while not succesful:
-            payload = {
-                "operation": "DOWNLOAD_FILE",
-                "provider": "github",
-                "config": {
-                    "token": self.config.GITHUB_TOKEN,
-                    "owner": owner,
-                    "repo": repo,
-                    "branch": self.config.GITHUB_BRANCH
-                },
-                "path": clean_path,
-                "iswiki": iswiki 
-            }
 
-            result = self._invoke_lambda(self.config.GET_REPO_STRUCTURE_LAMBDA, payload)
-            iswiki = not iswiki 
-            succesful = result.success or iswiki
+        wiki_text= "false"
+        if iswiki:
+            wiki_text= "true"
 
-            if not result.success:
-                self.logger.error(f"❌ Error al descargar archivo desde GitHub: {result.error}")
-                return None
+                
+        payload = {
+            "operation": "DOWNLOAD_FILE",
+            "provider": "github",
+            "config": {
+                "token": self.config.GITHUB_TOKEN,
+                "owner": owner,
+                "repo": repo,
+                "branch": self.config.GITHUB_BRANCH
+            },
+            "path": clean_path,
+            "iswiki": wiki_text
+        }
+
+        payload_str = json.dumps(payload, ensure_ascii=False)  # <- JSON como str
+
+        result = self._invoke_lambda(self.config.GET_REPO_STRUCTURE_LAMBDA, payload)
+
+        if not result.success:
+            self.logger.error(f"❌ Error al descargar archivo desde GitHub: {result.error}")
+            return None
 
         try:
             raw_content = self._get_file_s3_location(result.data)
+            print("------*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-")
+            print(raw_content)
+            print("------*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-")
+
             return raw_content
         except Exception as e:
             self.logger.error(f"❌ Error procesando respuesta de descarga: {e}")
             return None
-        
-    def _parse_wiki_marker(path: str) :
-        """
-        Devuelve el path limpio y si es de wiki usando prefijo '(wiki) '
-        """
-        path = path.strip()
-        if path.lower().startswith("(wiki) "):
-            clean_path = path[len("(wiki) "):].strip()
-            return clean_path, True
-        return path, False
+       
+   
     
     def _get_file_s3_location(self, lambda_data: dict) -> Dict[str, Any]:
         """
@@ -171,13 +170,15 @@ class LambdaInvoker:
         
         return obj_file_location
 
-    def _convert_reference_to_markdown(self, file_path: str, file_location: Dict[str,Any]) -> Optional[str]:
+    def _convert_reference_to_markdown(self, file_path_key: FileEntry, file_location: Dict[str,Any]) -> Optional[str]:
         """
         Convierte un archivo en base64 a formato Markdown utilizando una Lambda especializada.
 
         Returns:
             Contenido Markdown extraído, None si ocurre un error
         """
+
+        (file_path, _) = file_path_key
 
         print(f"file location -> {file_location}")
         print(f"tipe of file location -> {type(file_location)}")

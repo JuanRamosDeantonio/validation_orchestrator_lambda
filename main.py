@@ -23,8 +23,8 @@ def test_lambda():
     # Eventos de prueba
     events = {
         'complete': {
-            'repository_url': 'https://github.com/JuanRamosDeantonio/SrvBillAgreementStandardPaymentREST',
-            'branch': 'dev',
+            'repository_url': 'https://github.com/JuanRamosDeantonio/int-iib-fcd-SrvReturnBalanceSettleAccGMFFcd-middleware-esql',
+            'branch': 'main',
             'report_title': 'Reporte de Validación de Estructura y Contenido'
         },
         # 'minimal': {

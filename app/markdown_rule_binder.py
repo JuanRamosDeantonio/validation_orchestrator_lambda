@@ -1,6 +1,6 @@
 from typing import List, Dict, Set, Tuple
 
-from app.models import MarkdownDocument, RuleData
+from app.models import FileEntry, MarkdownDocument, RuleData
 import fnmatch
 import logging
 
@@ -64,7 +64,7 @@ class DocumentCache:
         """
         return f"{repository_url}:{path}"
     
-    def get_document(self, path: str, repository_url: str) -> MarkdownDocument:
+    def get_document(self, pathkey: FileEntry, repository_url: str) -> MarkdownDocument:
         """
         Obtiene un documento del cache o lo carga si no existe.
         
@@ -78,6 +78,9 @@ class DocumentCache:
         Raises:
             Exception: Si hay error cargando el archivo
         """
+
+        (path, _) = pathkey
+
         cache_key = self._generate_cache_key(path, repository_url)
         
         if cache_key in self._cache:
@@ -87,7 +90,7 @@ class DocumentCache:
         logger.debug(LogMessages.CACHE_MISS.format(path=path))
         
         try:
-            markdown_result = self.markdown_provider.get_file_markdown(path, repository_url)
+            markdown_result = self.markdown_provider.get_file_markdown(pathkey, repository_url)
             document = MarkdownDocument(
                 path=path,
                 content=markdown_result.markdown_content
@@ -101,7 +104,7 @@ class DocumentCache:
             logger.error(LogMessages.MARKDOWN_LOAD_ERROR.format(path=path, error=str(e)))
             raise
     
-    def get_documents(self, paths: List[str], repository_url: str) -> Dict[str, MarkdownDocument]:
+    def get_documents(self, paths: List[FileEntry], repository_url: str) -> Dict[str, MarkdownDocument]:
         """
         Obtiene múltiples documentos usando el cache.
         
@@ -170,26 +173,44 @@ def extract_patterns_from_rule(rule: RuleData) -> Tuple[str, List[str]]:
     return source_pattern, destiny_patterns
 
 
-def find_matching_paths(paths: List[str], patterns: List[str]) -> List[str]:
+def find_matching_paths(paths: List[FileEntry], patterns: List[str]) -> List[FileEntry]:
     """
-    Encuentra todas las rutas que coincidan con cualquiera de los patrones dados.
+    Filtra archivos usando patrones glob. Devuelve todos los que coincidan,
+    sin duplicados y manteniendo el orden original.
     
     Args:
-        paths: Lista de rutas disponibles
-        patterns: Lista de patrones de búsqueda (estilo Unix glob)
-        
+        paths: Lista de tuplas (ruta, iswiki)
+        patterns: Patrones glob para filtrar (ej: ["*.py", "docs/**"])
+    
     Returns:
-        Lista de rutas que coinciden con al menos un patrón
+        Lista de archivos que coinciden con algún patrón, sin duplicados
     """
     if not patterns:
         return []
     
-    matching_paths = []
-    for path in paths:
-        if any(fnmatch.fnmatch(path, pattern) for pattern in patterns):
-            matching_paths.append(path)
+    # Normaliza patrones una sola vez y descarta vacíos
+    norm_patterns = [p.replace("\\", "/") for p in patterns if p.strip()]
+    if not norm_patterns:
+        return []
     
-    return matching_paths
+    matching: List[FileEntry] = []
+    seen: set[str] = set()
+    
+    for path, iswiki in (paths or []):
+        norm_path = path.replace("\\", "/")
+        
+        # Busca coincidencia con cualquier patrón
+        for pattern in norm_patterns:
+            try:
+                if fnmatch.fnmatchcase(norm_path, pattern):
+                    if norm_path not in seen:
+                        matching.append((norm_path, iswiki))
+                        seen.add(norm_path)
+                    break  # Ya encontró match, no buscar en otros patrones
+            except Exception:
+                continue  # Ignora patrones malformados
+    
+    return matching
 
 
 class MarkdownLoader:
@@ -209,7 +230,7 @@ class MarkdownLoader:
         """
         self.document_cache = document_cache
     
-    def load_documents(self, paths: List[str], repository_url: str) -> Dict[str, MarkdownDocument]:
+    def load_documents(self, paths: List[FileEntry], repository_url: str) -> Dict[str, MarkdownDocument]:
         """
         Carga múltiples documentos Markdown usando cache.
         
@@ -243,7 +264,7 @@ class RuleProcessor:
         """
         self.markdown_loader = markdown_loader
     
-    def process_rule(self, rule: RuleData, available_paths: List[str], repository_url: str) -> bool:
+    def process_rule(self, rule: RuleData, available_paths: List[FileEntry], repository_url: str) -> bool:
         """
         Ejecuta el procesamiento completo de una regla individual.
         
@@ -299,7 +320,7 @@ class RuleProcessor:
         
         return True
     
-    def _find_target_paths(self, rule: RuleData, available_paths: List[str]) -> List[str]:
+    def _find_target_paths(self, rule: RuleData, available_paths: List[FileEntry]) -> List[FileEntry]:
         """
         Identifica todas las rutas objetivo para una regla según sus patrones.
         
@@ -323,7 +344,7 @@ class RuleProcessor:
         # Combinar eliminando duplicados
         return list(set(sources + targets))
     
-    def _load_rule_documents(self, rule: RuleData, paths: List[str], repository_url: str) -> None:
+    def _load_rule_documents(self, rule: RuleData, paths: List[FileEntry], repository_url: str) -> None:
         """
         Carga los documentos Markdown usando cache y los asigna a la regla.
         
@@ -375,7 +396,7 @@ class MarkdownRuleBinder:
         self.markdown_loader = MarkdownLoader(self.document_cache)
         self.rule_processor = RuleProcessor(self.markdown_loader)
     
-    def run(self, rules: List[RuleData], paths: List[str], repository_url: str) -> Dict[str, any]:
+    def run(self, rules: List[RuleData], paths: List[FileEntry], repository_url: str) -> Dict[str, any]:
         """
         Ejecuta el proceso completo de correlación para todas las reglas.
         

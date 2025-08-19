@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 
 @dataclass
@@ -26,7 +26,9 @@ class MarkdownDocument:
         return value in self.content
 
 
-@dataclass
+FileEntry = Tuple[str, bool]  # (ruta_relativa, iswiki)
+
+@dataclass(slots=True)
 class MarkdownResponse:
     """Respuesta de markdown desde las lambdas."""
     success: bool
@@ -34,7 +36,7 @@ class MarkdownResponse:
     error: Optional[str] = None
     execution_time: Optional[float] = None
     source: Optional[str] = None  # 'structure' o 'file'
-    files: Optional[List[str]] = None
+    files: Optional[List[FileEntry]] = None  # [(path, iswiki)]
 
 
 @dataclass

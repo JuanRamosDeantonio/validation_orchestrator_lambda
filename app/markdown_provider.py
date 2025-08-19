@@ -8,7 +8,7 @@ from dataclasses import dataclass
 
 from app.config import Config, setup_logger
 from app.lambda_invoker import create_lambda_invoker, LambdaResult
-from app.models import MarkdownResponse
+from app.models import FileEntry, MarkdownResponse
 
 
 
@@ -85,7 +85,7 @@ class MarkdownConsumer:
                 source="structure"
             )
     
-    def get_file_markdown(self, file_path: str, repository_url: str) -> MarkdownResponse:
+    def get_file_markdown(self, file_path: FileEntry, repository_url: str) -> MarkdownResponse:
         """
         Obtiene el markdown de un archivo específico.
         
