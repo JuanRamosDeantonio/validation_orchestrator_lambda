@@ -137,7 +137,7 @@ class ValidationPipeline:
     
     def _extract_project_type_from_url(self, url: str) -> str:
     # Ejemplo, se asume que el nombre del repo está al final después del último slash
-        project_types = ['fcd','orch','srv','adp','tvs']
+        project_types = ['fcd','orch','srv','adp','trv']
         for project_type in project_types:
             if project_type in url:
                 return project_type
