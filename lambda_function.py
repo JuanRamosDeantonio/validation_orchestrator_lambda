@@ -82,9 +82,11 @@ class ValidationPipeline:
                 gather_prompt_results(validation_result),
                 format_rule_violations_report(self.rules)
             )
+
+            report = run_bedrock_prompt(prompt_results)
             
             # 7. Generacion del reporte
-            report_to_lambda(prompt_results, self.config.repository_url)
+            report_to_lambda(report, self.config.repository_url)
 
             # 8. eLIMINACION DE TEMPORALES
             delete_temporal_data = Config.DELETE_TEMPORAL_DATA_FOLDER
@@ -95,7 +97,7 @@ class ValidationPipeline:
             
             return {
                 'validation_result': validation_result,
-                'report': prompt_results,
+                'report': report,
                 'prompts_count': len(self.prompts),
                 'rules_count': len(self.rules)
             }
