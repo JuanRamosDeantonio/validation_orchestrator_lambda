@@ -126,7 +126,7 @@ class BedrockClient(metaclass=SingletonMeta):
             return f"\n\nHuman: {raw_prompt}\n\nAssistant:"
         return raw_prompt
 
-    def generate_report(self, prompt: str, temperature: float = 0.7, max_tokens: int = 2048) -> Optional[str]:
+    def generate_report(self, prompt: str, temperature: float = 0.7, max_tokens: int = 12000) -> Optional[str]:
         """
         Envía un prompt al modelo configurado en Bedrock y retorna la respuesta generada.
 
@@ -155,7 +155,7 @@ class BedrockClient(metaclass=SingletonMeta):
 
             # Decodificación eficiente del stream de respuesta
             response_body = json.load(codecs.getreader("utf-8")(response["body"]))
-            output = response_body.get("completion")
+            output = response_body.get("content")[0].get("text")
 
             logger.info("Informe generado exitosamente desde Bedrock.")
             return output
@@ -184,52 +184,21 @@ def run_bedrock_prompt(prompt: str) -> Optional[str]:
             model_id=DEFAULT_MODEL_ID,
             environment=DEFAULT_ENVIRONMENT
         )
-        prompt = """Genera un informe profesional en formato Markdown a partir de los siguientes resultados de validación. El informe debe:
- 
-- Incluir un encabezado con fecha y estado general.
-- Listar todas las reglas incumplidas, una por una.
-- Para cada regla: muestra tipo, criticidad, archivo afectado, descripción y referencia.
-- Finaliza con un apartado de recomendaciones si es posible.
-- Usa íconos o etiquetas para facilitar la lectura (ej: ❌, ✅, ⚠️).
-- Mantén el lenguaje técnico, claro y conciso.
-- No incluyas reglas que fueron cumplidas.
- 
-Aquí están las reglas incumplidas:
- 
-1. Regla 03: Falta de sección obligatoria "Objetivos"
-   - Tipo: Contenido
-   - Criticidad: Alta
-   - Archivo: bp02-requerimientos.docx
-   - Descripción: El documento no incluye la sección de objetivos, necesaria para contextualizar el propósito del entregable.
-   - Referencia esperada: Encabezado "2. Objetivos"
- 
-2. Regla 05: Formato incorrecto de campos clave
-   - Tipo: Semántica
-   - Criticidad: Media
-   - Archivo: bp03-plan-proyecto.docx
-   - Descripción: El campo "Fecha de Inicio" no presenta un formato válido (esperado: dd/mm/aaaa).
-   - Referencia: Planificación > Cronograma
- 
-3. Regla 07: Ausencia de referencias cruzadas
-   - Tipo: Estructura
-   - Criticidad: Media
-   - Archivo: bp05-especificaciones-funcionales.md
-   - Descripción: No se encontraron referencias cruzadas hacia el documento de arquitectura técnica (bp01-arquitectura.md).
-   - Referencia: Módulo de integración
- 
-Genera el informe completo ahora.
- 
-Assistant:"""
+
 
         base_prompt = f"""Detecta y limpia TODAS las autocorrecciones en este reporte, incluso si no usan la palabra "corrección".
  
 🚨 DETECTAR estos signos de autocorrección:
+- Deja como titulo Reporte General en el resultado, evita otro tipo de titulos.
 - Cambios de ❌ a ✅ en misma sección
 - Frases: "Tras revisar...", "revisión más detallada", "SÍ SE CUMPLE"
 - Evidencia ✅✅✅ pero conclusión ❌
 - Títulos: "CORREGIDO", "Corrección del Análisis"
 - Números que no cuadran entre inicio y final
 - Misma información reportada dos veces con diferentes resultados
+- No pierdas reglas en el proceso, manten tambien las que no tengan reproceso
+- Muestra tambien el detalle de los cumplimientos
+- Ordena las reglas de menor a mayor.
  
 ✅ PARA SECCIONES CON AUTOCORRECCIÓN: Mostrar solo resultado final limpio
 ❌ PARA SECCIONES SIN AUTOCORRECCIÓN: Mantener exactamente iguales

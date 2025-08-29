@@ -83,6 +83,7 @@ class ValidationPipeline:
                 format_rule_violations_report(self.rules)
             )
 
+            #6.5. Normalizacion del reporte con IA
             report = run_bedrock_prompt(prompt_results)
             
             # 7. Generacion del reporte
