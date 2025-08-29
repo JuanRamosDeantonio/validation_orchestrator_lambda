@@ -286,6 +286,8 @@ class RuleProcessor:
         # Paso 2: Encontrar archivos que coincidan con los patrones
         target_paths = self._find_target_paths(rule, available_paths)
         if not target_paths:
+            #si hay configuracion pero los archivos no existen se adiciona un error a la regla.
+            rule.add_error(LogMessages.RULE_NO_SOURCES.format(rule_id=rule.id))
             logger.info(LogMessages.RULE_NO_SOURCES.format(rule_id=rule.id))
             logger.info(LogMessages.RULE_PROCESSING_SKIPPED.format(rule_id=rule.id))
             return False

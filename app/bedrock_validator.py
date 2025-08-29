@@ -209,7 +209,7 @@ MEDIUM_PROMPT_SIZE = int(os.environ.get('MEDIUM_PROMPT_SIZE', '10000'))
 # Scores de calidad
 MIN_VALID_SCORE = float(os.environ.get('MIN_VALID_SCORE', '7.0'))
 MIN_REVISION_SCORE = float(os.environ.get('MIN_REVISION_SCORE', '5.0'))
-BASE_QUALITY_SCORE = float(os.environ.get('BASE_QUALITY_SCORE', '7.0'))
+BASE_QUALITY_SCORE = float(os.environ.get('BASE_QUALITY_SCORE', '8.0'))
 MAX_QUALITY_SCORE = float(os.environ.get('MAX_QUALITY_SCORE', '10.0'))
 
 # AWS Configuration - CON VALORES POR DEFECTO
