@@ -53,27 +53,37 @@ class RuleData:
     """
     Modelo que representa una regla de validación semántica o estructural.
     """
-    id: str  # Identificador único de la regla
-    description: str  # Descripción general de la regla
-    documentation: Optional[str] = None  # nombre de la regla
-    type: Optional[str] = None  # Tipo de regla (estructura, contenido, semántica, etc.)
-    criticality: Optional[str] = None  # Criticidad o severidad de la regla
-    references: Optional[str] = None  # Cadena de referencias separadas por coma (ej: 'patron1,valor,patron2')
-    markdownfiles: List[MarkdownDocument] = field(default_factory=list)  # Archivos Markdown relacionados con la regla
-    explanation: Optional[str] = None  # Explicación adicional sobre la lógica de la regla
+    id: str
+    description: str
+    documentation: Optional[str] = None
+    type: Optional[str] = None
+    criticality: Optional[str] = None
+    references: Optional[str] = None
+    markdownfiles: List["MarkdownDocument"] = field(default_factory=list)
+    explanation: Optional[str] = None
     projects: Optional[str] = None
-    tags: List[str] = field(default_factory=list)  # Etiquetas asociadas para filtrado o agrupación
-    
+    tags: List[str] = field(default_factory=list)
+
+    # NUEVO: lista opcional de errores generados a mano
+    errors: Optional[List[str]] = field(default=None)
+
     def __post_init__(self):
-        """Validación y conversión de tipos después de la inicialización."""
-        # Convierte integers a strings para explanation (equivalente al field_validator)
+        # Convierte integers a strings para explanation
         if self.explanation is not None and isinstance(self.explanation, int):
             self.explanation = str(self.explanation)
-    
+
     @property
     def parsed_references(self) -> List[str]:
-        """
-        Devuelve la cadena `references` separada por comas como lista, limpiando espacios.
-        Si `references` es None, retorna una lista vacía.
-        """
         return [r.strip() for r in self.references.split(",")] if self.references else []
+
+    # Helpers opcionales
+    def add_error(self, msg: str) -> None:
+        if self.errors is None:
+            self.errors = []
+        self.errors.append(str(msg))
+
+    def has_errors(self) -> bool:
+        return bool(self.errors)
+
+    def clear_errors(self) -> None:
+        self.errors = None

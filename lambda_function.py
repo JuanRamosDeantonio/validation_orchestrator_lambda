@@ -15,6 +15,7 @@ from app.bedrock_client import run_bedrock_prompt
 from app.lambda_invoker import create_lambda_invoker
 from app.report_producer import produce_report, report_to_lambda, gather_prompt_results
 from app.config import Config
+from app.helper import format_rule_violations_report, join_sections, printer_prompt
 
 # Configurar logging para Lambda (CloudWatch)
 logger = logging.getLogger()
@@ -75,29 +76,18 @@ class ValidationPipeline:
             
             # 5. Ejecutar validación con IA
             validation_result = self._execute_ai_validation()
-
-            #produce_report(validation_result)
-            #template_report = self.s3_reader.read_template_report()
-            prompt_results = gather_prompt_results(validation_result)
-            #report_prompt = str(template_report) + prompt_results
-            #print(report_prompt)
-            #report = run_bedrock_prompt(report_prompt)
-
+  
+            # 6. Organizar el resultado de los prompts ejecutados
+            prompt_results = join_sections(
+                gather_prompt_results(validation_result),
+                format_rule_violations_report(self.rules)
+            )
+            
+            # 7. Generacion del reporte
             report_to_lambda(prompt_results, self.config.repository_url)
 
-            #print(f'RESULTADOS DE PROMPTS >>>> {validation_result['results']}')
-            
-            # 6. Generar reporte final
-            #report = self._generate_final_report(validation_result)
-
-            #response_report = self.lambda_invoker.generate_report(report, self.config.repository_url)
-
-            #logger.info("Se ejecuta lambda de reporte con respuesta: %s", response_report)
-            
-            #run_bedrock_prompt("prompt")
-
+            # 8. eLIMINACION DE TEMPORALES
             delete_temporal_data = Config.DELETE_TEMPORAL_DATA_FOLDER
-
             if delete_temporal_data:
                 create_s3_reader().delete_temporal_data()
 
@@ -167,7 +157,7 @@ class ValidationPipeline:
             runner.run(self.rules, repository_structure.files, self.config.repository_url)
             
             # Contar reglas vinculadas
-            bound_rules = sum(1 for rule in self.rules if hasattr(rule, 'references') and rule.references)
+            bound_rules = sum(1 for rule in self.rules if hasattr(rule, 'references') and rule.references and not rule.has_errors())
             runner.get_unique_markdown_paths(self.rules)
             logger.info(f"✅ {bound_rules} reglas vinculadas con archivos")
             
@@ -180,8 +170,9 @@ class ValidationPipeline:
         logger.info("📝 Generando prompts de validación")
         
         try:
-            # Agrupar reglas
-            self.groups = group_rules(self.rules)
+            # Agrupar reglas sin errores
+            rules = [r for r in self.rules if not r.has_errors()]
+            self.groups = group_rules(rules)
             logger.info(f"📊 Reglas agrupadas en {len(self.groups)} grupos")
             
             # Cargar plantillas
@@ -194,6 +185,8 @@ class ValidationPipeline:
             # Generar prompts
             self.prompts = format_prompts(self.groups, template, replacements, template_structure)
             
+            printer_prompt(self.prompts, Config.IS_PRINT)
+
             logger.info(f"✅ {len(self.prompts)} prompts generados")
             
         except Exception as e:
@@ -567,3 +560,36 @@ def _json_fallback(obj):
         return obj.__dict__
     else:
         return str(obj)
+    
+
+
+def format_incumplimiento_de_regla(all_rules: List[RuleData]) -> str:
+    """
+    Retorna un string con el formato:
+    **Reglas incumplidas:** N - [id1, id2]
+    
+    ## Detalle de Incumplimientos
+    
+    ### Regla <id>: <description>
+    - <error 1>
+    - <error 2>
+    """
+    # 1) Calcula total e IDs de reglas con error
+    failed_rules = [r for r in all_rules if r.has_errors()]
+    total_failed = len(failed_rules)
+    failed_ids = ", ".join(r.id for r in failed_rules)
+
+    # 2) Encabezado
+    header = f"**Reglas incumplidas:** {total_failed} - [{failed_ids}]\n\n## Detalle de Incumplimientos\n\n"
+
+    # 3) Bloque de la regla solicitada
+    for rule in failed_rules:
+        title = f"### Regla {rule.id}: {rule.description or rule.documentation or ''}".rstrip()
+        errors = rule.errors
+
+        if not errors:
+            body = f"{title}\n- Sin errores registrados."
+        else:
+            body = title + "\n" + "\n".join(f"- {msg}" for msg in errors)
+
+        return header + body

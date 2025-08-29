@@ -165,6 +165,11 @@ class Config:
         """Lambda para generar reportes."""
         return self._get_env_cached('REPORT_LAMBDA', '')
     
+    @property
+    def IS_PRINT(self) -> bool:
+        """Lambda para generar reportes."""
+        return bool(self._get_env_bool('IS_PRINT', False))
+    
     # =============================================================================
     # REPOSITORY ACCESS
     # =============================================================================
