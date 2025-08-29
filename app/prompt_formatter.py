@@ -970,17 +970,32 @@ import re
 
 def fix_xml_backticks(text):
     """
-    Corrige patrones específicos de backticks incorrectos en archivos XML
+    Corrige patrones específicos de backticks incorrectos en archivos XML y JSON
     """
+    # Casos para archivos XML
     # Caso 1: `nombre-`resto.xml`` (backtick mal ubicado)
     text = re.sub(r'(`[^`]*)-`([^`]*\.xml)``', r'\1-\2`', text)
-    
+   
     # Caso 2: ``archivo.xml`` (dobles backticks al inicio y final)
     text = re.sub(r'``([^`]+\.xml)``', r'`\1`', text)
-    
+   
     # Caso 3: ``archivo.xml` (dobles backticks al inicio)
     text = re.sub(r'``([^`]+\.xml)`', r'`\1`', text)
     
+    # Casos para archivos JSON
+    # Caso 1: `nombre-`resto.json`` (backtick mal ubicado)
+    text = re.sub(r'(`[^`]*)-`([^`]*\.json)``', r'\1-\2`', text)
+   
+    # Caso 2: ``archivo.json`` (dobles backticks al inicio y final)
+    text = re.sub(r'``([^`]+\.json)``', r'`\1`', text)
+   
+    # Caso 3: ``archivo.json` (dobles backticks al inicio)
+    text = re.sub(r'``([^`]+\.json)`', r'`\1`', text)
+    
+    # Caso 4 específico: `archivo.`extension`` → `archivo.extension`
+    text = re.sub(r'(`[^`]*\.)`([^`]*``)', r'\1\2', text)
+    text = re.sub(r'(`[^`]*\.[^`]*)``', r'\1`', text)
+   
     return text
 
 
