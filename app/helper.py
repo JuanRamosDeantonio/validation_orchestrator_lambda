@@ -159,3 +159,5 @@ def printer_prompt(prompts: list[str], is_print: bool):
     is_lambda = 'AWS_LAMBDA_FUNCTION_NAME' in os.environ
     handler = PromptHandler(prompts, is_print, use_tmp=is_lambda)  # ← CORREGIDO
     handler.handle_prompts()
+
+

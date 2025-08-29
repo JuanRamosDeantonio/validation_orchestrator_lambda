@@ -510,7 +510,7 @@ class PromptGenerator:
         for i, group in enumerate(groups):
             try:
                 prompt = self._generate_single_prompt(group, template, replacements, template_structure)
-                results.append(prompt)
+                results.append(fix_xml_backticks(prompt))
             except Exception as e:
                 group_name = getattr(group, 'group', f'grupo_{i+1}')
                 error_msg = f"Error procesando '{group_name}': {str(e)}"
@@ -965,6 +965,24 @@ Recomendación: migrar a TypeScript es importante."""
     print("✅ PromptGenerator: Solo orquestación")
     print("✅ LambdaCache: Solo caching")
     print("✅ AdvancedMarkdownEnricher: Solo enriquecimiento inteligente")
+
+import re
+
+def fix_xml_backticks(text):
+    """
+    Corrige patrones específicos de backticks incorrectos en archivos XML
+    """
+    # Caso 1: `nombre-`resto.xml`` (backtick mal ubicado)
+    text = re.sub(r'(`[^`]*)-`([^`]*\.xml)``', r'\1-\2`', text)
+    
+    # Caso 2: ``archivo.xml`` (dobles backticks al inicio y final)
+    text = re.sub(r'``([^`]+\.xml)``', r'`\1`', text)
+    
+    # Caso 3: ``archivo.xml` (dobles backticks al inicio)
+    text = re.sub(r'``([^`]+\.xml)`', r'`\1`', text)
+    
+    return text
+
 
 if __name__ == "__main__":
     example_optimized_usage()
