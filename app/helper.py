@@ -145,7 +145,7 @@ class PromptHandler:
         self.folder_path.mkdir(parents=True, exist_ok=True)
         for i, prompt in enumerate(self.prompts, 1):
             if prompt.strip():
-                file_path = self.folder_path / f"prompt_{i:03d}.txt"
+                file_path = self.folder_path / f"prompt_{i:03d}.md"
                 file_path.write_text(prompt, encoding='utf-8')
     
     def _remove_files(self):
