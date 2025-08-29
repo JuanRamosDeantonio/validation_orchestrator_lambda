@@ -28,4 +28,6 @@ def report_to_lambda(report_prompt : str, repo_url: str):
 
     lambda_invoker = create_lambda_invoker()
 
+    print(f"REPORTE CON OPUS >>>>>>>>>> {report_prompt}")
+
     lambda_invoker.generate_report(report_prompt, repo_url)

@@ -220,7 +220,23 @@ Aquí están las reglas incumplidas:
 Genera el informe completo ahora.
  
 Assistant:"""
-        return client.generate_report(prompt)
+
+        base_prompt = f"""Detecta y limpia TODAS las autocorrecciones en este reporte, incluso si no usan la palabra "corrección".
+ 
+🚨 DETECTAR estos signos de autocorrección:
+- Cambios de ❌ a ✅ en misma sección
+- Frases: "Tras revisar...", "revisión más detallada", "SÍ SE CUMPLE"
+- Evidencia ✅✅✅ pero conclusión ❌
+- Títulos: "CORREGIDO", "Corrección del Análisis"
+- Números que no cuadran entre inicio y final
+- Misma información reportada dos veces con diferentes resultados
+ 
+✅ PARA SECCIONES CON AUTOCORRECCIÓN: Mostrar solo resultado final limpio
+❌ PARA SECCIONES SIN AUTOCORRECCIÓN: Mantener exactamente iguales
+ 
+REPORTE:
+{prompt}"""
+        return client.generate_report(base_prompt)
 
     except Exception as e:
         logger.error(f"Error ejecutando prompt directo: {e}", exc_info=True)
