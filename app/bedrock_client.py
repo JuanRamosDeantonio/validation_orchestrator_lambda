@@ -278,11 +278,12 @@ def run_bedrock_prompt(prompt: str) -> Optional[str]:
         1. **Título exacto:** Usar "Reporte General" sin modificaciones
         2. **Ordenamiento numérico:** Ordenar reglas por número ascendente (1.1, 1.2, 1.4, 1.7, etc.)
         3. **Conservación de información:** NO inventar datos no presentes en el texto original
-        4. **Inclusión completa:** Incluir TODAS las reglas identificadas sin pérdidas
-        5. **Detalle diferenciado:**
+        4. **Ocultamiento de correcciones:** NO mencionar el proceso de corrección en la salida final
+        5. **Inclusión completa:** Incluir TODAS las reglas identificadas sin pérdidas
+        6. **Detalle diferenciado:**
         - Reglas cumplidas: número + descripción breve
         - Reglas incumplidas: detalles completos obligatorios
-        6. **Consistencia numérica:** Verificar que suma de cumplidas + incumplidas = total
+        7. **Consistencia numérica:** Verificar que suma de cumplidas + incumplidas = total
 
         ### VALIDACIONES AUTOMÁTICAS:
         - Confirmar que no se pierdan reglas durante el procesamiento
