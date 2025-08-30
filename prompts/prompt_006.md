@@ -7,6 +7,7 @@ METODOLOGÍA OBLIGATORIA:
 - Para cada regla, busca evidencia específica en la estructura
 - Determina cumplimiento ÚNICAMENTE basado en evidencia encontrada
 - Presenta tu reporte final
+- Documenta cumplimientos e incumplimientos con evidencia especifica
 
 REGLA CRÍTICA: Tu evaluación debe ser correcta la primera vez. Una vez que determines el cumplimiento de una regla, esa evaluación es FINAL. No la cambies, no te corrijas, no digas "me equivoqué".
  
@@ -25,7 +26,7 @@ El contenido a evaluar es el siguiente:
       - 📄 `Reverse_MQ-SrvReturnBalanceSettleAccGMFFcd.mq`
       - 📄 `Verify_MQ-SrvReturnBalanceSettleAccGMFFcd.mq`
     - 📁 `Test`
-      - 📄 `ReturnBalanceSettleAccGMF-soapui-project.txt`
+      - 📄 `ReturnBalanceSettleAccGMF-soapui-project.xml`
   - 📁 `SrvReturnBalanceSettleAccGMFFcd`
     - 📄 `.project`
     - 📄 `application.descriptor`

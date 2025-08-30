@@ -83,6 +83,8 @@ class ValidationPipeline:
                 format_rule_violations_report(self.rules)
             )
 
+            escribir_markdown(prompt_results,"reporte_temporal")            
+
             #6.5. Normalizacion del reporte con IA
             report = run_bedrock_prompt(prompt_results)
             
@@ -106,7 +108,8 @@ class ValidationPipeline:
         except Exception as e:
             logger.error(f"❌ Error en pipeline: {str(e)}")
             raise
-    
+
+  
     def _load_validation_rules(self) -> None:
         """Carga las reglas de validación desde S3"""
         logger.info("📋 Cargando reglas de validación desde S3")
@@ -596,3 +599,7 @@ def format_incumplimiento_de_regla(all_rules: List[RuleData]) -> str:
             body = title + "\n" + "\n".join(f"- {msg}" for msg in errors)
 
         return header + body
+    
+def escribir_markdown(contenido, nombre_archivo):
+    with open(nombre_archivo, 'w', encoding='utf-8') as archivo:
+        archivo.write(contenido)

@@ -35,7 +35,7 @@ Estructura de directorios
       - 📄 `Reverse_MQ-SrvReturnBalanceSettleAccGMFFcd.mq`
       - 📄 `Verify_MQ-SrvReturnBalanceSettleAccGMFFcd.mq`
     - 📁 `Test`
-      - 📄 `ReturnBalanceSettleAccGMF-soapui-project.txt`
+      - 📄 `ReturnBalanceSettleAccGMF-soapui-project.xml`
   - 📁 `SrvReturnBalanceSettleAccGMFFcd`
     - 📄 `.project`
     - 📄 `application.descriptor`

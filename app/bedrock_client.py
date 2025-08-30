@@ -185,28 +185,139 @@ def run_bedrock_prompt(prompt: str) -> Optional[str]:
             environment=DEFAULT_ENVIRONMENT
         )
 
+        base_prompt = f"""
+        ### OBJETIVO
+        Procesar reportes dinámicos generados por IA para producir un reporte final limpio que refleje el estado definitivo de cada regla, considerando todas las correcciones realizadas durante el análisis.
 
-        base_prompt = f"""Detecta y limpia TODAS las autocorrecciones en este reporte, incluso si no usan la palabra "corrección".
- 
-🚨 DETECTAR estos signos de autocorrección:
-- Deja como titulo Reporte General en el resultado, evita otro tipo de titulos.
-- Cambios de ❌ a ✅ en misma sección
-- Frases: "Tras revisar...", "revisión más detallada", "SÍ SE CUMPLE"
-- Evidencia ✅✅✅ pero conclusión ❌
-- Títulos: "CORREGIDO", "Corrección del Análisis"
-- Números que no cuadran entre inicio y final
-- Misma información reportada dos veces con diferentes resultados
-- No pierdas reglas en el proceso, manten tambien las que no tengan reproceso
-- Muestra tambien el detalle de los cumplimientos
-- Ordena las reglas de menor a mayor.
- 
-✅ PARA SECCIONES CON AUTOCORRECCIÓN: Mostrar solo resultado final limpio
-❌ PARA SECCIONES SIN AUTOCORRECCIÓN: Mantener exactamente iguales
- 
-REPORTE:
-{prompt}"""
+        ---
+
+        ## ALGORITMO DE PROCESAMIENTO
+
+        ### PASO 1: EXTRACCIÓN DE REGLAS
+        ```
+        Para cada regla encontrada en el texto:
+        1. Extraer número de regla (formato: X.Y donde X e Y son dígitos)
+        2. Identificar TODAS las menciones de esa regla en el texto
+        3. Registrar estado inicial y cualquier estado posterior
+        4. Documentar evidencias, razones de incumplimiento y ubicaciones
+        ```
+
+        ### PASO 2: DETECCIÓN DE CORRECCIONES
+        Identificar patrones de corrección por orden de prioridad:
+
+        **PATRONES DE ALTA PRIORIDAD (Corrección Explícita):**
+        - Texto contiene frases: "Tras revisar", "SÍ SE CUMPLE", "CORREGIDO", "Corrección del Análisis"
+        - Títulos que incluyen: "CORREGIDO", "Corrección", "ACTUALIZACIÓN"  
+        - Frases de rectificación: "En realidad sí cumple", "Error en evaluación inicial"
+
+        **PATRONES DE MEDIA PRIORIDAD (Cambio de Estado):**
+        - Misma regla evaluada múltiples veces: primera aparición ❌ → aparición posterior ✅
+        - Misma regla evaluada múltiples veces: primera aparición ✅ → aparición posterior ❌
+        - Evidencia positiva (múltiples ✅) pero conclusión inicial ❌
+
+        **PATRONES DE BAJA PRIORIDAD (Inconsistencias):**
+        - Múltiples evaluaciones de misma regla con resultados contradictorios
+        - Cambios en conteos numéricos sin explicación clara
+        - Información duplicada con diferentes conclusiones
+
+        ### PASO 3: RESOLUCIÓN DE ESTADO FINAL
+        ```
+        Para cada regla identificada:
+            if existe_correccion_explicita:
+                estado_final = estado_después_de_corrección_explícita
+            elif existe_cambio_de_estado_documentado:
+                estado_final = último_estado_encontrado_cronológicamente
+            elif hay_contradicción_evidencia_vs_conclusión:
+                estado_final = estado_que_coincida_con_evidencia_concreta
+            else:
+                estado_final = primera_evaluación_encontrada
+        ```
+
+        ### PASO 4: CONSTRUCCIÓN DE SALIDA
+        ```
+        REGLAS_CUMPLIDAS = [lista de números de regla que cumplen]
+        REGLAS_INCUMPLIDAS = [lista de objetos con detalles completos de incumplimiento]
+
+        Para cada regla procesada:
+            if estado_final == CUMPLE:
+                agregar solo número a REGLAS_CUMPLIDAS
+            else:
+                agregar objeto completo a REGLAS_INCUMPLIDAS con:
+                    - número de regla
+                    - descripción de la regla
+                    - razón específica del incumplimiento
+                    - evidencia concreta encontrada
+                    - ubicación donde se detectó el problema
+        ```
+
+        ---
+
+        ## FORMATO DE SALIDA OBLIGATORIO
+
+        ```markdown
+        # Reporte General
+
+        ## Resumen de Cumplimiento
+        ✅ **Reglas cumplidas:** {{{{cantidad_total}}}} - [{{{{números_ordenados_ascendentemente}}}}]
+        ❌ **Reglas incumplidas:** {{{{cantidad_total}}}} - [{{{{números_ordenados_ascendentemente}}}}]
+
+        ## Detalle de Incumplimientos
+
+        ### Regla {{{{número}}}}: {{{{descripción_completa_de_la_regla}}}}
+        **Razón del incumplimiento:** {{{{explicación_específica_del_problema}}}}
+        **Evidencia específica:** {{{{detalles_concretos_encontrados}}}}
+        **Ubicación:** {{{{dónde_se_encontró_el_problema}}}}
+
+        {{{{REPETIR_PARA_CADA_REGLA_INCUMPLIDA}}}}
+
+        ---
+
+        ## REGLAS DE PROCESAMIENTO OBLIGATORIAS
+
+        ### CUMPLIMIENTO ESTRICTO:
+        1. **Título exacto:** Usar "Reporte General" sin modificaciones
+        2. **Ordenamiento numérico:** Ordenar reglas por número ascendente (1.1, 1.2, 1.4, 1.7, etc.)
+        3. **Conservación de información:** NO inventar datos no presentes en el texto original
+        4. **Inclusión completa:** Incluir TODAS las reglas identificadas sin pérdidas
+        5. **Detalle diferenciado:**
+        - Reglas cumplidas: número + descripción breve
+        - Reglas incumplidas: detalles completos obligatorios
+        6. **Consistencia numérica:** Verificar que suma de cumplidas + incumplidas = total
+
+        ### VALIDACIONES AUTOMÁTICAS:
+        - Confirmar que no se pierdan reglas durante el procesamiento
+        - Verificar que el estado final sea consistente con la evidencia disponible
+        - Asegurar que todos los campos obligatorios estén completos para reglas incumplidas
+
+        ---
+
+        ## CASOS ESPECIALES Y EXCEPCIONES
+
+        **Regla aparece múltiples veces sin corrección explícita:**
+        - Acción: Usar la última evaluación encontrada en orden cronológico
+
+        **Contradicción sin resolución clara:**
+        - Acción: Priorizar evidencia concreta y tangible sobre conclusiones subjetivas
+
+        **Información insuficiente para determinar estado:**
+        - Acción: Clasificar como incumplida y documentar la falta de información
+
+        **Texto con errores o datos inconsistentes:**
+        - Acción: Procesar con la información disponible, NO inventar datos faltantes
+
+        **Reglas mencionadas pero no evaluadas:**
+        - Acción: Excluir del reporte final, procesar solo reglas con evaluación
+
+        ---
+
+        ## TEXTO A PROCESAR:
+        {prompt}
+
+        ---"""
+
+    
         return client.generate_report(base_prompt)
-
+    
     except Exception as e:
         logger.error(f"Error ejecutando prompt directo: {e}", exc_info=True)
         return None

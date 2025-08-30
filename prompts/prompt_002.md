@@ -35,7 +35,7 @@ Estructura de directorios
       - 📄 `Reverse_MQ-SrvReturnBalanceSettleAccGMFFcd.mq`
       - 📄 `Verify_MQ-SrvReturnBalanceSettleAccGMFFcd.mq`
     - 📁 `Test`
-      - 📄 `ReturnBalanceSettleAccGMF-soapui-project.txt`
+      - 📄 `ReturnBalanceSettleAccGMF-soapui-project.xml`
   - 📁 `SrvReturnBalanceSettleAccGMFFcd`
     - 📄 `.project`
     - 📄 `application.descriptor`
@@ -56,201 +56,6 @@ Estructura de directorios
 
 Contenido de archivos
 
-
-
-TITULO: int-iib-fcd-SrvReturnBalanceSettleAccGMFFcd-middleware-esql/SrvReturnBalanceSettleAccGMFFcd/co/com/bancopopular/fcd/ReturnBalanceSettleAccGMFFcdWS_REQ.msgflow
-
-CONTENIDO: ``xml
-<?xml version="1.0" ?>
-<ecore:EPackage xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmCompute.msgnode="ComIbmCompute.msgnode" xmlns:ComIbmMQOutput.msgnode="ComIbmMQOutput.msgnode" xmlns:ComIbmSOAPInput.msgnode="ComIbmSOAPInput.msgnode" xmlns:ComIbmSOAPReply.msgnode="ComIbmSOAPReply.msgnode" xmlns:ComIbmThrow.msgnode="ComIbmThrow.msgnode" xmlns:SRRetrieveEntity.msgnode="SRRetrieveEntity.msgnode" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility" xmi:version="2.0" nsURI="co/com/bancopopular/fcd/ReturnBalanceSettleAccGMFFcdWS_REQ.msgflow" nsPrefix="co_com_bancopopular_fcd_ReturnBalanceSettleAccGMFFcdWS_REQ.msgflow">
-  
-  
-  <eClassifiers xmi:type="eflow:FCMComposite" name="FCMComposite_1">
-    
-    
-    <eSuperTypes href="http://www.ibm.com/wbi/2005/eflow#//FCMBlock"/>
-    
-    
-    <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.UDP_Application" name="UDP_Application" lowerBound="1" defaultValueLiteral="SrvReturnBalanceSettleAccGMFFcd">
-      
-      
-      <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
-      
-    
-    </eStructuralFeatures>
-    
-    
-    <translation xmi:type="utility:TranslatableString" key="ReturnBalanceSettleAccGMFFcdWS_REQ" bundleName="co/com/bancopopular/fcd/ReturnBalanceSettleAccGMFFcdWS_REQ" pluginId="SrvReturnBalanceSettleAccGMFFcd"/>
-    
-    
-    <colorGraphic16 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/SrvReturnBalanceSettleAccGMFFcd/icons/full/obj16/ReturnBalanceSettleAccGMFFcdWS_REQ.gif"/>
-    
-    
-    <colorGraphic32 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/SrvReturnBalanceSettleAccGMFFcd/icons/full/obj30/ReturnBalanceSettleAccGMFFcdWS_REQ.gif"/>
-    
-    
-    <composition>
-      
-      
-      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_1" location="589,169" dataSource="AUDITORIA" computeExpression="esql://routine/common.modules.fcd#Facade_RouteMsg_WS_V3.Main" computeMode="destinationAndMessage">
-        
-        
-        <translation xmi:type="utility:ConstantString" string="CmpRouteMsg"/>
-        
-      
-      </nodes>
-      
-      
-      <nodes xmi:type="ComIbmMQOutput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_2" location="711,170" destinationMode="list" transactionMode="no" request="true" replyToQ="MQINP.RTNBALANCESETTLEACC.FCD.WS.RESP">
-        
-        
-        <translation xmi:type="utility:ConstantString" string="MQOUT.GENERIC.SRV.REQ"/>
-        
-      
-      </nodes>
-      
-      
-      <nodes xmi:type="ComIbmSOAPReply.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_3" location="291,82" transactionMode="no">
-        
-        
-        <translation xmi:type="utility:ConstantString" string="SOAPReply"/>
-        
-      
-      </nodes>
-      
-      
-      <nodes xmi:type="ComIbmMQOutput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_4" location="736,248" queueName="LOG.REGISTER.REQ" transactionMode="no">
-        
-        
-        <translation xmi:type="utility:ConstantString" string="LOG.REGISTER.REQ"/>
-        
-      
-      </nodes>
-      
-      
-      <nodes xmi:type="ComIbmThrow.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_5" location="464,242" messageCatalog="FCD" messageNumber="3" messageText="No hay archivo de configuracion en WSRR para aplicacion SrvReturnBalanceSettleAccGMFFcd">
-        
-        
-        <translation xmi:type="utility:ConstantString" string="ThrowInqConfigApp"/>
-        
-        
-        <shortDescription xmi:type="utility:ConstantString" string="No se encuentra configuración de servicio."/>
-        
-      
-      </nodes>
-      
-      
-      <nodes xmi:type="ComIbmSOAPInput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_6" location="116,172" wsdlOperationMode="gateway" useHTTPTransport="true" urlSelector="/accounts/SSL/ReturnBalanceSettleAccGMF" useHTTPS="true" maxClientWaitTime="30" parserXmlnscBuildTreeUsingXMLSchema="false" validateMaster="none">
-        
-        
-        <translation xmi:type="utility:ConstantString" string="SOAPInput_HTTPS"/>
-        
-      
-      </nodes>
-      
-      
-      <nodes xmi:type="ComIbmMQOutput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_7" location="402,12" queueName="EXCEPTION.REGISTER.REQ" transactionMode="no">
-        
-        
-        <translation xmi:type="utility:ConstantString" string="EXCEPTION.REGISTER.REQ"/>
-        
-      
-      </nodes>
-      
-      
-      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_8" location="224,11" dataSource="AUDITORIA" computeExpression="esql://routine/common.modules.fcd#Facade_GetInfoError_IFX_WS_REQ.Main" computeMode="destinationAndMessage">
-        
-        
-        <translation xmi:type="utility:ConstantString" string="CmpGetInfoError"/>
-        
-      
-      </nodes>
-      
-      
-      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_9" location="275,168" computeExpression="esql://routine/common.modules.fcd#Facade_ReceiveMsg_WS_V2.Main" computeMode="destinationAndMessage">
-        
-        
-        <translation xmi:type="utility:ConstantString" string="CmpReceiveMsg"/>
-        
-      
-      </nodes>
-      
-      
-      <nodes xmi:type="SRRetrieveEntity.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_10" location="419,169" name="Default" serviceVersion="1.0" depthPolicy="MatchOnly">
-        
-        
-        <translation xmi:type="utility:ConstantString" string="RLGetConfigParams"/>
-        
-      
-      </nodes>
-      
-      
-      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_1" targetNode="FCMComposite_1_9" sourceNode="FCMComposite_1_6" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
-      
-      
-      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_2" targetNode="FCMComposite_1_2" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
-      
-      
-      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_3" targetNode="FCMComposite_1_8" sourceNode="FCMComposite_1_6" sourceTerminalName="OutTerminal.catch" targetTerminalName="InTerminal.in"/>
-      
-      
-      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_4" targetNode="FCMComposite_1_3" sourceNode="FCMComposite_1_8" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
-      
-      
-      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_5" targetNode="FCMComposite_1_8" sourceNode="FCMComposite_1_6" sourceTerminalName="OutTerminal.failure" targetTerminalName="InTerminal.in"/>
-      
-      
-      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_6" targetNode="FCMComposite_1_7" sourceNode="FCMComposite_1_8" sourceTerminalName="OutTerminal.out1" targetTerminalName="InTerminal.in"/>
-      
-      
-      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_7" targetNode="FCMComposite_1_1" sourceNode="FCMComposite_1_10" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
-      
-      
-      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_8" targetNode="FCMComposite_1_4" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.out1" targetTerminalName="InTerminal.in">
-        
-        
-        <bendPoints>24,69,-131,-10</bendPoints>
-        
-      
-      </connections>
-      
-      
-      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_9" targetNode="FCMComposite_1_5" sourceNode="FCMComposite_1_10" sourceTerminalName="OutTerminal.noMatch" targetTerminalName="InTerminal.in"/>
-      
-      
-      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_10" targetNode="FCMComposite_1_10" sourceNode="FCMComposite_1_9" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
-      
-      
-      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_11" targetNode="FCMComposite_1_3" sourceNode="FCMComposite_1_6" sourceTerminalName="OutTerminal.timeout" targetTerminalName="InTerminal.in"/>
-      
-    
-    </composition>
-    
-    
-    <propertyOrganizer>
-      
-      
-      <propertyDescriptor groupName="Group.Basic" configurable="true" userDefined="true" describedAttribute="Property.UDP_Application">
-        
-        
-        <propertyName xmi:type="utility:TranslatableString" key="Property.UDP_Application" bundleName="co/com/bancopopular/fcd/ReturnBalanceSettleAccGMFFcdWS_REQ" pluginId="SrvReturnBalanceSettleAccGMFFcd"/>
-        
-      
-      </propertyDescriptor>
-      
-    
-    </propertyOrganizer>
-    
-    
-    <stickyBoard/>
-    
-  
-  </eClassifiers>
-  
-
-</ecore:EPackage>
-
-``
 
 
 TITULO: int-iib-fcd-SrvReturnBalanceSettleAccGMFFcd-middleware-esql/Especificacion-‐-AddReturnBalanceSettleAccGMF.md
@@ -675,39 +480,6 @@ graph LR
 |:-------------:|-------------|
 | 200     | Transacción Exitosa |
 | 500 	  | ❌ **> ⚠️ **ERROR**** interno en el servidor |
-``
-
-
-TITULO: int-iib-fcd-SrvReturnBalanceSettleAccGMFFcd-middleware-esql/Home.md
-
-CONTENIDO: ``text
-# Servicio
-
-### *SrvReturnBalanceSettleAccGMFFcd* 
-
-## Funcionalidad
-
-Permite hacer la devolución de Saldo GMF a clientes con cuentas saldadas o por saldar desde el canal SOFIA a través de la convivencia de los diferentes aplicativos (FC y AST) que intervienen en estos procesos.
-
-## Ruta contrato de exposicion
-
-
-
-## Protocolo
-
-SOAP/HTTPS
-
-## Respositorios servicios atomicos de la funcionalidad:
-
-[int-iib-orch-SrvReturnBalanceSettleAccGMFOrch-middleware-esql.wiki](https://github.com/BancoPopular/int-iib-orch-SrvReturnBalanceSettleAccGMFOrch-middleware-esql/wiki)
-[int-iib-srv-SrvReturnBalanceSettleAccGMF-middleware-esql.wiki](https://github.com/BancoPopular/int-iib-srv-SrvReturnBalanceSettleAccGMF-middleware-esql/wiki)
-[int-iib-srv-SrvReturnBalanceSettleAccGMFAST-middleware-esql.wiki](https://github.com/BancoPopular/int-iib-srv-SrvReturnBalanceSettleAccGMFAST-middleware-esql/wiki)
-[int-iib-srv-SrvReturnBalanceSettleAccGMFRev-middleware-esql.wiki](https://github.com/BancoPopular/int-iib-srv-SrvReturnBalanceSettleAccGMFRev-middleware-esql/wiki)
-
-
-## Fecha Elaboracion
-
-12/06/25
 ``
 
 
@@ -1149,6 +921,234 @@ CONTENIDO: ``text
     </wsdl:port>
   </wsdl:service>
 </wsdl:definitions>
+``
+
+
+TITULO: int-iib-fcd-SrvReturnBalanceSettleAccGMFFcd-middleware-esql/SrvReturnBalanceSettleAccGMFFcd/co/com/bancopopular/fcd/ReturnBalanceSettleAccGMFFcdWS_REQ.msgflow
+
+CONTENIDO: ``xml
+<?xml version="1.0" ?>
+<ecore:EPackage xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmCompute.msgnode="ComIbmCompute.msgnode" xmlns:ComIbmMQOutput.msgnode="ComIbmMQOutput.msgnode" xmlns:ComIbmSOAPInput.msgnode="ComIbmSOAPInput.msgnode" xmlns:ComIbmSOAPReply.msgnode="ComIbmSOAPReply.msgnode" xmlns:ComIbmThrow.msgnode="ComIbmThrow.msgnode" xmlns:SRRetrieveEntity.msgnode="SRRetrieveEntity.msgnode" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility" xmi:version="2.0" nsURI="co/com/bancopopular/fcd/ReturnBalanceSettleAccGMFFcdWS_REQ.msgflow" nsPrefix="co_com_bancopopular_fcd_ReturnBalanceSettleAccGMFFcdWS_REQ.msgflow">
+  
+  
+  <eClassifiers xmi:type="eflow:FCMComposite" name="FCMComposite_1">
+    
+    
+    <eSuperTypes href="http://www.ibm.com/wbi/2005/eflow#//FCMBlock"/>
+    
+    
+    <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="Property.UDP_Application" name="UDP_Application" lowerBound="1" defaultValueLiteral="SrvReturnBalanceSettleAccGMFFcd">
+      
+      
+      <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+      
+    
+    </eStructuralFeatures>
+    
+    
+    <translation xmi:type="utility:TranslatableString" key="ReturnBalanceSettleAccGMFFcdWS_REQ" bundleName="co/com/bancopopular/fcd/ReturnBalanceSettleAccGMFFcdWS_REQ" pluginId="SrvReturnBalanceSettleAccGMFFcd"/>
+    
+    
+    <colorGraphic16 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/SrvReturnBalanceSettleAccGMFFcd/icons/full/obj16/ReturnBalanceSettleAccGMFFcdWS_REQ.gif"/>
+    
+    
+    <colorGraphic32 xmi:type="utility:GIFFileGraphic" resourceName="platform:/plugin/SrvReturnBalanceSettleAccGMFFcd/icons/full/obj30/ReturnBalanceSettleAccGMFFcdWS_REQ.gif"/>
+    
+    
+    <composition>
+      
+      
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_1" location="589,169" dataSource="AUDITORIA" computeExpression="esql://routine/common.modules.fcd#Facade_RouteMsg_WS_V3.Main" computeMode="destinationAndMessage">
+        
+        
+        <translation xmi:type="utility:ConstantString" string="CmpRouteMsg"/>
+        
+      
+      </nodes>
+      
+      
+      <nodes xmi:type="ComIbmMQOutput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_2" location="711,170" destinationMode="list" transactionMode="no" request="true" replyToQ="MQINP.RTNBALANCESETTLEACC.FCD.WS.RESP">
+        
+        
+        <translation xmi:type="utility:ConstantString" string="MQOUT.GENERIC.SRV.REQ"/>
+        
+      
+      </nodes>
+      
+      
+      <nodes xmi:type="ComIbmSOAPReply.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_3" location="291,82" transactionMode="no">
+        
+        
+        <translation xmi:type="utility:ConstantString" string="SOAPReply"/>
+        
+      
+      </nodes>
+      
+      
+      <nodes xmi:type="ComIbmMQOutput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_4" location="736,248" queueName="LOG.REGISTER.REQ" transactionMode="no">
+        
+        
+        <translation xmi:type="utility:ConstantString" string="LOG.REGISTER.REQ"/>
+        
+      
+      </nodes>
+      
+      
+      <nodes xmi:type="ComIbmThrow.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_5" location="464,242" messageCatalog="FCD" messageNumber="3" messageText="No hay archivo de configuracion en WSRR para aplicacion SrvReturnBalanceSettleAccGMFFcd">
+        
+        
+        <translation xmi:type="utility:ConstantString" string="ThrowInqConfigApp"/>
+        
+        
+        <shortDescription xmi:type="utility:ConstantString" string="No se encuentra configuración de servicio."/>
+        
+      
+      </nodes>
+      
+      
+      <nodes xmi:type="ComIbmSOAPInput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_6" location="116,172" wsdlOperationMode="gateway" useHTTPTransport="true" urlSelector="/accounts/SSL/ReturnBalanceSettleAccGMF" useHTTPS="true" maxClientWaitTime="30" parserXmlnscBuildTreeUsingXMLSchema="false" validateMaster="none">
+        
+        
+        <translation xmi:type="utility:ConstantString" string="SOAPInput_HTTPS"/>
+        
+      
+      </nodes>
+      
+      
+      <nodes xmi:type="ComIbmMQOutput.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_7" location="402,12" queueName="EXCEPTION.REGISTER.REQ" transactionMode="no">
+        
+        
+        <translation xmi:type="utility:ConstantString" string="EXCEPTION.REGISTER.REQ"/>
+        
+      
+      </nodes>
+      
+      
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_8" location="224,11" dataSource="AUDITORIA" computeExpression="esql://routine/common.modules.fcd#Facade_GetInfoError_IFX_WS_REQ.Main" computeMode="destinationAndMessage">
+        
+        
+        <translation xmi:type="utility:ConstantString" string="CmpGetInfoError"/>
+        
+      
+      </nodes>
+      
+      
+      <nodes xmi:type="ComIbmCompute.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_9" location="275,168" computeExpression="esql://routine/common.modules.fcd#Facade_ReceiveMsg_WS_V2.Main" computeMode="destinationAndMessage">
+        
+        
+        <translation xmi:type="utility:ConstantString" string="CmpReceiveMsg"/>
+        
+      
+      </nodes>
+      
+      
+      <nodes xmi:type="SRRetrieveEntity.msgnode:FCMComposite_1" xmi:id="FCMComposite_1_10" location="419,169" name="Default" serviceVersion="1.0" depthPolicy="MatchOnly">
+        
+        
+        <translation xmi:type="utility:ConstantString" string="RLGetConfigParams"/>
+        
+      
+      </nodes>
+      
+      
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_1" targetNode="FCMComposite_1_9" sourceNode="FCMComposite_1_6" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      
+      
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_2" targetNode="FCMComposite_1_2" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      
+      
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_3" targetNode="FCMComposite_1_8" sourceNode="FCMComposite_1_6" sourceTerminalName="OutTerminal.catch" targetTerminalName="InTerminal.in"/>
+      
+      
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_4" targetNode="FCMComposite_1_3" sourceNode="FCMComposite_1_8" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      
+      
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_5" targetNode="FCMComposite_1_8" sourceNode="FCMComposite_1_6" sourceTerminalName="OutTerminal.failure" targetTerminalName="InTerminal.in"/>
+      
+      
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_6" targetNode="FCMComposite_1_7" sourceNode="FCMComposite_1_8" sourceTerminalName="OutTerminal.out1" targetTerminalName="InTerminal.in"/>
+      
+      
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_7" targetNode="FCMComposite_1_1" sourceNode="FCMComposite_1_10" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      
+      
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_8" targetNode="FCMComposite_1_4" sourceNode="FCMComposite_1_1" sourceTerminalName="OutTerminal.out1" targetTerminalName="InTerminal.in">
+        
+        
+        <bendPoints>24,69,-131,-10</bendPoints>
+        
+      
+      </connections>
+      
+      
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_9" targetNode="FCMComposite_1_5" sourceNode="FCMComposite_1_10" sourceTerminalName="OutTerminal.noMatch" targetTerminalName="InTerminal.in"/>
+      
+      
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_10" targetNode="FCMComposite_1_10" sourceNode="FCMComposite_1_9" sourceTerminalName="OutTerminal.out" targetTerminalName="InTerminal.in"/>
+      
+      
+      <connections xmi:type="eflow:FCMConnection" xmi:id="FCMConnection_11" targetNode="FCMComposite_1_3" sourceNode="FCMComposite_1_6" sourceTerminalName="OutTerminal.timeout" targetTerminalName="InTerminal.in"/>
+      
+    
+    </composition>
+    
+    
+    <propertyOrganizer>
+      
+      
+      <propertyDescriptor groupName="Group.Basic" configurable="true" userDefined="true" describedAttribute="Property.UDP_Application">
+        
+        
+        <propertyName xmi:type="utility:TranslatableString" key="Property.UDP_Application" bundleName="co/com/bancopopular/fcd/ReturnBalanceSettleAccGMFFcdWS_REQ" pluginId="SrvReturnBalanceSettleAccGMFFcd"/>
+        
+      
+      </propertyDescriptor>
+      
+    
+    </propertyOrganizer>
+    
+    
+    <stickyBoard/>
+    
+  
+  </eClassifiers>
+  
+
+</ecore:EPackage>
+
+``
+
+
+TITULO: int-iib-fcd-SrvReturnBalanceSettleAccGMFFcd-middleware-esql/Home.md
+
+CONTENIDO: ``text
+# Servicio
+
+### *SrvReturnBalanceSettleAccGMFFcd* 
+
+## Funcionalidad
+
+Permite hacer la devolución de Saldo GMF a clientes con cuentas saldadas o por saldar desde el canal SOFIA a través de la convivencia de los diferentes aplicativos (FC y AST) que intervienen en estos procesos.
+
+## Ruta contrato de exposicion
+
+
+
+## Protocolo
+
+SOAP/HTTPS
+
+## Respositorios servicios atomicos de la funcionalidad:
+
+[int-iib-orch-SrvReturnBalanceSettleAccGMFOrch-middleware-esql.wiki](https://github.com/BancoPopular/int-iib-orch-SrvReturnBalanceSettleAccGMFOrch-middleware-esql/wiki)
+[int-iib-srv-SrvReturnBalanceSettleAccGMF-middleware-esql.wiki](https://github.com/BancoPopular/int-iib-srv-SrvReturnBalanceSettleAccGMF-middleware-esql/wiki)
+[int-iib-srv-SrvReturnBalanceSettleAccGMFAST-middleware-esql.wiki](https://github.com/BancoPopular/int-iib-srv-SrvReturnBalanceSettleAccGMFAST-middleware-esql/wiki)
+[int-iib-srv-SrvReturnBalanceSettleAccGMFRev-middleware-esql.wiki](https://github.com/BancoPopular/int-iib-srv-SrvReturnBalanceSettleAccGMFRev-middleware-esql/wiki)
+
+
+## Fecha Elaboracion
+
+12/06/25
 ``
 ```
 

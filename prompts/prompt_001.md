@@ -7,13 +7,14 @@ METODOLOGÍA OBLIGATORIA:
 - Para cada regla, busca evidencia específica en la estructura
 - Determina cumplimiento ÚNICAMENTE basado en evidencia encontrada
 - Presenta tu reporte final
+- Documenta cumplimientos e incumplimientos con evidencia especifica
 
 REGLA CRÍTICA: Tu evaluación debe ser correcta la primera vez. Una vez que determines el cumplimiento de una regla, esa evaluación es FINAL. No la cambies, no te corrijas, no digas "me equivoqué".
  
 📄 1.4 Debe haber un documento de Guion con extensión .md por cada aplicación. La palabra "Guion" en el documento estar presente obligatoriamente, si hay una variante con una letra de más se debe tomar como un ❌ **> ⚠️ **ERROR****. La extensión ".md" debe estar presente obligatoriamente en el Guion, si hay otra distinta debe ser tomado como un ❌ **> ⚠️ **ERROR****.
 📄 1.7 Debe haber al menos un archivo con extension .xml en la ruta Resource/Config. La extensión del archivo debe ser obligatoriamente .xml, si es una diferente el archivo no es válido.
 📄 1.9 Debe haber un archivo .project
-📄 1.10 En la ruta Resource/MQ deben incluirse exactamente tres archivos .mq con nombres que inicien con "Verify", "Reverse" y "MQ" respectivamente. Las palabras con las que deben inciar los nombres de los archivos deben ser estrictamente esas, si hay palabras que tengan variantes así sean parecidas a las obligatorias el archivo será inválido
+📄 1.10 En la ruta Resource/MQ deben incluirse exactamente tres archivos .mq con nombres que inicien con "Verify", "Reverse" y "MQ" respectivamente. Las palabras con las que deben inciar los nombres de los archivos deben ser estrictamente esas, si hay palabras que tengan variantes así sean parecidas a las obligatorias el archivo será inválido. Concentrate solo en el primer termino del nombre para comprobar las palabras de inicio, no tengas en cuenta los caracteres que hayan después de estas palabras. Si inicia con "Verify-", "Verify_", "Reverse-", "Reverse_", "MQ-", "MQ_" deben ser tomados como válidos. 
 📄 1.11 Debe haber al menos un archivo en la ruta Resource/Contract con la extensión .yaml o .wsdl. La extensión debe ser obligatoriamente .yaml ó .wsdl, si la extensión es distinta a las anteriomente mencionadas el archivo no es válido.
 📄 1.12 La ruta Resource/Test debe contener al menos un archivo. Las extensiones de los archivos deben seguir estas reglas basadas en el nombre del archivo (case-insensitive): contiene "soapui": extensión .xml, contiene "postman" (y no "soapui"): extensión .json, si no contiene ninguno de los anteriores: extensión .txt
 El contenido a evaluar es el siguiente:
@@ -30,7 +31,7 @@ El contenido a evaluar es el siguiente:
       - 📄 `Reverse_MQ-SrvReturnBalanceSettleAccGMFFcd.mq`
       - 📄 `Verify_MQ-SrvReturnBalanceSettleAccGMFFcd.mq`
     - 📁 `Test`
-      - 📄 `ReturnBalanceSettleAccGMF-soapui-project.txt`
+      - 📄 `ReturnBalanceSettleAccGMF-soapui-project.xml`
   - 📁 `SrvReturnBalanceSettleAccGMFFcd`
     - 📄 `.project`
     - 📄 `application.descriptor`

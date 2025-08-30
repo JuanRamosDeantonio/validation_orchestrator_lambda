@@ -35,7 +35,7 @@ Estructura de directorios
       - 📄 `Reverse_MQ-SrvReturnBalanceSettleAccGMFFcd.mq`
       - 📄 `Verify_MQ-SrvReturnBalanceSettleAccGMFFcd.mq`
     - 📁 `Test`
-      - 📄 `ReturnBalanceSettleAccGMF-soapui-project.txt`
+      - 📄 `ReturnBalanceSettleAccGMF-soapui-project.xml`
   - 📁 `SrvReturnBalanceSettleAccGMFFcd`
     - 📄 `.project`
     - 📄 `application.descriptor`
@@ -525,10 +525,10 @@ CONTENIDO: ``xml
 ``
 
 
-TITULO: int-iib-fcd-SrvReturnBalanceSettleAccGMFFcd-middleware-esql/Resource/MQ/Verify_MQ-SrvReturnBalanceSettleAccGMFFcd.mq
+TITULO: int-iib-fcd-SrvReturnBalanceSettleAccGMFFcd-middleware-esql/Resource/MQ/Reverse_MQ-SrvReturnBalanceSettleAccGMFFcd.mq
 
 CONTENIDO: ``text
-DISPLAY QLOCAL ('MQINP.RTNBALANCESETTLEACC.FCD.WS.RESP')
+DELETE QLOCAL ('MQINP.RTNBALANCESETTLEACC.FCD.WS.RESP') PURGE
 ``
 
 
@@ -543,10 +543,10 @@ DEFINE QLOCAL ('MQINP.RTNBALANCESETTLEACC.FCD.WS.RESP') +
 ``
 
 
-TITULO: int-iib-fcd-SrvReturnBalanceSettleAccGMFFcd-middleware-esql/Resource/MQ/Reverse_MQ-SrvReturnBalanceSettleAccGMFFcd.mq
+TITULO: int-iib-fcd-SrvReturnBalanceSettleAccGMFFcd-middleware-esql/Resource/MQ/Verify_MQ-SrvReturnBalanceSettleAccGMFFcd.mq
 
 CONTENIDO: ``text
-DELETE QLOCAL ('MQINP.RTNBALANCESETTLEACC.FCD.WS.RESP') PURGE
+DISPLAY QLOCAL ('MQINP.RTNBALANCESETTLEACC.FCD.WS.RESP')
 ``
 
 
