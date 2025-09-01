@@ -186,135 +186,80 @@ def run_bedrock_prompt(prompt: str) -> Optional[str]:
         )
 
         base_prompt = f"""
-        ### OBJETIVO
-        Procesar reportes dinámicos generados por IA para producir un reporte final limpio que refleje el estado definitivo de cada regla, considerando todas las correcciones realizadas durante el análisis.
-
-        ---
-
-        ## ALGORITMO DE PROCESAMIENTO
-
-        ### PASO 1: EXTRACCIÓN DE REGLAS
-        ```
-        Para cada regla encontrada en el texto:
-        1. Extraer número de regla (formato: X.Y donde X e Y son dígitos)
-        2. Identificar TODAS las menciones de esa regla en el texto
-        3. Registrar estado inicial y cualquier estado posterior
-        4. Documentar evidencias, razones de incumplimiento y ubicaciones
-        ```
-
-        ### PASO 2: DETECCIÓN DE CORRECCIONES
-        Identificar patrones de corrección por orden de prioridad:
-
-        **PATRONES DE ALTA PRIORIDAD (Corrección Explícita):**
-        - Texto contiene frases: "Tras revisar", "SÍ SE CUMPLE", "CORREGIDO", "Corrección del Análisis"
-        - Títulos que incluyen: "CORREGIDO", "Corrección", "ACTUALIZACIÓN"  
-        - Frases de rectificación: "En realidad sí cumple", "Error en evaluación inicial"
-
-        **PATRONES DE MEDIA PRIORIDAD (Cambio de Estado):**
-        - Misma regla evaluada múltiples veces: primera aparición ❌ → aparición posterior ✅
-        - Misma regla evaluada múltiples veces: primera aparición ✅ → aparición posterior ❌
-        - Evidencia positiva (múltiples ✅) pero conclusión inicial ❌
-
-        **PATRONES DE BAJA PRIORIDAD (Inconsistencias):**
-        - Múltiples evaluaciones de misma regla con resultados contradictorios
-        - Cambios en conteos numéricos sin explicación clara
-        - Información duplicada con diferentes conclusiones
-
-        ### PASO 3: RESOLUCIÓN DE ESTADO FINAL
-        ```
-        Para cada regla identificada:
-            if existe_correccion_explicita:
-                estado_final = estado_después_de_corrección_explícita
-            elif existe_cambio_de_estado_documentado:
-                estado_final = último_estado_encontrado_cronológicamente
-            elif hay_contradicción_evidencia_vs_conclusión:
-                estado_final = estado_que_coincida_con_evidencia_concreta
-            else:
-                estado_final = primera_evaluación_encontrada
-        ```
-
-        ### PASO 4: CONSTRUCCIÓN DE SALIDA
-        ```
-        REGLAS_CUMPLIDAS = [lista de números de regla que cumplen]
-        REGLAS_INCUMPLIDAS = [lista de objetos con detalles completos de incumplimiento]
-
-        Para cada regla procesada:
-            if estado_final == CUMPLE:
-                agregar solo número a REGLAS_CUMPLIDAS
-            else:
-                agregar objeto completo a REGLAS_INCUMPLIDAS con:
-                    - número de regla
-                    - descripción de la regla
-                    - razón específica del incumplimiento
-                    - evidencia concreta encontrada
-                    - ubicación donde se detectó el problema
-        ```
-
-        ---
-
-        ## FORMATO DE SALIDA OBLIGATORIO
-
-        ```markdown
+        OBJETIVO
+        Analizar el reporte dinámico generado por IA y producir una versión limpia que refleje el estado 
+        final de cada regla, considerando todas las correcciones realizadas.
+        
+        DETECCIÓN DE AUTOCORRECCIONES
+        Buscar estos patrones que indican que la IA corrigió su evaluación inicial:
+        Indicadores Textuales de Corrección:
+        "Tras revisar...", "revisión más detallada", "CORREGIDO"
+        "SÍ SE CUMPLE", "Corrección del Análisis"
+        Títulos con "CORREGIDO" o similar
+        "En realidad sí cumple", "Error en evaluación inicial"
+        
+        Indicadores de Estado Cambiado:
+        Misma regla con diferentes estados: Primera vez incumple, luego se marca como que cumple
+        Evidencia contradictoria: Evidencia positiva pero la conclusión no concuerda 
+        Evaluación duplicada: Misma regla evaluada dos veces con resultados diferentes
+        Corrección numérica: Números que cambian entre evaluaciones (ej: 5 reglas → 3 reglas)
+        Patrones de Corrección Específicos:
+        Sección que inicia con afirmando que se incumple pero termina con que sí cumple
+        Explicación inicial de incumplimiento seguida de justificación de cumplimiento
+        Cambio en el conteo total de reglas cumplidas/incumplidas
+        
+        PROCESO DE LIMPIEZA
+        1. IDENTIFICAR CORRECCIONES por regla:
+        Buscar múltiples evaluaciones de la misma regla en el texto
+        Detectar cambios de estado: INCUMPLE a CUMPLE o CUMPLE A INCUMPLE
+        Localizar frases de corrección: "Tras revisar...", "SÍ SE CUMPLE", "CORREGIDO"
+        2. APLICAR CORRECCIONES:
+        SI hay corrección explícita: Usar el estado final corregido (ignorar evaluación inicial)
+        SI hay contradicción sin corrección explícita: Usar la última evaluación encontrada
+        SI hay evidencia de que se cumple pero conclusión de que no se cumple: Verificar si hay corrección posterior
+        SI NO hay corrección: Mantener la evaluación original
+        3. DETERMINAR ESTADO FINAL:
+        Regla CUMPLIDA tras corrección: Solo listar número (sin detalles de incumplimiento)
+        Regla INCUMPLIDA tras corrección: Incluir detalles del incumplimiento REAL
+        Regla sin cambios: Mantener estado y detalles originales
+        4. Clasificar resultado final en:
+        Reglas cumplidas: Solo número de regla
+        Reglas incumplidas: Número + detalle completo del incumplimiento
+        
+        3. Estructura de salida:
+        
         # Reporte General
-
         ## Resumen de Cumplimiento
-        ✅ **Reglas cumplidas:** {{{{cantidad_total}}}} - [{{{{números_ordenados_ascendentemente}}}}]
-        ❌ **Reglas incumplidas:** {{{{cantidad_total}}}} - [{{{{números_ordenados_ascendentemente}}}}]
-
+        **Reglas cumplidas:** [cantidad] - [lista de números]
+        **Reglas incumplidas:** [cantidad] - [lista de números]
         ## Detalle de Incumplimientos
+        [Solo para reglas fallidas, ordenadas numéricamente de menor a mayor]
+        ### Regla X.X: [Descripción]
+        **Razón del incumplimiento:** [Explicación específica]
+        **Evidencia específica:** [Detalles concretos]
+        **Ubicación:** [Dónde se encontró el problema]
+        ## Reglas Cumplidas
+        [Lista simple sin detalles]
+        RESTRICCIONES CRÍTICAS
+        NO inventar información que no existe en el reporte original
+        NO perder ninguna regla durante el proceso
+        Mantener el título "Reporte General"
+        Considerar TODAS las correcciones para determinar el estado final
+        Ordenar reglas numéricamente (1.1, 1.2, 1.3, etc.)
+        
+        RESULTADO ESPERADO
+        Un reporte limpio que muestre:
+        Estado final CORREGIDO de cada regla (considerando TODAS las correcciones)
+        Detalles completos solo para reglas que DEFINITIVAMENTE fallan (después de correcciones)
+        Lista simple de reglas que cumplen (incluyendo las corregidas de incumplidas a cumplidas)
+        Sin mencionar las correcciones en el reporte final (solo el estado definitivo)
+        Formato consistente y profesional
+        EJEMPLO DE MANEJO DE CORRECCIÓN:
+        Texto original: "Regla 1.4 No cumple... [luego] Tras revisar, SÍ SE CUMPLE"
+        Resultado final: Incluir 1.4 en "Reglas cumplidas" (sin detalles de incumplimiento)
 
-        ### Regla {{{{número}}}}: {{{{descripción_completa_de_la_regla}}}}
-        **Razón del incumplimiento:** {{{{explicación_específica_del_problema}}}}
-        **Evidencia específica:** {{{{detalles_concretos_encontrados}}}}
-        **Ubicación:** {{{{dónde_se_encontró_el_problema}}}}
-
-        {{{{REPETIR_PARA_CADA_REGLA_INCUMPLIDA}}}}
-
-        ---
-
-        ## REGLAS DE PROCESAMIENTO OBLIGATORIAS
-
-        ### CUMPLIMIENTO ESTRICTO:
-        1. **Título exacto:** Usar "Reporte General" sin modificaciones
-        2. **Ordenamiento numérico:** Ordenar reglas por número ascendente (1.1, 1.2, 1.4, 1.7, etc.)
-        3. **Conservación de información:** NO inventar datos no presentes en el texto original
-        4. **Ocultamiento de correcciones:** NO mencionar el proceso de corrección en la salida final
-        5. **Inclusión completa:** Incluir TODAS las reglas identificadas sin pérdidas
-        6. **Detalle diferenciado:**
-        - Reglas cumplidas: número + descripción breve
-        - Reglas incumplidas: detalles completos obligatorios
-        7. **Consistencia numérica:** Verificar que suma de cumplidas + incumplidas = total
-
-        ### VALIDACIONES AUTOMÁTICAS:
-        - Confirmar que no se pierdan reglas durante el procesamiento
-        - Verificar que el estado final sea consistente con la evidencia disponible
-        - Asegurar que todos los campos obligatorios estén completos para reglas incumplidas
-
-        ---
-
-        ## CASOS ESPECIALES Y EXCEPCIONES
-
-        **Regla aparece múltiples veces sin corrección explícita:**
-        - Acción: Usar la última evaluación encontrada en orden cronológico
-
-        **Contradicción sin resolución clara:**
-        - Acción: Priorizar evidencia concreta y tangible sobre conclusiones subjetivas
-
-        **Información insuficiente para determinar estado:**
-        - Acción: Clasificar como incumplida y documentar la falta de información
-
-        **Texto con errores o datos inconsistentes:**
-        - Acción: Procesar con la información disponible, NO inventar datos faltantes
-
-        **Reglas mencionadas pero no evaluadas:**
-        - Acción: Excluir del reporte final, procesar solo reglas con evaluación
-
-        ---
-
-        ## TEXTO A PROCESAR:
-        {prompt}
-
-        ---"""
+         TEXTO A PROCESAR:
+         {prompt}"""
 
     
         return client.generate_report(base_prompt)
