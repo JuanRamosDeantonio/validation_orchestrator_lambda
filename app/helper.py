@@ -3,6 +3,7 @@ from typing import Any, List
 from app.models import RuleData
 import shutil
 from pathlib import Path
+import re
 
 class RuleIdSorter:
     """Responsabilidad: Ordenamiento de reglas por ID."""
@@ -160,4 +161,308 @@ def printer_prompt(prompts: list[str], is_print: bool):
     handler = PromptHandler(prompts, is_print, use_tmp=is_lambda)  # ← CORREGIDO
     handler.handle_prompts()
 
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+TextFilter - Versión final correcta y funcional
 
+Objetivo:
+- Conserva: números (0-9), letras (a-z, A-Z), acentos, punto, coma, espacios, saltos de línea
+- En archivos: elimina guiones (-) y guiones bajos (_)
+- En texto normal: conserva guiones (-), elimina guiones bajos (_)  
+- Elimina TODOS los backticks al final
+
+Uso:
+    from text_filter import clean_text
+    result = clean_text("tu texto aquí")
+"""
+
+class TextFilter:
+    """Filtro de texto completo y funcional."""
+    
+    def __init__(self):
+        """Inicializa el filtro con patrones optimizados."""
+        # Patrón para detectar archivos con cualquier extensión
+        self.file_pattern = re.compile(r'\b\w+(?:[-_\u2010\u2013\u2014]+\w+)*\.\w{1,15}\b')
+        
+        # Caracteres que SIEMPRE se eliminan
+        self.forbidden_chars = [
+            '@', '#', '$', '%', '&', '*', '(', ')', '[', ']', '{', '}', 
+            '|', '\\', '/', ':', ';', '"', "'", '<', '>', '?', '!', '¡', 
+            '¿', '=', '+', '^', '~'
+        ]
+        
+        # Patrón de caracteres permitidos (sin backticks)
+        self.allowed_pattern = r'[a-zA-Z0-9áéíóúüñÁÉÍÓÚÜÑàèìòùÀÈÌÒÙâêîôûÂÊÎÔÛäëïöüÄËÏÖÜçÇ\.,\- \n]'
+        
+        # Estadísticas
+        self.extensions_found = []
+        self.chars_removed = 0
+    
+    def clean_text(self, text):
+        """
+        Limpia el texto aplicando todas las reglas.
+        
+        Args:
+            text: Texto a limpiar
+            
+        Returns:
+            str: Texto limpio garantizado
+        """
+        # Validar entrada
+        if not text:
+            return ""
+        
+        if not isinstance(text, str):
+            text = str(text)
+        
+        original_length = len(text)
+        
+        # PASO 1: Limpiar archivos (eliminar guiones solo de archivos)
+        text = self.file_pattern.sub(self._clean_file, text)
+        
+        # PASO 2: Eliminar caracteres prohibidos específicos (excepto backticks)
+        for char in self.forbidden_chars:
+            text = text.replace(char, '')
+        
+        # PASO 3: Aplicar filtro de caracteres permitidos
+        allowed_chars = re.findall(self.allowed_pattern, text)
+        result = ''.join(allowed_chars)
+        
+        # PASO 4: Limpiar espacios múltiples y bordes
+        result = re.sub(r'  +', ' ', result)
+        result = result.strip()
+        
+        # PASO FINAL: Eliminar TODOS los backticks (la solución más simple y efectiva)
+        result = result.replace('`', '')
+        
+        # Actualizar estadísticas
+        self.chars_removed += max(0, original_length - len(result))
+        
+        return result
+    
+    def _clean_file(self, match):
+        """
+        Limpia un archivo eliminando guiones y guiones bajos.
+        
+        Args:
+            match: Match object del archivo detectado
+            
+        Returns:
+            str: Nombre de archivo sin guiones
+        """
+        filename = match.group(0)
+        
+        # Registrar extensión para estadísticas
+        if '.' in filename:
+            ext = filename.split('.')[-1].lower()
+            if ext not in self.extensions_found:
+                self.extensions_found.append(ext)
+        
+        # Eliminar TODOS los tipos de guiones del archivo
+        clean_filename = re.sub(r'[-_\u2010\u2013\u2014]', '', filename)
+        return clean_filename
+    
+    def get_stats(self):
+        """Retorna estadísticas del procesamiento."""
+        return {
+            'files_processed': len(self.extensions_found),
+            'extensions_found': self.extensions_found.copy(),
+            'chars_removed': self.chars_removed
+        }
+    
+    def reset_stats(self):
+        """Reinicia estadísticas."""
+        self.extensions_found = []
+        self.chars_removed = 0
+
+
+# ============================================================================
+# FUNCIONES DE CONVENIENCIA
+# ============================================================================
+
+def clean_text(text):
+    """
+    Función principal - simple y funcional.
+    
+    Args:
+        text: Texto a limpiar
+        
+    Returns:
+        str: Texto limpio SIN backticks
+        
+    Example:
+        result = clean_text("¡Hola! `archivo_test.xml`")
+        print(result)  # "Hola archivotest.xml"
+    """
+    filter_obj = TextFilter()
+    return filter_obj.clean_text(text)
+
+
+def clean_text_with_stats(text):
+    """
+    Limpia texto y retorna estadísticas.
+    
+    Args:
+        text: Texto a limpiar
+        
+    Returns:
+        tuple: (texto_limpio, estadísticas)
+    """
+    filter_obj = TextFilter()
+    clean_result = filter_obj.clean_text(text)
+    stats = filter_obj.get_stats()
+    return clean_result, stats
+
+
+def clean_multiple_texts(texts):
+    """
+    Limpia múltiples textos de forma eficiente.
+    
+    Args:
+        texts: Lista de textos a limpiar
+        
+    Returns:
+        list: Lista de textos limpios
+    """
+    if not texts:
+        return []
+    
+    filter_obj = TextFilter()
+    return [filter_obj.clean_text(text) for text in texts]
+
+
+# ============================================================================
+# TESTS COMPLETOS
+# ============================================================================
+
+def test_basic_functionality():
+    """Test de funcionalidad básica."""
+    print("TEST FUNCIONALIDAD BÁSICA")
+    print("=" * 50)
+    
+    test_cases = [
+        # Casos básicos
+        ("Texto simple", "¡Hola mundo!", "Hola mundo"),
+        ("Números", "123-456-789", "123-456-789"),  # Conserva guiones en texto
+        ("Acentos", "configuración técnica ñoño", "configuración técnica ñoño"),
+        
+        # Archivos (deben perder guiones)
+        ("XML", "`config-file.xml`", "configfile.xml"),
+        ("JSON", "`app_config.json`", "appconfig.json"),
+        ("Múltiples guiones", "`test-‐-final.md`", "testfinal.md"),
+        
+        # Símbolos especiales
+        ("Símbolos", "test@#$%&*()[]", "test"),
+        ("Emojis", "📁 `archivo.txt` 📄", "archivo.txt"),
+        
+        # Texto normal con guiones (deben conservarse)
+        ("Guiones texto", "int-iib-fcd-middleware", "int-iib-fcd-middleware"),
+    ]
+    
+    all_passed = True
+    for name, input_text, expected in test_cases:
+        result = clean_text(input_text)
+        passed = result == expected
+        status = "✅" if passed else "❌"
+        
+        print(f"{status} {name:20}: '{input_text}' → '{result}'")
+        if not passed:
+            print(f"   Esperado: '{expected}'")
+            all_passed = False
+    
+    print(f"\n{'✅ TODOS LOS TESTS PASARON' if all_passed else '❌ ALGUNOS TESTS FALLARON'}")
+    return all_passed
+
+
+def test_backticks_elimination():
+    """Test específico para eliminación de backticks."""
+    print("\nTEST ELIMINACIÓN DE BACKTICKS")
+    print("=" * 50)
+    
+    backtick_tests = [
+        "`simple.xml`",
+        "📁 `complex-file_name.json` 🗂️",
+        "`addRtnBcSettleAccGMF.xml`",
+        "`ReturnBalanceSettleAccGMFsoapuiproject.xml`",
+        "texto normal `con.archivo` en el medio",
+        "múltiples `file1.txt` y `file2.json` archivos"
+    ]
+    
+    all_clean = True
+    for test_input in backtick_tests:
+        result = clean_text(test_input)
+        has_backticks = '`' in result
+        status = "❌" if has_backticks else "✅"
+        
+        print(f"{status} '{test_input[:30]}...' → '{result}'")
+        if has_backticks:
+            all_clean = False
+    
+    print(f"\n{'✅ TODOS LOS BACKTICKS ELIMINADOS' if all_clean else '❌ FALTAN BACKTICKS POR ELIMINAR'}")
+    return all_clean
+
+
+def test_complete_scenario():
+    """Test con escenario completo similar al tuyo."""
+    print("\nTEST ESCENARIO COMPLETO")
+    print("=" * 50)
+    
+    complete_text = """- 📁 `int-iib-fcd-SrvReturnBalanceSettleAccGMFFcd-middleware-esql`
+  - 📄 `README.md`
+  - 📁 `Resource`
+    - 📄 `addRtnBcSettleAccGMF.xml`
+    - 📄 `MQ-SrvReturnBalanceSettleAccGMFFcd.mq`
+    - 📄 `Reverse_MQ-SrvReturnBalanceSettleAccGMFFcd.mq`
+    - 📄 `ReturnBalanceSettleAccGMFsoapuiproject.xml`
+  - 📄 `Especificacion-‐-AddReturnBalanceSettleAccGMF.md`"""
+    
+    result = clean_text(complete_text)
+    
+    print("RESULTADO:")
+    print(result)
+    
+    # Verificaciones
+    has_backticks = '`' in result
+    has_emojis = any(emoji in result for emoji in ['📁', '📄'])
+    has_file_dashes = any(file in result for file in ['MQ-Srv', 'Reverse_MQ', 'Especificacion-‐-'])
+    
+    print(f"\n📊 VERIFICACIONES:")
+    print(f"❌ Backticks eliminados: {'❌ NO' if has_backticks else '✅ SÍ'}")
+    print(f"❌ Emojis eliminados: {'❌ NO' if has_emojis else '✅ SÍ'}")
+    print(f"❌ Guiones archivos eliminados: {'❌ NO' if has_file_dashes else '✅ SÍ'}")
+    
+    # Verificar que se conservan guiones en texto normal
+    has_text_dashes = 'int-iib-fcd-SrvReturnBalanceSettleAccGMFFcd-middleware-esql' in result
+    print(f"✅ Guiones texto conservados: {'✅ SÍ' if has_text_dashes else '❌ NO'}")
+    
+    success = not has_backticks and not has_emojis and not has_file_dashes and has_text_dashes
+    print(f"\n{'✅ ESCENARIO COMPLETO EXITOSO' if success else '❌ HAY PROBLEMAS EN EL ESCENARIO'}")
+    
+    return success
+
+
+def run_all_tests():
+    """Ejecuta todos los tests."""
+    print("🧪 EJECUTANDO TODOS LOS TESTS")
+    print("=" * 70)
+    
+    test1 = test_basic_functionality()
+    test2 = test_backticks_elimination()  
+    test3 = test_complete_scenario()
+    
+    all_passed = test1 and test2 and test3
+    
+    print("\n" + "=" * 70)
+    print(f"RESULTADO FINAL: {'✅ TODOS LOS TESTS PASARON' if all_passed else '❌ HAY PROBLEMAS'}")
+    
+    if all_passed:
+        print("🎉 El código está listo para usar en producción!")
+    else:
+        print("⚠️  Hay problemas que necesitan ser corregidos.")
+    
+    return all_passed
+
+
+if __name__ == "__main__":
+    run_all_tests()

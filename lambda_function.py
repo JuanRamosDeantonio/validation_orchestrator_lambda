@@ -15,7 +15,7 @@ from app.bedrock_client import run_bedrock_prompt
 from app.lambda_invoker import create_lambda_invoker
 from app.report_producer import produce_report, report_to_lambda, gather_prompt_results
 from app.config import Config
-from app.helper import format_rule_violations_report, join_sections, printer_prompt
+from app.helper import format_rule_violations_report, join_sections, printer_prompt, clean_text
 
 # Configurar logging para Lambda (CloudWatch)
 logger = logging.getLogger()
@@ -148,6 +148,9 @@ class ValidationPipeline:
             )
             
             logger.info(f"✅ Estructura procesada - {len(structure.files)} archivos encontrados")
+
+            structure.markdown_content = clean_text(structure.markdown_content)
+            
             return structure
             
         except Exception as e:

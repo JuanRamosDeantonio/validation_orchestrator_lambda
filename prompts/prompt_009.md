@@ -20,38 +20,38 @@ Analiza archivos de un repositorio para validar cumplimiento de reglas específi
 
 
 ## Contenido a Analizar
-``
+```
 Estructura de directorios
 
-- 📁 `int-iib-fcd-SrvReturnBalanceSettleAccGMFFcd-middleware-esql`
-  - 📄 `README.md`
-  - 📁 `Resource`
-    - 📁 `Config`
-      - 📄 `addRtnBcSettleAccGMF.xml`
-    - 📁 `Contract`
-      - 📄 `ReturnBalanceSettleAccGMF.wsdl`
-    - 📁 `MQ`
-      - 📄 `MQ-SrvReturnBalanceSettleAccGMFFcd.mq`
-      - 📄 `Reverse_MQ-SrvReturnBalanceSettleAccGMFFcd.mq`
-      - 📄 `Verify_MQ-SrvReturnBalanceSettleAccGMFFcd.mq`
-    - 📁 `Test`
-      - 📄 `ReturnBalanceSettleAccGMF-soapui-project.xml`
-  - 📁 `SrvReturnBalanceSettleAccGMFFcd`
-    - 📄 `.project`
-    - 📄 `application.descriptor`
-    - 📁 `co`
-      - 📁 `com`
-        - 📁 `bancopopular`
-          - 📁 `fcd`
-            - 📄 `ReturnBalanceSettleAccGMFFcdWS_REQ.msgflow`
-            - 📄 `ReturnBalanceSettleAccGMFFcdWS_RESP.msgflow`
-- 📁 `int-iib-fcd-SrvReturnBalanceSettleAccGMFFcd-middleware-esql`
-  - 📄 `Especificacion-‐-AddReturnBalanceSettleAccGMF.md`
-  - 📄 `Guion.md`
-  - 📄 `Home.md`
-  - 📄 `Pruebas-‐-AddReturnBalanceSettleAccGMF.md`
-  - 📁 `Recursos`
-    - 📄 `DiagramaArq.png`
+- int-iib-fcd-SrvReturnBalanceSettleAccGMFFcd-middleware-esql
+ - README.md
+ - Resource
+ - Config
+ - `addRtnBcSettleAccGMF.xml`
+ - Contract
+ - ReturnBalanceSettleAccGMF.wsdl
+ - MQ
+ - MQSrvReturnBalanceSettleAccGMFFcd.mq
+ - ReverseMQSrvReturnBalanceSettleAccGMFFcd.mq
+ - VerifyMQSrvReturnBalanceSettleAccGMFFcd.mq
+ - Test
+ - `ReturnBalanceSettleAccGMFsoapuiproject.xml`
+ - SrvReturnBalanceSettleAccGMFFcd
+ - .project
+ - application.descriptor
+ - co
+ - com
+ - bancopopular
+ - fcd
+ - ReturnBalanceSettleAccGMFFcdWSREQ.msgflow
+ - ReturnBalanceSettleAccGMFFcdWSRESP.msgflow
+- int-iib-fcd-SrvReturnBalanceSettleAccGMFFcd-middleware-esql
+ - EspecificacionAddReturnBalanceSettleAccGMF.md
+ - Guion.md
+ - Home.md
+ - PruebasAddReturnBalanceSettleAccGMF.md
+ - Recursos
+ - DiagramaArq.png
 
 
 Contenido de archivos
@@ -60,7 +60,7 @@ Contenido de archivos
 
 TITULO: int-iib-fcd-SrvReturnBalanceSettleAccGMFFcd-middleware-esql/Guion.md
 
-CONTENIDO: ``text
+CONTENIDO: ```text
 ﻿# Tabla de Contenido
 
 - [Descripción de Entrega o Cambio](#descripción-de-entrega-o-cambio)
@@ -236,7 +236,7 @@ Eliminar los siguientes archivos de tipo XML y con versión 1.0: `addRtnBcSettle
 ## Reglas a Validar
 ```
 📄 4.5 En la sección "Glosario" deben incluirse las definiciones de términos y las rutas correspondientes al repositorio principal y al repositorio de la wiki.
-``
+```
 
 ## Formato de Respuesta
 
@@ -247,7 +247,7 @@ Eliminar los siguientes archivos de tipo XML y con versión 1.0: `addRtnBcSettle
 📊 **Archivos analizados:** [número]
 ✅ **Reglas cumplidas:** [número] - [R1, R2, ...]
 ❌ **Reglas incumplidas:** [número] - [R3, R4, ...]
-``
+```
 
 ### Para cada regla incumplida:
 ~~~markdown

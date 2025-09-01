@@ -20,47 +20,47 @@ Analiza archivos de un repositorio para validar cumplimiento de reglas específi
 
 
 ## Contenido a Analizar
-``
+```
 Estructura de directorios
 
-- 📁 `int-iib-fcd-SrvReturnBalanceSettleAccGMFFcd-middleware-esql`
-  - 📄 `README.md`
-  - 📁 `Resource`
-    - 📁 `Config`
-      - 📄 `addRtnBcSettleAccGMF.xml`
-    - 📁 `Contract`
-      - 📄 `ReturnBalanceSettleAccGMF.wsdl`
-    - 📁 `MQ`
-      - 📄 `MQ-SrvReturnBalanceSettleAccGMFFcd.mq`
-      - 📄 `Reverse_MQ-SrvReturnBalanceSettleAccGMFFcd.mq`
-      - 📄 `Verify_MQ-SrvReturnBalanceSettleAccGMFFcd.mq`
-    - 📁 `Test`
-      - 📄 `ReturnBalanceSettleAccGMF-soapui-project.xml`
-  - 📁 `SrvReturnBalanceSettleAccGMFFcd`
-    - 📄 `.project`
-    - 📄 `application.descriptor`
-    - 📁 `co`
-      - 📁 `com`
-        - 📁 `bancopopular`
-          - 📁 `fcd`
-            - 📄 `ReturnBalanceSettleAccGMFFcdWS_REQ.msgflow`
-            - 📄 `ReturnBalanceSettleAccGMFFcdWS_RESP.msgflow`
-- 📁 `int-iib-fcd-SrvReturnBalanceSettleAccGMFFcd-middleware-esql`
-  - 📄 `Especificacion-‐-AddReturnBalanceSettleAccGMF.md`
-  - 📄 `Guion.md`
-  - 📄 `Home.md`
-  - 📄 `Pruebas-‐-AddReturnBalanceSettleAccGMF.md`
-  - 📁 `Recursos`
-    - 📄 `DiagramaArq.png`
+- int-iib-fcd-SrvReturnBalanceSettleAccGMFFcd-middleware-esql
+ - README.md
+ - Resource
+ - Config
+ - `addRtnBcSettleAccGMF.xml`
+ - Contract
+ - ReturnBalanceSettleAccGMF.wsdl
+ - MQ
+ - MQSrvReturnBalanceSettleAccGMFFcd.mq
+ - ReverseMQSrvReturnBalanceSettleAccGMFFcd.mq
+ - VerifyMQSrvReturnBalanceSettleAccGMFFcd.mq
+ - Test
+ - `ReturnBalanceSettleAccGMFsoapuiproject.xml`
+ - SrvReturnBalanceSettleAccGMFFcd
+ - .project
+ - application.descriptor
+ - co
+ - com
+ - bancopopular
+ - fcd
+ - ReturnBalanceSettleAccGMFFcdWSREQ.msgflow
+ - ReturnBalanceSettleAccGMFFcdWSRESP.msgflow
+- int-iib-fcd-SrvReturnBalanceSettleAccGMFFcd-middleware-esql
+ - EspecificacionAddReturnBalanceSettleAccGMF.md
+ - Guion.md
+ - Home.md
+ - PruebasAddReturnBalanceSettleAccGMF.md
+ - Recursos
+ - DiagramaArq.png
 
 
 Contenido de archivos
 
 
 
-TITULO: int-iib-fcd-SrvReturnBalanceSettleAccGMFFcd-middleware-esql/Pruebas-‐-AddReturnBalanceSettleAccGMF.md
+TITULO: int-iib-fcd-SrvReturnBalanceSettleAccGMFFcd-middleware-esql/Pruebas---AddReturnBalanceSettleAccGMF.md
 
-CONTENIDO: ``text
+CONTENIDO: ```text
 ## CP01 - EXITOSO SE
 
 <table border="1" cellspacing="0" cellpadding="5">
@@ -1211,7 +1211,7 @@ CONTENIDO: ``text
   </tbody>
 </table>
 
-``
+```
 ```
 
 ## Reglas a Validar
@@ -1220,7 +1220,7 @@ CONTENIDO: ``text
 📄 6.3 Las url's de prueba deben coincidir con las url's de las etiquetas endpoint del documento xml de soapui
 📄 6.4 Debe incluirse la traza completa de la transacción, generando logs en la tabla de excepciones solo para errores de timeout, conexión y aplicación, pero no para escenarios exitosos ni errores de negocio. En cada uno de los casos el mensaje de respuesta debe estar presente en la trazabilidad y el RqUID debe coincidir.
 📄 6.6 Deben especificarse los pasos ejecutados para obtener cada escenario y su respectivo RQUID.
-``
+```
 
 ## Formato de Respuesta
 
@@ -1231,7 +1231,7 @@ CONTENIDO: ``text
 📊 **Archivos analizados:** [número]
 ✅ **Reglas cumplidas:** [número] - [R1, R2, ...]
 ❌ **Reglas incumplidas:** [número] - [R3, R4, ...]
-``
+```
 
 ### Para cada regla incumplida:
 ~~~markdown

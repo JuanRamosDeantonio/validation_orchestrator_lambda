@@ -20,38 +20,38 @@ Analiza archivos de un repositorio para validar cumplimiento de reglas específi
 
 
 ## Contenido a Analizar
-``
+```
 Estructura de directorios
 
-- 📁 `int-iib-fcd-SrvReturnBalanceSettleAccGMFFcd-middleware-esql`
-  - 📄 `README.md`
-  - 📁 `Resource`
-    - 📁 `Config`
-      - 📄 `addRtnBcSettleAccGMF.xml`
-    - 📁 `Contract`
-      - 📄 `ReturnBalanceSettleAccGMF.wsdl`
-    - 📁 `MQ`
-      - 📄 `MQ-SrvReturnBalanceSettleAccGMFFcd.mq`
-      - 📄 `Reverse_MQ-SrvReturnBalanceSettleAccGMFFcd.mq`
-      - 📄 `Verify_MQ-SrvReturnBalanceSettleAccGMFFcd.mq`
-    - 📁 `Test`
-      - 📄 `ReturnBalanceSettleAccGMF-soapui-project.xml`
-  - 📁 `SrvReturnBalanceSettleAccGMFFcd`
-    - 📄 `.project`
-    - 📄 `application.descriptor`
-    - 📁 `co`
-      - 📁 `com`
-        - 📁 `bancopopular`
-          - 📁 `fcd`
-            - 📄 `ReturnBalanceSettleAccGMFFcdWS_REQ.msgflow`
-            - 📄 `ReturnBalanceSettleAccGMFFcdWS_RESP.msgflow`
-- 📁 `int-iib-fcd-SrvReturnBalanceSettleAccGMFFcd-middleware-esql`
-  - 📄 `Especificacion-‐-AddReturnBalanceSettleAccGMF.md`
-  - 📄 `Guion.md`
-  - 📄 `Home.md`
-  - 📄 `Pruebas-‐-AddReturnBalanceSettleAccGMF.md`
-  - 📁 `Recursos`
-    - 📄 `DiagramaArq.png`
+- int-iib-fcd-SrvReturnBalanceSettleAccGMFFcd-middleware-esql
+ - README.md
+ - Resource
+ - Config
+ - `addRtnBcSettleAccGMF.xml`
+ - Contract
+ - ReturnBalanceSettleAccGMF.wsdl
+ - MQ
+ - MQSrvReturnBalanceSettleAccGMFFcd.mq
+ - ReverseMQSrvReturnBalanceSettleAccGMFFcd.mq
+ - VerifyMQSrvReturnBalanceSettleAccGMFFcd.mq
+ - Test
+ - `ReturnBalanceSettleAccGMFsoapuiproject.xml`
+ - SrvReturnBalanceSettleAccGMFFcd
+ - .project
+ - application.descriptor
+ - co
+ - com
+ - bancopopular
+ - fcd
+ - ReturnBalanceSettleAccGMFFcdWSREQ.msgflow
+ - ReturnBalanceSettleAccGMFFcdWSRESP.msgflow
+- int-iib-fcd-SrvReturnBalanceSettleAccGMFFcd-middleware-esql
+ - EspecificacionAddReturnBalanceSettleAccGMF.md
+ - Guion.md
+ - Home.md
+ - PruebasAddReturnBalanceSettleAccGMF.md
+ - Recursos
+ - DiagramaArq.png
 
 
 Contenido de archivos
@@ -60,7 +60,7 @@ Contenido de archivos
 
 TITULO: int-iib-fcd-SrvReturnBalanceSettleAccGMFFcd-middleware-esql/Resource/Contract/ReturnBalanceSettleAccGMF.wsdl
 
-CONTENIDO: ``text
+CONTENIDO: ```text
 <?xml version="1.0" encoding="UTF-8"?><wsdl:definitions xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" name="ReturnBalanceSettleAccGMF" targetNamespace="urn://grupoaval.com/accounts/v1/" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:v1="urn://grupoaval.com/accounts/v1/" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <wsdl:types>
     <xsd:schema>
@@ -496,13 +496,13 @@ CONTENIDO: ``text
     </wsdl:port>
   </wsdl:service>
 </wsdl:definitions>
-``
+```
 ```
 
 ## Reglas a Validar
 ```
-📄 1.1 Para cada operación extraída, verifica que existe al menos un archivo .md en las estructuras de directorios que contenga: la palabra "Especificacion" (exacta), el nombre de la operación (contenido, no necesariamente exacto, y la extensión .md (obligatoria). La correspondencia es flexible: basta con que la operación esté contenida en el nombre del archivo de especificación. No evalues los caracteres extraños en el nombre del archivo de Especificacion, ignoralos.
-``
+📄 1.1 Para cada operación extraída, verifica que existe al menos un archivo .md en las estructuras de directorios que contenga: la palabra "Especificacion", el nombre de la operación (contenido, no necesariamente exacto, y la extensión .md. La correspondencia es flexible: basta con que la operación esté contenida en el nombre del archivo de especificación. No evalues los caracteres extraños en el nombre del archivo de Especificacion, ignoralos. El nombre del documento debe ser "Especificacion" obligatoriamente si hay alguna otra palabra o una variante de la correcta el documento será tomado como errado, no importan los caracteres que estén después del primer termino. La extensión ".md" es obligatoria si el documento tiene otra distinta o que se le parezca será tomado como errado.
+```
 
 ## Formato de Respuesta
 
@@ -513,7 +513,7 @@ CONTENIDO: ``text
 📊 **Archivos analizados:** [número]
 ✅ **Reglas cumplidas:** [número] - [R1, R2, ...]
 ❌ **Reglas incumplidas:** [número] - [R3, R4, ...]
-``
+```
 
 ### Para cada regla incumplida:
 ~~~markdown

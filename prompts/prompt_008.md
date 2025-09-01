@@ -20,38 +20,38 @@ Analiza archivos de un repositorio para validar cumplimiento de reglas específi
 
 
 ## Contenido a Analizar
-``
+```
 Estructura de directorios
 
-- 📁 `int-iib-fcd-SrvReturnBalanceSettleAccGMFFcd-middleware-esql`
-  - 📄 `README.md`
-  - 📁 `Resource`
-    - 📁 `Config`
-      - 📄 `addRtnBcSettleAccGMF.xml`
-    - 📁 `Contract`
-      - 📄 `ReturnBalanceSettleAccGMF.wsdl`
-    - 📁 `MQ`
-      - 📄 `MQ-SrvReturnBalanceSettleAccGMFFcd.mq`
-      - 📄 `Reverse_MQ-SrvReturnBalanceSettleAccGMFFcd.mq`
-      - 📄 `Verify_MQ-SrvReturnBalanceSettleAccGMFFcd.mq`
-    - 📁 `Test`
-      - 📄 `ReturnBalanceSettleAccGMF-soapui-project.xml`
-  - 📁 `SrvReturnBalanceSettleAccGMFFcd`
-    - 📄 `.project`
-    - 📄 `application.descriptor`
-    - 📁 `co`
-      - 📁 `com`
-        - 📁 `bancopopular`
-          - 📁 `fcd`
-            - 📄 `ReturnBalanceSettleAccGMFFcdWS_REQ.msgflow`
-            - 📄 `ReturnBalanceSettleAccGMFFcdWS_RESP.msgflow`
-- 📁 `int-iib-fcd-SrvReturnBalanceSettleAccGMFFcd-middleware-esql`
-  - 📄 `Especificacion-‐-AddReturnBalanceSettleAccGMF.md`
-  - 📄 `Guion.md`
-  - 📄 `Home.md`
-  - 📄 `Pruebas-‐-AddReturnBalanceSettleAccGMF.md`
-  - 📁 `Recursos`
-    - 📄 `DiagramaArq.png`
+- int-iib-fcd-SrvReturnBalanceSettleAccGMFFcd-middleware-esql
+ - README.md
+ - Resource
+ - Config
+ - `addRtnBcSettleAccGMF.xml`
+ - Contract
+ - ReturnBalanceSettleAccGMF.wsdl
+ - MQ
+ - MQSrvReturnBalanceSettleAccGMFFcd.mq
+ - ReverseMQSrvReturnBalanceSettleAccGMFFcd.mq
+ - VerifyMQSrvReturnBalanceSettleAccGMFFcd.mq
+ - Test
+ - `ReturnBalanceSettleAccGMFsoapuiproject.xml`
+ - SrvReturnBalanceSettleAccGMFFcd
+ - .project
+ - application.descriptor
+ - co
+ - com
+ - bancopopular
+ - fcd
+ - ReturnBalanceSettleAccGMFFcdWSREQ.msgflow
+ - ReturnBalanceSettleAccGMFFcdWSRESP.msgflow
+- int-iib-fcd-SrvReturnBalanceSettleAccGMFFcd-middleware-esql
+ - EspecificacionAddReturnBalanceSettleAccGMF.md
+ - Guion.md
+ - Home.md
+ - PruebasAddReturnBalanceSettleAccGMF.md
+ - Recursos
+ - DiagramaArq.png
 
 
 Contenido de archivos
@@ -60,7 +60,7 @@ Contenido de archivos
 
 TITULO: int-iib-fcd-SrvReturnBalanceSettleAccGMFFcd-middleware-esql/Resource/Contract/ReturnBalanceSettleAccGMF.wsdl
 
-CONTENIDO: ``text
+CONTENIDO: ```text
 <?xml version="1.0" encoding="UTF-8"?><wsdl:definitions xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" name="ReturnBalanceSettleAccGMF" targetNamespace="urn://grupoaval.com/accounts/v1/" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:v1="urn://grupoaval.com/accounts/v1/" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <wsdl:types>
     <xsd:schema>
@@ -496,13 +496,13 @@ CONTENIDO: ``text
     </wsdl:port>
   </wsdl:service>
 </wsdl:definitions>
-``
+```
 ```
 
 ## Reglas a Validar
 ```
-📄 1.5 Para cada operación extraída del contrato (.wsdl o .yaml), verificar que existe un archivo .md que: comience con "Pruebas" (case-insensitive), contenga el nombre exacto de la operación y tenga extensión .md. Normalización para comparación: convertir a minúsculas, conservar solo letras/números/espacios, eliminar espacios múltiples.
-``
+📄 1.5 Para cada operación extraída del contrato (.wsdl o .yaml), verificar que existe un archivo .md que: comience con "Pruebas" (case-insensitive), contenga el nombre exacto de la operación y tenga extensión .md. Normalización para comparación: convertir a minúsculas, conservar solo letras/números/espacios, eliminar espacios múltiples. La palabra "Pruebas" en el nombre del documento es obligatoria si hay alguna variante de la misma u otra distinta el documento debe ser tomado como errado. La extensión ".md" es obligatoria si hay alguna variante o una diferente el documento debe ser tomado como errado.
+```
 
 ## Formato de Respuesta
 
@@ -513,7 +513,7 @@ CONTENIDO: ``text
 📊 **Archivos analizados:** [número]
 ✅ **Reglas cumplidas:** [número] - [R1, R2, ...]
 ❌ **Reglas incumplidas:** [número] - [R3, R4, ...]
-``
+```
 
 ### Para cada regla incumplida:
 ~~~markdown

@@ -20,38 +20,38 @@ Analiza archivos de un repositorio para validar cumplimiento de reglas específi
 
 
 ## Contenido a Analizar
-``
+```
 Estructura de directorios
 
-- 📁 `int-iib-fcd-SrvReturnBalanceSettleAccGMFFcd-middleware-esql`
-  - 📄 `README.md`
-  - 📁 `Resource`
-    - 📁 `Config`
-      - 📄 `addRtnBcSettleAccGMF.xml`
-    - 📁 `Contract`
-      - 📄 `ReturnBalanceSettleAccGMF.wsdl`
-    - 📁 `MQ`
-      - 📄 `MQ-SrvReturnBalanceSettleAccGMFFcd.mq`
-      - 📄 `Reverse_MQ-SrvReturnBalanceSettleAccGMFFcd.mq`
-      - 📄 `Verify_MQ-SrvReturnBalanceSettleAccGMFFcd.mq`
-    - 📁 `Test`
-      - 📄 `ReturnBalanceSettleAccGMF-soapui-project.xml`
-  - 📁 `SrvReturnBalanceSettleAccGMFFcd`
-    - 📄 `.project`
-    - 📄 `application.descriptor`
-    - 📁 `co`
-      - 📁 `com`
-        - 📁 `bancopopular`
-          - 📁 `fcd`
-            - 📄 `ReturnBalanceSettleAccGMFFcdWS_REQ.msgflow`
-            - 📄 `ReturnBalanceSettleAccGMFFcdWS_RESP.msgflow`
-- 📁 `int-iib-fcd-SrvReturnBalanceSettleAccGMFFcd-middleware-esql`
-  - 📄 `Especificacion-‐-AddReturnBalanceSettleAccGMF.md`
-  - 📄 `Guion.md`
-  - 📄 `Home.md`
-  - 📄 `Pruebas-‐-AddReturnBalanceSettleAccGMF.md`
-  - 📁 `Recursos`
-    - 📄 `DiagramaArq.png`
+- int-iib-fcd-SrvReturnBalanceSettleAccGMFFcd-middleware-esql
+ - README.md
+ - Resource
+ - Config
+ - `addRtnBcSettleAccGMF.xml`
+ - Contract
+ - ReturnBalanceSettleAccGMF.wsdl
+ - MQ
+ - MQSrvReturnBalanceSettleAccGMFFcd.mq
+ - ReverseMQSrvReturnBalanceSettleAccGMFFcd.mq
+ - VerifyMQSrvReturnBalanceSettleAccGMFFcd.mq
+ - Test
+ - `ReturnBalanceSettleAccGMFsoapuiproject.xml`
+ - SrvReturnBalanceSettleAccGMFFcd
+ - .project
+ - application.descriptor
+ - co
+ - com
+ - bancopopular
+ - fcd
+ - ReturnBalanceSettleAccGMFFcdWSREQ.msgflow
+ - ReturnBalanceSettleAccGMFFcdWSRESP.msgflow
+- int-iib-fcd-SrvReturnBalanceSettleAccGMFFcd-middleware-esql
+ - EspecificacionAddReturnBalanceSettleAccGMF.md
+ - Guion.md
+ - Home.md
+ - PruebasAddReturnBalanceSettleAccGMF.md
+ - Recursos
+ - DiagramaArq.png
 
 
 Contenido de archivos
@@ -60,7 +60,7 @@ Contenido de archivos
 
 TITULO: int-iib-fcd-SrvReturnBalanceSettleAccGMFFcd-middleware-esql/Guion.md
 
-CONTENIDO: ``text
+CONTENIDO: ```text
 ﻿# Tabla de Contenido
 
 - [Descripción de Entrega o Cambio](#descripción-de-entrega-o-cambio)
@@ -235,7 +235,7 @@ Eliminar los siguientes archivos de tipo XML y con versión 1.0: `addRtnBcSettle
 
 TITULO: int-iib-fcd-SrvReturnBalanceSettleAccGMFFcd-middleware-esql/SrvReturnBalanceSettleAccGMFFcd/.project
 
-CONTENIDO: ``xml
+CONTENIDO: ```xml
 <?xml version="1.0" ?>
 <projectDescription>
   
@@ -522,37 +522,23 @@ CONTENIDO: ``xml
 
 </projectDescription>
 
-``
-
-
-TITULO: int-iib-fcd-SrvReturnBalanceSettleAccGMFFcd-middleware-esql/Resource/MQ/Reverse_MQ-SrvReturnBalanceSettleAccGMFFcd.mq
-
-CONTENIDO: ``text
-DELETE QLOCAL ('MQINP.RTNBALANCESETTLEACC.FCD.WS.RESP') PURGE
-``
+```
 
 
 TITULO: int-iib-fcd-SrvReturnBalanceSettleAccGMFFcd-middleware-esql/Resource/MQ/MQ-SrvReturnBalanceSettleAccGMFFcd.mq
 
-CONTENIDO: ``text
+CONTENIDO: ```text
 DEFINE QLOCAL ('MQINP.RTNBALANCESETTLEACC.FCD.WS.RESP') +
                 BOQNAME('SYSTEM.DEAD.LETTER.QUEUE') +
                 BOTHRESH(1) +
 				MAXDEPTH(5000) +
                 REPLACE
-``
-
-
-TITULO: int-iib-fcd-SrvReturnBalanceSettleAccGMFFcd-middleware-esql/Resource/MQ/Verify_MQ-SrvReturnBalanceSettleAccGMFFcd.mq
-
-CONTENIDO: ``text
-DISPLAY QLOCAL ('MQINP.RTNBALANCESETTLEACC.FCD.WS.RESP')
-``
+```
 
 
 TITULO: int-iib-fcd-SrvReturnBalanceSettleAccGMFFcd-middleware-esql/SrvReturnBalanceSettleAccGMFFcd/co/com/bancopopular/fcd/ReturnBalanceSettleAccGMFFcdWS_RESP.msgflow
 
-CONTENIDO: ``xml
+CONTENIDO: ```xml
 <?xml version="1.0" ?>
 <ecore:EPackage xmlns:xmi="http://www.omg.org/XMI" xmlns:ComIbmCompute.msgnode="ComIbmCompute.msgnode" xmlns:ComIbmMQInput.msgnode="ComIbmMQInput.msgnode" xmlns:ComIbmMQOutput.msgnode="ComIbmMQOutput.msgnode" xmlns:ComIbmSOAPReply.msgnode="ComIbmSOAPReply.msgnode" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:eflow="http://www.ibm.com/wbi/2005/eflow" xmlns:utility="http://www.ibm.com/wbi/2005/eflow_utility" xmi:version="2.0" nsURI="co/com/bancopopular/fcd/ReturnBalanceSettleAccGMFFcdWS_RESP.msgflow" nsPrefix="co_com_bancopopular_fcd_ReturnBalanceSettleAccGMFFcdWS_RESP.msgflow">
   
@@ -694,7 +680,21 @@ CONTENIDO: ``xml
 
 </ecore:EPackage>
 
-``
+```
+
+
+TITULO: int-iib-fcd-SrvReturnBalanceSettleAccGMFFcd-middleware-esql/Resource/MQ/Reverse_MQ-SrvReturnBalanceSettleAccGMFFcd.mq
+
+CONTENIDO: ```text
+DELETE QLOCAL ('MQINP.RTNBALANCESETTLEACC.FCD.WS.RESP') PURGE
+```
+
+
+TITULO: int-iib-fcd-SrvReturnBalanceSettleAccGMFFcd-middleware-esql/Resource/MQ/Verify_MQ-SrvReturnBalanceSettleAccGMFFcd.mq
+
+CONTENIDO: ```text
+DISPLAY QLOCAL ('MQINP.RTNBALANCESETTLEACC.FCD.WS.RESP')
+```
 
 
 TITULO: int-iib-fcd-SrvReturnBalanceSettleAccGMFFcd-middleware-esql/Resource/Config/`addRtnBcSettleAccGMF.xml`
@@ -928,7 +928,7 @@ CONTENIDO: ```xml
 
 </srvConfiguration>
 
-``
+```
 ```
 
 ## Reglas a Validar
@@ -969,7 +969,7 @@ DELETE QLOCAL ('nombrecola') PURGE
 📄 4.13 En el guión de instalación de BUS no deben incluirse configuraciones de DataPower (actualización de conceptos, creación de WSP o MPG), las cuales deben estar en un guión de instalación específico de DataPower.
 📄 4.15 Si el servicio requiere configuración de properties, debe detallarse en el guión de instalación. Si se requiere la modificación de un archivo .bar, debe validarse que en la carpeta Resource/Properties exista un archivo .properties. Las configuraciones de properties deben detallarse en el punto "Despliegue de los Componentes de la Solución".
 📄 4.16 Para fachadas **REST**, el guión de instalación debe incluir comandos CORS y listeners HTTPS embebidos, sin habilitar HTTP. Para los servicios **REST** se debe especificar que tenga siempre esta configuracion la cual se encuentra en el paso Configuración Consumo de Servicios **REST**
-``
+```
 
 ## Formato de Respuesta
 
@@ -980,7 +980,7 @@ DELETE QLOCAL ('nombrecola') PURGE
 📊 **Archivos analizados:** [número]
 ✅ **Reglas cumplidas:** [número] - [R1, R2, ...]
 ❌ **Reglas incumplidas:** [número] - [R3, R4, ...]
-``
+```
 
 ### Para cada regla incumplida:
 ~~~markdown

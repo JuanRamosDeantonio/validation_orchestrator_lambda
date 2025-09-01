@@ -14,35 +14,35 @@ REGLA CRÍTICA: Tu evaluación debe ser correcta la primera vez. Una vez que det
 
 El contenido a evaluar es el siguiente:
  
-- 📁 `int-iib-fcd-SrvReturnBalanceSettleAccGMFFcd-middleware-esql`
-  - 📄 `README.md`
-  - 📁 `Resource`
-    - 📁 `Config`
-      - 📄 `addRtnBcSettleAccGMF.xml`
-    - 📁 `Contract`
-      - 📄 `ReturnBalanceSettleAccGMF.wsdl`
-    - 📁 `MQ`
-      - 📄 `MQ-SrvReturnBalanceSettleAccGMFFcd.mq`
-      - 📄 `Reverse_MQ-SrvReturnBalanceSettleAccGMFFcd.mq`
-      - 📄 `Verify_MQ-SrvReturnBalanceSettleAccGMFFcd.mq`
-    - 📁 `Test`
-      - 📄 `ReturnBalanceSettleAccGMF-soapui-project.xml`
-  - 📁 `SrvReturnBalanceSettleAccGMFFcd`
-    - 📄 `.project`
-    - 📄 `application.descriptor`
-    - 📁 `co`
-      - 📁 `com`
-        - 📁 `bancopopular`
-          - 📁 `fcd`
-            - 📄 `ReturnBalanceSettleAccGMFFcdWS_REQ.msgflow`
-            - 📄 `ReturnBalanceSettleAccGMFFcdWS_RESP.msgflow`
-- 📁 `int-iib-fcd-SrvReturnBalanceSettleAccGMFFcd-middleware-esql`
-  - 📄 `Especificacion-‐-AddReturnBalanceSettleAccGMF.md`
-  - 📄 `Guion.md`
-  - 📄 `Home.md`
-  - 📄 `Pruebas-‐-AddReturnBalanceSettleAccGMF.md`
-  - 📁 `Recursos`
-    - 📄 `DiagramaArq.png`
+- int-iib-fcd-SrvReturnBalanceSettleAccGMFFcd-middleware-esql
+ - README.md
+ - Resource
+ - Config
+ - `addRtnBcSettleAccGMF.xml`
+ - Contract
+ - ReturnBalanceSettleAccGMF.wsdl
+ - MQ
+ - MQSrvReturnBalanceSettleAccGMFFcd.mq
+ - ReverseMQSrvReturnBalanceSettleAccGMFFcd.mq
+ - VerifyMQSrvReturnBalanceSettleAccGMFFcd.mq
+ - Test
+ - `ReturnBalanceSettleAccGMFsoapuiproject.xml`
+ - SrvReturnBalanceSettleAccGMFFcd
+ - .project
+ - application.descriptor
+ - co
+ - com
+ - bancopopular
+ - fcd
+ - ReturnBalanceSettleAccGMFFcdWSREQ.msgflow
+ - ReturnBalanceSettleAccGMFFcdWSRESP.msgflow
+- int-iib-fcd-SrvReturnBalanceSettleAccGMFFcd-middleware-esql
+ - EspecificacionAddReturnBalanceSettleAccGMF.md
+ - Guion.md
+ - Home.md
+ - PruebasAddReturnBalanceSettleAccGMF.md
+ - Recursos
+ - DiagramaArq.png
 
 **## Formato de Respuesta Requerido**
 **### Encabezado**
@@ -69,7 +69,7 @@ Para cada regla incumplida, proporciona:
 
 **📌 **IMPORTANTE**:** Tu reporte debe ser definitivo y preciso desde la primera entrega. No hagas correcciones posteriores.
 **## Ejemplo de Respuesta Esperada**
-``markdown
+```markdown
 **# Reporte de Análisis de Directorios**
 ✅ **Reglas cumplidas:** 3 - [1, 3, 5]
 ❌ **Reglas incumplidas:** 2 - [2, 4]
@@ -86,7 +86,7 @@ Para cada regla incumplida, proporciona:
 **Razón del incumplimiento:** Archivos con convención incorrecta
 **Evidencia específica:**
 
-- `MyComponent.js`` debería ser ``my_component.js` (archivo presente en línea X)
-- ``UserInterface.css` debería ser ``user_interface.css` (archivo presente en línea Y)
+- ``MyComponent.js`` debería ser ``my_component.js`` (archivo presente en línea X)
+- ``UserInterface.css`` debería ser ``user_interface.css`` (archivo presente en línea Y)
 
 **Ubicación:** `/`src/components`/`
