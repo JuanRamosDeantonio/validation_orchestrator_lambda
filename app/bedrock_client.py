@@ -109,7 +109,7 @@ class BedrockClient(metaclass=SingletonMeta):
             "max_tokens": max_tokens,  # Límite de seguridad
             "messages": messages,
             "temperature": temperature,
-            "top_p": 0.9
+            "top_p": 0.2
         }
     def _format_prompt(self, raw_prompt: str) -> str:
         """
