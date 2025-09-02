@@ -525,13 +525,6 @@ CONTENIDO: ```xml
 ```
 
 
-TITULO: int-iib-fcd-SrvReturnBalanceSettleAccGMFFcd-middleware-esql/Resource/MQ/Verify_MQ-SrvReturnBalanceSettleAccGMFFcd.mq
-
-CONTENIDO: ```text
-DISPLAY QLOCAL ('MQINP.RTNBALANCESETTLEACC.FCD.WS.RESP')
-```
-
-
 TITULO: int-iib-fcd-SrvReturnBalanceSettleAccGMFFcd-middleware-esql/SrvReturnBalanceSettleAccGMFFcd/co/com/bancopopular/fcd/ReturnBalanceSettleAccGMFFcdWS_RESP.msgflow
 
 CONTENIDO: ```xml
@@ -687,6 +680,13 @@ DEFINE QLOCAL ('MQINP.RTNBALANCESETTLEACC.FCD.WS.RESP') +
                 BOTHRESH(1) +
 				MAXDEPTH(5000) +
                 REPLACE
+```
+
+
+TITULO: int-iib-fcd-SrvReturnBalanceSettleAccGMFFcd-middleware-esql/Resource/MQ/Verify_MQ-SrvReturnBalanceSettleAccGMFFcd.mq
+
+CONTENIDO: ```text
+DISPLAY QLOCAL ('MQINP.RTNBALANCESETTLEACC.FCD.WS.RESP')
 ```
 
 

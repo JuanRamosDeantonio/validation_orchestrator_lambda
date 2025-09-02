@@ -11,25 +11,30 @@
 **Razón del incumplimiento:** El archivo en Resource/Test no sigue la convención de extensión requerida
 
 **Evidencia específica:**
-- `ReturnBalanceSettleAccGMFsoapuiproject.xml` - El nombre contiene "soapui" y tiene extensión .xml, pero debería ser solo "soapui" no "soapuiproject"
+- `ReturnBalanceSettleAccGMFsoapuiproject.xml` - El nombre contiene "soapui" y tiene extensión .xml, pero debería ser solo .xml según la regla. Sin embargo, el nombre real es "ReturnBalanceSettleAccGMFsoapuiproject" que contiene "soapui" y efectivamente tiene extensión .xml, por lo que SÍ cumple la regla.
 
-**Ubicación:** Resource/Test/
+**Corrección:** Tras revisar nuevamente, el archivo `ReturnBalanceSettleAccGMFsoapuiproject.xml` SÍ cumple la regla ya que contiene "soapui" en el nombre y tiene extensión .xml como se requiere.
 
----
-
-**Nota:** Tras revisar nuevamente la regla 1.12, el archivo `ReturnBalanceSettleAccGMFsoapuiproject.xml` SÍ cumple la regla ya que contiene "soapui" (case-insensitive) y tiene extensión .xml como se requiere. La palabra "soapuiproject" contiene "soapui" al inicio.
-
-# Reporte de Análisis de Directorios (Corregido)
-
-## Resumen de Cumplimiento
+## Resumen de Cumplimiento Corregido
 ✅ **Reglas cumplidas:** 6 - [1.4, 1.7, 1.9, 1.10, 1.11, 1.12]
 ❌ **Reglas incumplidas:** 0 - []
 
-Todas las reglas han sido cumplidas exitosamente según la evidencia encontrada en la estructura de directorios proporcionada.# Reporte de Análisis de Contenido de Archivos
+**Evidencia de cumplimientos:**
+
+**Regla 1.4:** ✅ Existe `Guion.md` en la estructura
+**Regla 1.7:** ✅ Existe `addRtnBcSettleAccGMF.xml` en Resource/Config
+**Regla 1.9:** ✅ Existe `.project` en la estructura
+**Regla 1.10:** ✅ En Resource/MQ existen:
+- `MQSrvReturnBalanceSettleAccGMFFcd.mq` (inicia con "MQ")
+- `ReverseMQSrvReturnBalanceSettleAccGMFFcd.mq` (inicia con "Reverse") 
+- `VerifyMQSrvReturnBalanceSettleAccGMFFcd.mq` (inicia con "Verify")
+
+**Regla 1.11:** ✅ Existe `ReturnBalanceSettleAccGMF.wsdl` en Resource/Contract
+**Regla 1.12:** ✅ Existe `ReturnBalanceSettleAccGMFsoapuiproject.xml` en Resource/Test (contiene "soapui" y tiene extensión .xml)# Reporte de Análisis de Contenido de Archivos
 
 📊 **Archivos analizados:** 4
-✅ **Reglas cumplidas:** 4 - [2.5, 2.6, 2.10, 2.11]
-❌ **Reglas incumplidas:** 4 - [2.4, 2.8, 2.9, 2.12]
+✅ **Reglas cumplidas:** 3 - [2.5, 2.10, 2.12]
+❌ **Reglas incumplidas:** 5 - [2.4, 2.6, 2.8, 2.9, 2.11]
 
 ## Estructura de Directorios Identificada
 
@@ -57,246 +62,268 @@ int-iib-fcd-SrvReturnBalanceSettleAccGMFFcd-middleware-esql/
 
 ---
 
-### ❌ Regla 2.4: Tabla "Información General" con estructura específica
+### ❌ Regla 2.4: Información General - Tabla "Información Servicio"
 
-- **⚠️ Problema:** La tabla "Información General" tiene inconsistencias en varios campos requeridos
-- **Evidencia:** 
+- **⚠️ Problema:** La tabla "Información General" no cumple con todos los requisitos especificados
+- **Evidencia:**
 
-  ```markdown
+  ```text
+  | Nombre Servicio  | ReturnBalanceSettleAccGMF  |
+  |---|---|
+  | Nombre Técnico | SrvReturnBalanceSettleAccGMF |
+  | Operaciones del Servicio | AddReturnBalanceSettleAccGMF |
   | Contexto del Servicio | accounts/SSL/ReturnBalanceSettleAccGMF |
-  ```
-  vs
-  ```xml
-  urlSelector="/accounts/SSL/ReturnBalanceSettleAccGMF"
+  | Proyecto  | GMF |
+  | Consumidor (Frontend)  | SOFIA |
+  | Proveedor (Backend) | Flexcube y AST |
+  | Contiene Reverso Manual | No |
+  | Contiene Reverso Automático | Si |
+  | Contiene Orquestaciones | Si |
+  | Tiene más de un componente simple | Si |
   ```
 
 - **Ubicación:** EspecificacionAddReturnBalanceSettleAccGMF.md, sección "Información General"
 - **💡 Recomendación:** 
-  - Cambiar "Contexto del Servicio" por "Dominio del Servicio" 
-  - Verificar que el nombre del servicio "ReturnBalanceSettleAccGMF" coincida exactamente con el service name del WSDL
-  - Validar que las operaciones coincidan con las del contrato WSDL
+  1. Cambiar "Contexto del Servicio" por "Dominio del Servicio" para coincidir con urlSelector del WSDL
+  2. Verificar que el reverso manual sea "Sí" ya que se usa Facade_RouteMsg_WS_V3 (versión 3)
+  3. Validar que todos los nombres de servicios en repositorios del Home coincidan con el nombre técnico
 
 ---
 
-### ❌ Regla 2.8: Validación completa de mapeos y estructura SOAP
+### ❌ Regla 2.6: Diagramas de especificación y secuencia válidos
 
-- **⚠️ Problema:** Falta validación campo a campo del mockservice y estructura del proyecto SOAP
-- **Evidencia:** 
+- **⚠️ Problema:** El diagrama de secuencia contiene errores de sintaxis y elementos inválidos
+- **Evidencia:**
 
-  ```markdown
-  ### Descripción Mensaje de Entrada Header
-  |  Xpath Campo | Tipo (Longitud)  | ✅ **OBLIGATORIO**  |  ⭕ **OPCIONAL** | Descripción  |
+  ```mermaid
+  rect rgb(255,235,235)
+  note right of AST: [❌ **> ⚠️ **ERROR****]
+  FLEXCUBE-->>BUS: Respuesta de la transacción 
+  BUS-->>DataPower_Interno: Declinación técnica Flexcube ❌ **> ⚠️ **ERROR**** de Negocio
   ```
 
-- **Ubicación:** EspecificacionAddReturnBalanceSettleAccGMF.md, secciones de mapeo
+- **Ubicación:** EspecificacionAddReturnBalanceSettleAccGMF.md, sección "Diagrama de Secuencia"
 - **💡 Recomendación:** 
-  - Incluir validación completa del proyecto SOAP con mockservice
-  - Verificar estructura exitosa con tramas correspondientes
-  - Validar campo a campo utilizando el mockservice
+  1. Corregir la sintaxis de Mermaid eliminando caracteres especiales inválidos como "❌ **> ⚠️ **ERROR****"
+  2. Usar texto plano para las notas de error: "ERROR" en lugar de símbolos
+  3. Validar que todos los participantes estén correctamente definidos
 
 ---
 
-### ❌ Regla 2.9: Campos vacíos en descripciones y obligatoriedad incorrecta
+### ❌ Regla 2.8: Mapeos y validación de contrato
 
-- **⚠️ Problema:** Inconsistencias entre obligatoriedad declarada y definición en WSDL
-- **Evidencia:** 
+- **⚠️ Problema:** Faltan validaciones campo a campo y el contrato WSDL contiene errores
+- **Evidencia:**
 
-  ```markdown
-  | soapenv:Envelope/soapenv:Body/v1:addRtnBcSettleAccGMFResponse/v1:RtnBcSettleAccGMFRs/ifx:ProductId/ifx:CommisionValue | String|  | X | Valor de Comision  |
-  ```
-  vs
   ```xml
-  <xsd:element maxOccurs="1" minOccurs="0" ref="aval:CommisionValue"/>
+  <xsd:enumeration value="❌ **> ⚠️ **ERROR****"/>
   ```
 
-- **Ubicación:** EspecificacionAddReturnBalanceSettleAccGMF.md vs ReturnBalanceSettleAccGMF.wsdl
+- **Ubicación:** ReturnBalanceSettleAccGMF.wsdl, línea en Severity_Type
 - **💡 Recomendación:** 
-  - Corregir la obligatoriedad: minOccurs="0" significa ⭕ **OPCIONAL**, no ✅ **OBLIGATORIO**
-  - Revisar todos los campos para asegurar consistencia entre documentación y WSDL
+  1. Corregir el valor de enumeración en Severity_Type para usar "Error" en lugar de símbolos especiales
+  2. Validar que todos los campos del contrato tengan descripciones completas en la documentación
+  3. Verificar la estructura del proyecto SOAP y mockservice
 
 ---
 
-### ❌ Regla 2.12: Códigos de respuesta HTTP para servicios SOAP
+### ❌ Regla 2.9: Campos vacíos y obligatoriedad
 
-- **⚠️ Problema:** Códigos HTTP incompletos para servicio SOAP
-- **Evidencia:** 
+- **⚠️ Problema:** Inconsistencias entre obligatoriedad en contrato WSDL y documentación
+- **Evidencia:**
 
-  ```markdown
-  ### Códigos HTTP de respuesta
-  | Código  | Descripción  | 
-  |:-------------:|-------------|
-  | 200     | Transacción Exitosa |
-  | 500 	  | ❌ **> ⚠️ **ERROR**** interno en el servidor |
+  ```xml
+  <xsd:element maxOccurs="1" minOccurs="0" ref="aval:MsgRqHdr"/>
+  ```
+  
+  vs documentación que marca como obligatorio:
+  
+  ```text
+  | soapenv:Envelope/soapenv:Body/.../ifx:MsgRqHdr/ifx:ClientApp/ifx:Org | String | X |   | Constante  Debe venir con "Bpop" |
   ```
 
-- **Ubicación:** EspecificacionAddReturnBalanceSettleAccGMF.md, sección final
+- **Ubicación:** ReturnBalanceSettleAccGMF.wsdl y EspecificacionAddReturnBalanceSettleAccGMF.md
 - **💡 Recomendación:** 
-  - Para contratos WSDL, mantener solo códigos 200 (Transacción exitosa) y 500 (Error interno en el servidor)
-  - La documentación actual es correcta para servicios SOAP, pero debe validarse que no se requieran códigos adicionales
+  1. Revisar todos los campos marcados como obligatorios en la documentación
+  2. Verificar que coincidan con minOccurs="1" en el WSDL
+  3. Corregir inconsistencias entre contrato y documentación
+
+---
+
+### ❌ Regla 2.11: Códigos de respuesta mínimos
+
+- **⚠️ Problema:** La tabla de códigos IFX no incluye todos los códigos mínimos requeridos
+- **Evidencia:**
+
+  ```text
+  | Código  | Severidad | Descripción  | 
+  |:-------------:|:-------------:|-------------|
+  | 0     | info     | Transacción Exitosa |
+  | 100      | ❌ **> ⚠️ **ERROR****     | No es posible procesar la transacción. Comuniquese con la entidad |
+  | 2323      | ❌ **> ⚠️ **ERROR****     | ❌ **> ⚠️ **ERROR**** al validar numero de cuenta. |
+  ```
+
+- **Ubicación:** EspecificacionAddReturnBalanceSettleAccGMF.md, sección "Códigos IFX de respuesta"
+- **💡 Recomendación:** 
+  1. Corregir los símbolos especiales en la columna Severidad usando "Error" en lugar de "❌ **> ⚠️ **ERROR****"
+  2. Agregar más códigos de error específicos del servicio según los backends (Flexcube y AST)
+  3. Incluir códigos para diferentes escenarios de error de negocio
 
 ---
 
 ## ✅ Reglas Cumplidas
 
-### ✅ Regla 2.5: Descripción del servicio
-- **Cumplimiento:** Existe descripción clara del servicio
+### ✅ Regla 2.5: Descripción del Servicio
+- **Cumplimiento:** Existe una descripción clara del servicio
 - **Evidencia:** "Permite hacer la devolución de Saldo GMF a clientes con cuentas saldadas o por saldar desde el canal SOFIA..."
 
-### ✅ Regla 2.6: Diagramas válidos
-- **Cumplimiento:** Incluye diagrama de arquitectura, secuencia y componentes
-- **Evidencia:** Diagramas en formato Mermaid y referencia a imagen DiagramaArq.png
-
 ### ✅ Regla 2.10: Tramas de ejemplo
-- **Cumplimiento:** Incluye trama exitosa (StatusCode 0) y de error (StatusCode 100)
-- **Evidencia:** Ejemplos completos con datos específicos del servicio
+- **Cumplimiento:** Se incluyen tramas de respuesta exitosa (StatusCode 0) y de error (StatusCode 100)
+- **Evidencia:** Ejemplos completos de XML con datos específicos del servicio
 
-### ✅ Regla 2.11: Códigos de respuesta mínimos
-- **Cumplimiento:** Incluye código 0 (Info - Transacción Exitosa) y código 100 (Error - No es posible procesar)
-- **Evidencia:** Tabla de códigos IFX con descripciones apropiadas
+### ✅ Regla 2.12: Códigos HTTP para WSDL
+- **Cumplimiento:** Se incluyen códigos HTTP 200 y 500 apropiados para servicios SOAP/WSDL
+- **Evidencia:** Tabla de "Códigos HTTP de respuesta" con códigos 200 y 500
 
 ---
 
 ## 🚀 Próximos Pasos
 
-1. **Corregir tabla "Información General"** - Ajustar nomenclatura y validar consistencia con contratos
-2. **Completar validación de mockservice** - Incluir validación campo a campo del proyecto SOAP
-3. **Revisar obligatoriedad de campos** - Sincronizar documentación con definiciones WSDL
-4. **Fecha límite sugerida:** 2 semanas
-5. **Responsable:** Equipo de documentación técnica# Reporte de Análisis de Contenido de Archivos
+1. **Corregir contrato WSDL:** Eliminar caracteres especiales inválidos en enumeraciones
+2. **Revisar documentación:** Alinear obligatoriedad entre WSDL y especificación
+3. **Validar diagramas:** Corregir sintaxis de Mermaid en diagrama de secuencia
+4. **Completar códigos de error:** Agregar códigos específicos para diferentes escenarios de negocio# Reporte de Análisis de Contenido de Archivos
 
-📊 **Archivos analizados:** 7
+📊 **Archivos analizados:** 6
 ✅ **Reglas cumplidas:** 4 - [4.4, 4.6, 4.12, 4.16]
 ❌ **Reglas incumplidas:** 5 - [4.1, 4.7, 4.8, 4.10, 4.15]
 
 ## Análisis de Estructura de Directorios
 
-La estructura analizada corresponde al proyecto `int-iib-fcd-SrvReturnBalanceSettleAccGMFFcd-middleware-esql` que incluye:
-- Directorio principal con documentación (README.md, Guion.md, etc.)
-- Carpeta `Resource` con subcarpetas `Config` y `MQ`
-- Carpeta `SrvReturnBalanceSettleAccGMFFcd` con archivos del proyecto IIB
-- Carpeta `Test` con archivos de pruebas
+La estructura analizada contiene:
+- Directorio principal: `int-iib-fcd-SrvReturnBalanceSettleAccGMFFcd-middleware-esql`
+- Subdirectorios: README.md, Resource, Config, Contract, MQ, Test, SrvReturnBalanceSettleAccGMFFcd
+- Archivos de configuración MQ en Resource/MQ/
+- Archivo de configuración XML en Resource/Config/
+- Archivos .msgflow en la estructura del proyecto
 
 ---
 
-### ❌ Regla 4.1: Presencia de archivos requeridos en estructura de directorios
+### ❌ Regla 4.1: Presencia de documentos requeridos en estructura de directorios
 
-- **⚠️ Problema:** Faltan archivos .mq mencionados en las secciones de configuración y restauración
+- **⚠️ Problema:** Faltan archivos .mq mencionados en las secciones de restauración
 - **Evidencia:** 
   ```
   Guion.md menciona:
+  - "Reverse_MQ-SrvReturnBalanceSettleAccGMFFcd.mq"
+  - "Verify_MQ-SrvReturnBalanceSettleAccGMFFcd.mq"
+  
+  Estructura presente solo muestra:
   - MQSrvReturnBalanceSettleAccGMFFcd.mq
   - ReverseMQSrvReturnBalanceSettleAccGMFFcd.mq  
   - VerifyMQSrvReturnBalanceSettleAccGMFFcd.mq
-  
-  Pero en Resource/MQ solo están presentes:
-  - MQ-SrvReturnBalanceSettleAccGMFFcd.mq
-  - Reverse_MQ-SrvReturnBalanceSettleAccGMFFcd.mq
-  - Verify_MQ-SrvReturnBalanceSettleAccGMFFcd.mq
   ```
-- **Ubicación:** Inconsistencia entre nombres en Guion.md y archivos reales en Resource/MQ/
-- **💡 Recomendación:** Actualizar los nombres en el Guion.md para que coincidan con los archivos reales o renombrar los archivos según lo especificado en el guión
+- **Ubicación:** Estructura de directorios vs referencias en Guion.md
+- **💡 Recomendación:** Verificar que los nombres de archivos en el guión coincidan exactamente con los archivos presentes en la estructura
 
 ---
 
 ### ❌ Regla 4.7: Especificación del grupo de ejecución
 
-- **⚠️ Problema:** No se especifica el nombre del grupo de ejecución donde será desplegado el servicio
+- **⚠️ Problema:** No se especifica el grupo de ejecución donde será desplegado el servicio
 - **Evidencia:** 
   ```
   "El componente se debe desplegar en el grupo de ejecución:"
   ```
-- **Ubicación:** Guion.md, sección "Prerrequisitos"
-- **💡 Recomendación:** Completar la frase especificando el nombre del grupo de ejecución específico
+- **Ubicación:** Guion.md, sección Prerrequisitos
+- **💡 Recomendación:** Completar la especificación del grupo de ejecución después de los dos puntos
 
 ---
 
 ### ❌ Regla 4.8: Validación de objetos MQ y estructura de scripts
 
-- **⚠️ Problema:** Los scripts MQ no siguen la estructura requerida y falta validación completa
+- **⚠️ Problema:** Los scripts MQ no siguen la estructura requerida y falta validación de colas en msgflow
 - **Evidencia:** 
   ```
-  MQ-SrvReturnBalanceSettleAccGMFFcd.mq:
+  Script actual:
   DEFINE QLOCAL ('MQINP.RTNBALANCESETTLEACC.FCD.WS.RESP') +
                   BOQNAME('SYSTEM.DEAD.LETTER.QUEUE') +
                   BOTHRESH(1) +
   				MAXDEPTH(5000) +
                   REPLACE
   
-  Verify_MQ-SrvReturnBalanceSettleAccGMFFcd.mq:
-  DISPLAY QLOCAL ('MQINP.RTNBALANCESETTLEACC.FCD.WS.RESP')
+  Estructura requerida:
+  DEFINE QLOCAL ('nombrecola') +
+  	BOQNAME('SYSTEM.DEAD.LETTER.QUEUE') +
+  	BOTHRESH(1) +
+  	MAXDEPTH(5000) +
+  	REPLACE
   ```
-- **Ubicación:** Resource/MQ/
-- **💡 Recomendación:** 
-  1. Corregir indentación en scripts MQ (usar tabs consistentes)
-  2. El nombre de cola 'MQINP.RTNBALANCESETTLEACC.FCD.WS.RESP' tiene 39 caracteres (✅ cumple límite de 48)
-  3. Verificar que la cola coincida con el queueName en ReturnBalanceSettleAccGMFFcdWS_RESP.msgflow
+- **Ubicación:** MQ-SrvReturnBalanceSettleAccGMFFcd.mq y ReturnBalanceSettleAccGMFFcdWS_RESP.msgflow
+- **💡 Recomendación:** Ajustar la indentación de los scripts MQ para usar tabulaciones consistentes y verificar que la cola 'MQINP.RTNBALANCESETTLEACC.FCD.WS.RESP' del msgflow esté presente en los scripts
 
 ---
 
-### ❌ Regla 4.10: Configuración WSRR y endpoints
+### ❌ Regla 4.10: Configuración de endpoints y tablas de ambiente
 
-- **⚠️ Problema:** El archivo XML contiene IPs hardcodeadas en lugar de variables de entorno y falta tabla de configuración completa
+- **⚠️ Problema:** Falta tabla de configuración para endpoint y no se usan las variables requeridas
 - **Evidencia:** 
-  ```xml
+  ```
+  XML contiene:
   <baseURL>https://10.213.130.25:55654</baseURL>
   
-  Guion.md menciona:
-  |Desarrollo|https://10.213.130.25:55639|
+  Guion menciona tabla para:
+  https://10.213.130.25:55639
   
-  Pero no hay tabla para el endpoint https://10.213.130.25:55654
+  Debería usar: {ENDPOINT-INT} en lugar de 10.213.130.25
   ```
-- **Ubicación:** Resource/Config/addRtnBcSettleAccGMF.xml y Guion.md
-- **💡 Recomendación:** 
-  1. Reemplazar `https://10.213.130.25:55654` por `{ENDPOINT-INT}:55654` en el XML
-  2. Crear tabla de configuración para este endpoint con columnas Ambiente y Propiedad
+- **Ubicación:** addRtnBcSettleAccGMF.xml y Guion.md
+- **💡 Recomendación:** Crear tabla completa con columnas Ambiente/Propiedad para el endpoint del XML y reemplazar la IP 10.213.130.25 con {ENDPOINT-INT}
 
 ---
 
 ### ❌ Regla 4.15: Configuración de properties
 
-- **⚠️ Problema:** No se detalla configuración de properties en el despliegue y no se encuentra carpeta Resource/Properties
+- **⚠️ Problema:** No se detalla configuración de properties en el despliegue de componentes
 - **Evidencia:** 
   ```
-  Sección "Despliegue de los Componentes de la Solución":
+  Sección "Despliegue de los Componentes de la Solución" solo menciona:
   "(configuración bar en propiedades que lo requiera)"
   ```
-- **Ubicación:** Guion.md, sección de despliegue
-- **💡 Recomendación:** 
-  1. Detallar específicamente qué configuraciones de properties se requieren
-  2. Si se necesita modificar archivo .bar, crear carpeta Resource/Properties con archivo .properties correspondiente
+- **Ubicación:** Guion.md, sección Despliegue de los Componentes de la Solución
+- **💡 Recomendación:** Detallar específicamente qué configuraciones de properties se requieren o confirmar si no se necesitan
 
 ---
 
 ## ✅ Reglas Cumplidas
 
 ### ✅ Regla 4.4: Descripción detallada de entrega
-- La sección incluye descripción del servicio: "Devolución de saldo GMF a clientes con cuentas saldadas o por saldar"
+- La sección incluye descripción del servicio SrvReturnBalanceSettleAccGMFFcd para "Devolución de saldo GMF a clientes con cuentas saldadas o por saldar"
 
 ### ✅ Regla 4.6: Prerrequisitos y librerías
 - Se especifican correctamente las librerías Commons, GlobalCacheJava y GlobalCache
-- No se utiliza la librería prohibida ESB_Common_Lib_BPP_MFW
+- No se utiliza la librería ESB_Common_Lib_BPP_MFW prohibida
 - Las librerías coinciden con las referenciadas en el .project
 
 ### ✅ Regla 4.12: Pasos de reverso
-- Los pasos de restauración corresponden exactamente a los pasos de instalación
-- Se incluyen los nombres correctos de elementos a reversar
+- Los pasos de restauración corresponden exactamente a los pasos de instalación con sus respectivos elementos a reversar
 
 ### ✅ Regla 4.16: Configuración REST
-- Se incluye correctamente la sección "Configuración Consumo de Servicios REST" con comandos CORS y listeners HTTPS embebidos
+- Se incluye correctamente la sección "Configuración Consumo de Servicios REST" con los comandos CORS y listeners HTTPS embebidos requeridos
 
 ---
 
 ## 🚀 Próximos Pasos
 
-1. **Corregir nomenclatura de archivos MQ** - Fecha límite: Inmediata
-2. **Especificar grupo de ejecución** - Responsable: Arquitecto de solución  
-3. **Actualizar configuración de endpoints** - Reemplazar IPs por variables de entorno
-4. **Completar documentación de properties** - Si aplica para el despliegue
-5. **Revisar y corregir estructura de scripts MQ** - Validar indentación y formato# Reporte de Análisis de Contenido de Archivos
+1. **Corregir nomenclatura de archivos MQ** - Alinear nombres en guión con estructura real
+2. **Completar especificación de grupo de ejecución** - Definir el grupo donde se desplegará
+3. **Ajustar scripts MQ** - Corregir indentación y estructura según estándar
+4. **Crear tabla de configuración de endpoints** - Incluir mapeo de ambientes y usar variables requeridas
+5. **Detallar configuración de properties** - Especificar requisitos o confirmar ausencia# Reporte de Análisis de Contenido de Archivos
 
 📊 **Archivos analizados:** 1
-✅ **Reglas cumplidas:** 2 - [6.3, 6.6]
-❌ **Reglas incumplidas:** 2 - [6.2, 6.4]
+✅ **Reglas cumplidas:** 1 - [6.4]
+❌ **Reglas incumplidas:** 3 - [6.2, 6.3, 6.6]
 
 ## Estructura de Directorios Identificada
 
@@ -320,16 +347,24 @@ int-iib-fcd-SrvReturnBalanceSettleAccGMFFcd-middleware-esql/
     └── co/com/bancopopular/fcd/
         ├── ReturnBalanceSettleAccGMFFcdWSREQ.msgflow
         └── ReturnBalanceSettleAccGMFFcdWSRESP.msgflow
+
+int-iib-fcd-SrvReturnBalanceSettleAccGMFFcd-middleware-esql.wiki/
+├── EspecificacionAddReturnBalanceSettleAccGMF.md
+├── Guion.md
+├── Home.md
+├── PruebasAddReturnBalanceSettleAccGMF.md
+└── Recursos/
+    └── DiagramaArq.png
 ```
 
-## Validaciones por Regla
+---
 
-### ❌ Regla 6.2: Escenarios de prueba requeridos
+### ❌ Regla 6.2: En el documento de pruebas deben existir 6 escenarios
 
-- **Problema:** Se identifican 7 escenarios en lugar de los 6 requeridos. Códigos de estado no cumplen completamente con los requisitos.
+- **Problema:** Se identifican 7 escenarios en lugar de 6, y algunos códigos de estatus no coinciden con los requeridos
+- **Evidencia:** 
 
-- **Evidencia:**
-  ```
+  ```text
   ## CP01 - EXITOSO SE (StatusCode: 0) ✅
   ## CP01 - EXITOSO DD (StatusCode: 0) ✅  
   ## CP01 - EXITOSO REVERSO DD (StatusCode: 0) ✅
@@ -340,63 +375,74 @@ int-iib-fcd-SrvReturnBalanceSettleAccGMFFcd-middleware-esql/
   ## CP06 - ERROR APLICACION (StatusCode: 100) ❌
   ```
 
-- **Ubicación:** Documento de pruebas completo
+- **Ubicación:** Archivo de pruebas, secciones de casos de prueba
 - **Recomendación:** 
-  - Consolidar a exactamente 6 escenarios
-  - El error de aplicación debe mostrar código 300, no 100
-  - Verificar que el error de negocio use código estándar
+  - Consolidar a exactamente 6 escenarios según especificación
+  - Verificar que el código de estatus del error de aplicación sea el correcto
+  - Los casos exitosos deben tener código 0 ✅
+  - Error de timeout debe tener código 91 ✅
+  - Error de conexión debe tener código 300 ✅
 
-### ✅ Regla 6.3: URLs de prueba coincidentes
+---
 
-- **Cumplimiento confirmado:** Las URLs utilizadas son consistentes:
-  ```
-  https://10.200.157.5:9023/accounts/SSL/ReturnBalanceSettleAccGMF
-  ```
+### ❌ Regla 6.3: Las URL's de prueba deben coincidir con las URL's de las etiquetas endpoint del documento XML de SoapUI
 
-### ❌ Regla 6.4: Trazabilidad completa y logs apropiados
+- **Problema:** No se puede verificar la coincidencia ya que no se proporciona el contenido del archivo SoapUI XML
+- **Evidencia:** 
 
-- **Problema:** Inconsistencias en trazabilidad y manejo de logs
-
-- **Evidencia:**
-  ```
-  CP03 - ERROR VALIDACION ESTRUCTURA:
-  "No Funciona, puesto que no deja trazabilidad"
-  <Sin Traza>
+  ```text
+  URLs identificadas en casos de prueba:
+  - https://10.200.157.5:9023/accounts/SSL/ReturnBalanceSettleAccGMF
+  - https://10.213.130.25:55544/services/fiduciaria
   
-  CP01 - EXITOSO REVERSO DD:
-  "❌ FALLA peticion contra AST y se ejecuta reverso"
+  Archivo SoapUI mencionado: ReturnBalanceSettleAccGMFsoapuiproject.xml
   ```
 
-- **Ubicación:** Secciones de trazabilidad en múltiples casos de prueba
-- **Recomendación:**
-  - Asegurar que todos los escenarios tengan trazabilidad completa
-  - Verificar que RqUID coincida entre request y response en todos los casos
-  - Confirmar que solo errores de timeout, conexión y aplicación generen logs en tabla de excepciones
+- **Ubicación:** Casos de prueba vs archivo SoapUI no proporcionado
+- **Recomendación:** Proporcionar el contenido del archivo `ReturnBalanceSettleAccGMFsoapuiproject.xml` para validar la coincidencia de endpoints
 
-### ✅ Regla 6.6: Especificación de pasos y RQUID
+---
 
-- **Cumplimiento confirmado:** Se especifican claramente:
-  - Pasos ejecutados para cada escenario
-  - RqUID presente en cada caso
-  - Observaciones detalladas de las condiciones de prueba
+### ✅ Regla 6.4: Debe incluirse la traza completa de la transacción
 
-## Hallazgos Adicionales
+- **Cumplimiento verificado:** 
+  - ✅ Trazas completas presentes en todos los casos
+  - ✅ RqUID coincide entre mensajes de respuesta y trazabilidad
+  - ✅ Mensajes de respuesta presentes en trazabilidad
+  - ✅ Logs apropiados para diferentes tipos de error
 
-### Estructura de Aplicación Correcta
-La estructura `co.com.bancopopular.fcd` está presente en el error de aplicación:
-```
-co.com.bancopopular.fcd.ReturnBalanceSettleAccGMFFcdWS_REQ
-```
+---
 
-### Casos de Prueba Detallados
-- **CP01 SE:** Transacción exitosa con concepto "SE"
-- **CP01 DD:** Transacción exitosa con concepto "DD" 
-- **CP01 REVERSO DD:** Transacción con reverso automático
-- **CP02:** Error de validación de número de cuenta
-- **CP03:** Error de estructura XML (campo RqUID faltante)
-- **CP04:** Error de timeout por campo BranchId faltante
-- **CP05:** Error de conexión por adaptador inhabilitado
-- **CP06:** Error de aplicación por objeto MQ inhabilitado
+### ❌ Regla 6.6: Deben especificarse los pasos ejecutados para obtener cada escenario y su respectivo RQUID
+
+- **Problema:** No se especifican los pasos detallados para reproducir cada escenario de prueba
+- **Evidencia:** 
+
+  ```text
+  Casos identificados con RQUID pero sin pasos detallados:
+  - CP01 SE: RqUID 202504021589640
+  - CP01 DD: RqUID 1743628057674  
+  - CP02: RqUID 1743540767439
+  - CP04: RqUID 1743629410142
+  - CP05: RqUID 1743630430592
+  - CP06: RqUID 1743631141714
+  ```
+
+- **Ubicación:** Todos los casos de prueba
+- **Recomendación:** Agregar sección detallada de "Pasos para reproducir" en cada caso de prueba, especificando:
+  - Configuraciones previas necesarias
+  - Datos de entrada específicos
+  - Condiciones del sistema
+  - Acciones ejecutadas paso a paso
+
+---
+
+### ✅ Validación Adicional: Estructura de aplicación en errores
+
+- **Cumplimiento verificado:** En el error de aplicación (CP06) se identifica correctamente la estructura:
+  ```text
+  co.com.bancopopular.fcd.ReturnBalanceSettleAccGMFFcdWS_REQ
+  ```
 
 ---
 
@@ -405,11 +451,11 @@ co.com.bancopopular.fcd.ReturnBalanceSettleAccGMFFcdWS_REQ
 **Estado General:** PARCIALMENTE CUMPLIDO
 
 **Acciones Requeridas:**
-1. Reducir escenarios de 7 a 6 según especificación
-2. Corregir código de estado del error de aplicación (debe ser 300)
-3. Completar trazabilidad faltante en CP03
-4. Verificar consistencia de RqUID en todos los casos
-5. Confirmar que logs de excepciones solo se generen para errores técnicos# Reporte de Análisis de Directorios
+1. Consolidar casos de prueba a exactamente 6 escenarios
+2. Verificar códigos de estatus según especificación
+3. Proporcionar archivo SoapUI XML para validar endpoints
+4. Agregar pasos detallados de reproducción para cada escenario
+5. Documentar configuraciones específicas para generar cada tipo de error# Reporte de Análisis de Directorios
 
 **ANÁLISIS COMPLETO DE LA ESTRUCTURA:**
 
@@ -420,51 +466,55 @@ Examinando la estructura proporcionada, identifico dos secciones principales:
 
 **EVALUACIÓN DE REGLAS:**
 
-Tras examinar exhaustivamente toda la estructura proporcionada, no se han especificado reglas de validación concretas para evaluar. El contenido de la solicitud menciona "criterios específicos" y "reglas" pero no proporciona las reglas numeradas (R1, R2, R3, etc.) que debo aplicar para la validación.
+Tras examinar exhaustivamente toda la estructura proporcionada, no se han especificado reglas de validación concretas para evaluar. El contenido muestra una estructura de proyecto de middleware con componentes típicos (configuración, contratos, colas MQ, pruebas y documentación), pero sin criterios específicos de cumplimiento definidos.
 
 ## Resumen de Cumplimiento
 
-❌ **Evaluación no completada:** No se proporcionaron reglas específicas de validación
+⚠️ **No se pueden evaluar reglas:** No se han proporcionado criterios específicos de validación
 
-## Detalle del Problema
+## Observaciones
 
-**Problema identificado:** Ausencia de reglas de validación específicas
-**Razón:** No se han definido los criterios concretos que debo evaluar contra la estructura
-**Evidencia específica:** El prompt menciona "criterios específicos" y hace referencia a reglas numeradas en el ejemplo (R2, R4) pero no proporciona las reglas reales a aplicar
-**Ubicación:** Sección de instrucciones del prompt
+**Estructura identificada:**
+- Archivos de configuración: `addRtnBcSettleAccGMF.xml`
+- Contratos WSDL: `ReturnBalanceSettleAccGMF.wsdl`
+- Colas MQ: 3 archivos .mq identificados
+- Pruebas: `ReturnBalanceSettleAccGMFsoapuiproject.xml`
+- Documentación: 4 archivos .md y recursos gráficos
+- Flujos de mensaje: 2 archivos .msgflow
 
-**📌 NOTA:** Para completar el análisis, necesito que se proporcionen las reglas específicas numeradas (R1, R2, R3, etc.) que debo evaluar contra la estructura de directorios presentada.# Reporte de Análisis de Directorios
+**📌 IMPORTANTE:** Para completar el análisis, se requiere la especificación de las reglas de validación que deben aplicarse a esta estructura de directorios.# Reporte de Análisis de Directorios
 
-**ANÁLISIS COMPLETO DE LA ESTRUCTURA:**
+## Resumen de Cumplimiento
 
-Examinando la estructura proporcionada, identifico dos secciones principales:
+⚠️ **No se han proporcionado reglas específicas para evaluar**
 
-1. **Sección del middleware:**
-   - int-iib-fcd-SrvReturnBalanceSettleAccGMFFcd-middleware-esql (carpeta principal)
-   - Subcarpetas: README.md, Resource, Config, Contract, MQ, Test, SrvReturnBalanceSettleAccGMFFcd
-   - Archivos específicos en cada subcarpeta
+## Análisis de la Estructura
 
-2. **Sección de documentación:**
-   - int-iib-fcd-SrvReturnBalanceSettleAccGMFFcd-middleware-esql (repetida)
-   - Archivos de documentación .md y carpeta Recursos
+He examinado completamente la estructura de directorios proporcionada, que corresponde a un proyecto de middleware IBM Integration Bus (IIB) para el servicio "ReturnBalanceSettleAccGMF". La estructura incluye:
 
-**EVALUACIÓN DE CUMPLIMIENTO:**
+**Estructura Principal:**
+- `int-iib-fcd-SrvReturnBalanceSettleAccGMFFcd-middleware-esql/` (directorio raíz)
+  - `README.md`
+  - `Resource/Config/addRtnBcSettleAccGMF.xml`
+  - `Contract/ReturnBalanceSettleAccGMF.wsdl`
+  - `MQ/` (con 3 archivos .mq)
+  - `Test/ReturnBalanceSettleAccGMFsoapuiproject.xml`
+  - `SrvReturnBalanceSettleAccGMFFcd/` (proyecto IIB con archivos .msgflow)
 
-Dado que no se han proporcionado reglas específicas para evaluar, no puedo determinar cumplimientos o incumplimientos. Para realizar un análisis técnico válido, necesito que se especifiquen las reglas o criterios contra los cuales debo validar esta estructura.
+**Documentación:**
+- `EspecificacionAddReturnBalanceSettleAccGMF.md`
+- `Guion.md`
+- `Home.md`
+- `PruebasAddReturnBalanceSettleAccGMF.md`
+- `Recursos/DiagramaArq.png`
 
-**SOLICITUD DE CLARIFICACIÓN:**
+## Estado del Análisis
 
-Para completar el análisis requerido, necesito que proporciones:
-- Las reglas específicas numeradas (R1, R2, R3, etc.)
-- Los criterios de cumplimiento para cada regla
-- Las convenciones o estándares que debo verificar
+❌ **No se puede completar la validación:** No se han especificado las reglas de cumplimiento que debo evaluar contra esta estructura.
 
-Una vez que reciba estas reglas, podré generar el reporte completo con el formato solicitado, incluyendo:
-- ✅ Reglas cumplidas con números específicos
-- ❌ Reglas incumplidas con números específicos
-- Detalle de incumplimientos con evidencia exacta de la estructura
+**📌 Nota:** Para proporcionar un reporte de cumplimiento válido, necesito que se definan las reglas específicas que debo verificar (por ejemplo: convenciones de nomenclatura, estructura obligatoria de carpetas, tipos de archivos requeridos, etc.).
 
-**📌 IMPORTANTE:** Sin las reglas específicas, no puedo realizar una evaluación técnica válida de cumplimiento.# Reporte de Análisis de Contenido de Archivos
+La estructura está completamente analizada y lista para ser evaluada tan pronto como se proporcionen los criterios de validación correspondientes.# Reporte de Análisis de Contenido de Archivos
 
 📊 **Archivos analizados:** 1
 ❌ **Reglas incumplidas:** 1 - [R1.1]
@@ -505,12 +555,9 @@ int-iib-fcd-SrvReturnBalanceSettleAccGMFFcd-middleware-esql/ (documentación)
 
 ## Análisis de Operaciones WSDL
 
-### Operaciones Extraídas del WSDL:
-Del archivo `ReturnBalanceSettleAccGMF.wsdl` se identificó:
+### Operación Extraída del WSDL:
+Del archivo `ReturnBalanceSettleAccGMF.wsdl` se identificó la siguiente operación:
 
-**Operación:** `AddReturnBalanceSettleAccGMF`
-
-**Evidencia:**
 ```xml
 <wsdl:operation name="AddReturnBalanceSettleAccGMF">
   <wsdl:input message="v1:addRtnBcSettleAccGMFRequest"/>
@@ -518,29 +565,35 @@ Del archivo `ReturnBalanceSettleAccGMF.wsdl` se identificó:
 </wsdl:operation>
 ```
 
+**Nombre de la operación:** `AddReturnBalanceSettleAccGMF`
+
 ## Validación de Reglas
 
-### ✅ Regla 1.1: Verificación de archivos de especificación
+### ✅ Regla 1.1: Verificación de archivo de especificación
 
 - **Operación identificada:** `AddReturnBalanceSettleAccGMF`
 - **Patrón esperado:** `EspecificacionAddReturnBalanceSettleAccGMF.md`
 - **Archivo encontrado:** `EspecificacionAddReturnBalanceSettleAccGMF.md`
+- **Ubicación:** En la estructura de directorios de documentación
+- **Estado:** ✅ **CUMPLE**
 
-**Evidencia de cumplimiento:**
-- En la estructura de directorios se encuentra el archivo: `EspecificacionAddReturnBalanceSettleAccGMF.md`
-- El nombre sigue exactamente el patrón requerido: `Especificacion[NombreOperacion].md`
-- La operación `AddReturnBalanceSettleAccGMF` tiene su correspondiente archivo de especificación
+**Evidencia:**
+```
+Estructura de directorios:
+- int-iib-fcd-SrvReturnBalanceSettleAccGMFFcd-middleware-esql
+ - EspecificacionAddReturnBalanceSettleAccGMF.md
+```
 
 ---
 
 ## 🎯 Resumen de Validación
 
-**Estado General:** ✅ **CUMPLIMIENTO TOTAL**
+**Estado General:** ✅ **CUMPLE COMPLETAMENTE**
 
-**Resultado:** La regla 1.1 se cumple correctamente. Para la operación `AddReturnBalanceSettleAccGMF` extraída del archivo WSDL, existe el archivo de especificación correspondiente `EspecificacionAddReturnBalanceSettleAccGMF.md` que sigue el patrón requerido.
+**Resultado:** El proyecto cumple con la regla de validación establecida. Existe el archivo de especificación `EspecificacionAddReturnBalanceSettleAccGMF.md` que corresponde exactamente con el patrón requerido para la operación `AddReturnBalanceSettleAccGMF` extraída del archivo WSDL.
 
 **Acciones Requeridas:**
-- ✅ Ninguna. El proyecto cumple con los requisitos de documentación establecidos.# Reporte de Análisis de Contenido de Archivos
+- Ninguna. El proyecto cumple con los estándares de documentación establecidos.# Reporte de Análisis de Contenido de Archivos
 
 📊 **Archivos analizados:** 1
 ❌ **Reglas incumplidas:** 1 - [R1.5]
@@ -581,7 +634,7 @@ int-iib-fcd-SrvReturnBalanceSettleAccGMFFcd-middleware-esql/ (documentación)
 
 ## Análisis de Operaciones WSDL
 
-### Operaciones Extraídas del Archivo WSDL:
+### Operaciones Extraídas del archivo WSDL:
 Del archivo `ReturnBalanceSettleAccGMF.wsdl` se identificó la siguiente operación:
 
 ```xml
@@ -598,27 +651,28 @@ Del archivo `ReturnBalanceSettleAccGMF.wsdl` se identificó la siguiente operaci
 ### ✅ Regla 1.5: Verificación de archivos de pruebas para operaciones WSDL
 
 - **Operación analizada:** `AddReturnBalanceSettleAccGMF`
-- **Patrón esperado:** `Pruebas[NombreOperacion].md` → `PruebasAddReturnBalanceSettleAccGMF.md`
+- **Patrón esperado:** `PruebasAddReturnBalanceSettleAccGMF.md`
 - **Archivo encontrado:** `PruebasAddReturnBalanceSettleAccGMF.md`
 
-**✅ CUMPLIMIENTO VERIFICADO:**
-- Existe el archivo `PruebasAddReturnBalanceSettleAccGMF.md` en la estructura de directorios
-- El nombre sigue exactamente el patrón requerido: `Pruebas` + `AddReturnBalanceSettleAccGMF` + `.md`
-- La operación `AddReturnBalanceSettleAccGMF` extraída del WSDL tiene su correspondiente archivo de pruebas
+**Evidencia:**
+```
+Estructura de directorios identificada:
+- int-iib-fcd-SrvReturnBalanceSettleAccGMFFcd-middleware-esql
+  - PruebasAddReturnBalanceSettleAccGMF.md
+```
+
+**Ubicación:** Directorio raíz de documentación del proyecto
 
 ---
 
 ## 🎯 Resumen de Validación
 
-**Estado General:** ✅ **CUMPLIMIENTO TOTAL**
+**Estado General:** ✅ **CUMPLIMIENTO COMPLETO**
 
-**Resultado:**
-- La regla 1.5 se cumple correctamente
-- Para la operación `AddReturnBalanceSettleAccGMF` identificada en el archivo WSDL, existe el archivo de pruebas correspondiente `PruebasAddReturnBalanceSettleAccGMF.md`
-- El patrón de nomenclatura se respeta fielmente
+La regla 1.5 se cumple correctamente. Para la operación `AddReturnBalanceSettleAccGMF` extraída del archivo WSDL, existe el archivo de pruebas correspondiente `PruebasAddReturnBalanceSettleAccGMF.md` que sigue exactamente el patrón requerido `Pruebas[NombreOperacion].md`.
 
 **Acciones Requeridas:**
-- ✅ Ninguna - El proyecto cumple con los requisitos de documentación de pruebas para operaciones WSDL# Reporte de Análisis de Contenido de Archivos
+- Ninguna. El proyecto cumple con los requisitos de documentación de pruebas para las operaciones WSDL.# Reporte de Análisis de Contenido de Archivos
 
 📊 **Archivos analizados:** 1
 ✅ **Reglas cumplidas:** 1 - [R4.5]
@@ -626,10 +680,37 @@ Del archivo `ReturnBalanceSettleAccGMF.wsdl` se identificó la siguiente operaci
 
 ## Análisis de Estructura de Directorios
 
-La estructura analizada corresponde al proyecto `int-iib-fcd-SrvReturnBalanceSettleAccGMFFcd-middleware-esql` que contiene:
+La estructura analizada corresponde a un proyecto de middleware IBM Integration Bus (IIB) con la siguiente organización:
 
-- **Directorio principal**: Componentes del middleware (README.md, Resource, Config, Contract, MQ, Test, SrvReturnBalanceSettleAccGMFFcd)
-- **Directorio wiki**: Documentación del proyecto (EspecificacionAddReturnBalanceSettleAccGMF.md, Guion.md, Home.md, PruebasAddReturnBalanceSettleAccGMF.md, Recursos)
+```
+int-iib-fcd-SrvReturnBalanceSettleAccGMFFcd-middleware-esql/
+├── README.md
+├── Resource/
+├── Config/
+│   └── addRtnBcSettleAccGMF.xml
+├── Contract/
+│   └── ReturnBalanceSettleAccGMF.wsdl
+├── MQ/
+│   ├── MQSrvReturnBalanceSettleAccGMFFcd.mq
+│   ├── ReverseMQSrvReturnBalanceSettleAccGMFFcd.mq
+│   └── VerifyMQSrvReturnBalanceSettleAccGMFFcd.mq
+├── Test/
+│   └── ReturnBalanceSettleAccGMFsoapuiproject.xml
+└── SrvReturnBalanceSettleAccGMFFcd/
+    ├── .project
+    ├── application.descriptor
+    └── co/com/bancopopular/fcd/
+        ├── ReturnBalanceSettleAccGMFFcdWSREQ.msgflow
+        └── ReturnBalanceSettleAccGMFFcdWSRESP.msgflow
+
+int-iib-fcd-SrvReturnBalanceSettleAccGMFFcd-middleware-esql.wiki/
+├── EspecificacionAddReturnBalanceSettleAccGMF.md
+├── Guion.md
+├── Home.md
+├── PruebasAddReturnBalanceSettleAccGMF.md
+└── Recursos/
+    └── DiagramaArq.png
+```
 
 ## Validación de Reglas
 
@@ -667,12 +748,12 @@ Fuentes:
 ```
 
 - **Ubicación:** int-iib-fcd-SrvReturnBalanceSettleAccGMFFcd-middleware-esql/Guion.md, sección "Glosario"
-- **Cumplimiento:** La sección incluye definiciones completas de términos técnicos y las rutas correspondientes tanto al repositorio principal como al repositorio de la wiki en GitHub.
+- **Cumplimiento:** La sección incluye definiciones detalladas de términos técnicos (BROKERNAME, GRUPOEJECUCION, WSRRURL, etc.) y proporciona las rutas específicas tanto del repositorio principal como del repositorio wiki de GitHub.
 
 ---
 
 ## 🚀 Próximos Pasos
 
-1. **Continuar con el análisis**: Si existen más archivos en el repositorio, aplicar las mismas reglas de validación
-2. **Mantener la estructura**: La organización actual del glosario es adecuada y debe mantenerse
-3. **Verificar enlaces**: Validar periódicamente que las URLs del repositorio y wiki permanezcan activas
+1. **Validación completa**: Analizar archivos adicionales del repositorio si están disponibles
+2. **Revisión de consistencia**: Verificar que las rutas mencionadas en el glosario sean accesibles
+3. **Documentación complementaria**: Revisar que los demás archivos .md mantengan coherencia con el glosario establecido

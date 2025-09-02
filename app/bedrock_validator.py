@@ -455,7 +455,7 @@ class LambdaOptimizedAWSManager:
             "anthropic_version": "bedrock-2023-05-31",
             "max_tokens": min(max_tokens, self.bedrock_config.execution_max_tokens),  # Usar límite de config
             "messages": messages,
-            "temperature": 0.2,
+            "temperature": 0,
             "top_p": 1.0
         }
         
