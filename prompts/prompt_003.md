@@ -29,7 +29,7 @@ Estructura de directorios
  - Config
  - `addRtnBcSettleAccGMF.xml`
  - Contract
- - ReturnBalanceSettleAccGMF.wsdl
+ - ReturnBalanceSettleAccGMF.txt
  - MQ
  - MQSrvReturnBalanceSettleAccGMFFcd.mq
  - ReverseMQSrvReturnBalanceSettleAccGMFFcd.mq
@@ -525,6 +525,13 @@ CONTENIDO: ```xml
 ```
 
 
+TITULO: int-iib-fcd-SrvReturnBalanceSettleAccGMFFcd-middleware-esql/Resource/MQ/Reverse_MQ-SrvReturnBalanceSettleAccGMFFcd.mq
+
+CONTENIDO: ```text
+DELETE QLOCAL ('MQINP.RTNBALANCESETTLEACC.FCD.WS.RESP') PURGE
+```
+
+
 TITULO: int-iib-fcd-SrvReturnBalanceSettleAccGMFFcd-middleware-esql/SrvReturnBalanceSettleAccGMFFcd/co/com/bancopopular/fcd/ReturnBalanceSettleAccGMFFcdWS_RESP.msgflow
 
 CONTENIDO: ```xml
@@ -687,13 +694,6 @@ TITULO: int-iib-fcd-SrvReturnBalanceSettleAccGMFFcd-middleware-esql/Resource/MQ/
 
 CONTENIDO: ```text
 DISPLAY QLOCAL ('MQINP.RTNBALANCESETTLEACC.FCD.WS.RESP')
-```
-
-
-TITULO: int-iib-fcd-SrvReturnBalanceSettleAccGMFFcd-middleware-esql/Resource/MQ/Reverse_MQ-SrvReturnBalanceSettleAccGMFFcd.mq
-
-CONTENIDO: ```text
-DELETE QLOCAL ('MQINP.RTNBALANCESETTLEACC.FCD.WS.RESP') PURGE
 ```
 
 

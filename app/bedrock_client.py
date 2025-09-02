@@ -126,7 +126,7 @@ class BedrockClient(metaclass=SingletonMeta):
             return f"\n\nHuman: {raw_prompt}\n\nAssistant:"
         return raw_prompt
 
-    def generate_report(self, prompt: str, temperature: float = 0.7, max_tokens: int = 12000) -> Optional[str]:
+    def generate_report(self, prompt: str, temperature: float = 0.2, max_tokens: int = 12000) -> Optional[str]:
         """
         Envía un prompt al modelo configurado en Bedrock y retorna la respuesta generada.
 

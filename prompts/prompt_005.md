@@ -20,7 +20,7 @@ El contenido a evaluar es el siguiente:
  - Config
  - `addRtnBcSettleAccGMF.xml`
  - Contract
- - ReturnBalanceSettleAccGMF.wsdl
+ - ReturnBalanceSettleAccGMF.txt
  - MQ
  - MQSrvReturnBalanceSettleAccGMFFcd.mq
  - ReverseMQSrvReturnBalanceSettleAccGMFFcd.mq

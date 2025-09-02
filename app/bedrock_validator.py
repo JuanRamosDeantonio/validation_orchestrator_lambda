@@ -456,7 +456,7 @@ class LambdaOptimizedAWSManager:
             "max_tokens": min(max_tokens, self.bedrock_config.execution_max_tokens),  # Usar límite de config
             "messages": messages,
             "temperature": 0,
-            "top_p": 1.0
+            "top_p": 0.1
         }
         
         # Verificar timeout de Lambda

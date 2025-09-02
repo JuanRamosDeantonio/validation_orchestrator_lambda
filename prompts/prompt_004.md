@@ -29,7 +29,7 @@ Estructura de directorios
  - Config
  - `addRtnBcSettleAccGMF.xml`
  - Contract
- - ReturnBalanceSettleAccGMF.wsdl
+ - ReturnBalanceSettleAccGMF.txt
  - MQ
  - MQSrvReturnBalanceSettleAccGMFFcd.mq
  - ReverseMQSrvReturnBalanceSettleAccGMFFcd.mq
@@ -58,7 +58,7 @@ Contenido de archivos
 
 
 
-TITULO: int-iib-fcd-SrvReturnBalanceSettleAccGMFFcd-middleware-esql/Pruebas---AddReturnBalanceSettleAccGMF.md
+TITULO: int-iib-fcd-SrvReturnBalanceSettleAccGMFFcd-middleware-esql/Pruebas-‐-AddReturnBalanceSettleAccGMF.md
 
 CONTENIDO: ```text
 ## CP01 - EXITOSO SE
