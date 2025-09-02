@@ -17,6 +17,7 @@
 from typing import List, Dict, Union, Callable, Optional, Any
 import re
 from datetime import datetime
+from app.helper import remove_backticks_replace
 
 # ===== CONFIGURACIÓN LAMBDA =====
 CACHE_SIZE = 100
@@ -510,7 +511,7 @@ class PromptGenerator:
         for i, group in enumerate(groups):
             try:
                 prompt = self._generate_single_prompt(group, template, replacements, template_structure)
-                results.append(prompt)
+                results.append(remove_backticks_replace(prompt))
             except Exception as e:
                 group_name = getattr(group, 'group', f'grupo_{i+1}')
                 error_msg = f"Error procesando '{group_name}': {str(e)}"

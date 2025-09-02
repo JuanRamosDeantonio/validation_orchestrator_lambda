@@ -463,6 +463,10 @@ def run_all_tests():
     
     return all_passed
 
+def remove_backticks_replace(text):
+    """Método con replace() - Recomendado"""
+    return text.replace('`', '')
+
 
 if __name__ == "__main__":
     run_all_tests()
