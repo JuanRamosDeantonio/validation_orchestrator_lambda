@@ -58,6 +58,431 @@ Contenido de archivos
 
 
 
+TITULO: int-iib-fcd-SrvReturnBalanceSettleAccGMFFcd-middleware-esql/Especificacion---AddReturnBalanceSettleAccGMF.md
+
+CONTENIDO: ```text
+# Tabla de Contenido
+
+- [Introducción](#introducción)
+  - [Información General](#información-general)
+
+- [Descripción del Servicio](#descripción-del-servicio)
+  - [Diagrama de Integración](#diagrama-de-integración)
+  - [Diagrama de Secuencia](#diagrama-de-secuencia)
+  - [Diagrama de Componentes](#diagrama-de-componentes)
+  - [Descripcion del Diagrama de interaccion de Componentes](#descripcion-del-diagrama-de-interaccion-de-componentes)
+
+- [Especificación Detallada del Servicio](#especificación-detalada-del-servicio)
+  - [Descripción Mensaje de Entrada](#descripción-mensaje-de-entrada)
+  - [Ejemplo Mensaje de Entrada](#ejemplo-mensaje-de-entrada)
+  - [Descripción Mensaje de Salida](#descripción-mensaje-de-salida)
+  - [Ejemplo Mensaje de Respuesta Exitosa](#ejemplo-mensaje-de-respuesta-exitosa)
+  - [Ejemplo Mensaje de Respuesta ❌ **> ⚠️ **ERROR**** de Negocio](#ejemplo-mensaje-de-respuesta-❌ **> ⚠️ **ERROR****-de-negocio)
+  - [Códigos IFX de respuesta y ❌ **> ⚠️ **ERROR****](#códigos-ifx-de-respuesta-y-❌ **> ⚠️ **ERROR****)
+
+
+
+## Introducción
+
+### Información General
+
+| Nombre Servicio  | ReturnBalanceSettleAccGMF  |
+|---|---|
+| Nombre Técnico | SrvReturnBalanceSettleAccGMF |
+| Operaciones del Servicio | AddReturnBalanceSettleAccGMF |
+| Contexto del Servicio | accounts/SSL/ReturnBalanceSettleAccGMF |
+| Proyecto  | GMF |
+| Consumidor (Frontend)  | SOFIA |
+| Proveedor (Backend) | Flexcube y AST |
+| Contiene Reverso Manual | No |
+| Contiene Reverso Automático | Si |
+| Contiene Orquestaciones | Si |
+| Tiene más de un componente simple | Si |
+
+## Descripción del Servicio
+
+Permite hacer la devolución de Saldo GMF a clientes con cuentas saldadas o por saldar desde el canal SOFIA a través de la convivencia de los diferentes aplicativos (FC y AST) que intervienen en estos procesos.
+
+### Diagrama de Arquitectura
+
+![Diagrama de Arquitectura.](./Recursos/DiagramaArq.png)
+
+### Diagrama de Secuencia
+
+```mermaid
+sequenceDiagram
+    %% Definición de participantes
+    participant SOFIA
+    participant DataPower_Interno
+    participant BUS
+    participant DataPower_Int
+    participant AST
+    participant FLEXCUBE
+
+    %% Inicio del flujo principal
+    SOFIA->>DataPower_Interno: Cobro de Saldo por devolución de GMF
+    DataPower_Interno->>BUS: <<Request - XML SOAP>>
+    BUS->>FLEXCUBE: <<JMS>> FCUB8RTService_CreateTransaction
+
+    %% ❌ **> ⚠️ **ERROR**** inicial Flexcube
+    rect rgb(255,235,235)
+    note right of AST: [❌ **> ⚠️ **ERROR****]
+    FLEXCUBE-->>BUS: Respuesta de la transacción 
+    BUS-->>DataPower_Interno: Declinación técnica Flexcube ❌ **> ⚠️ **ERROR**** de Negocio: Estado del productos, fondos, entre otros
+    DataPower_Interno-->>SOFIA: Respuesta de la transacción
+    end
+
+    %% Flujo exitoso Flexcube
+    rect rgb(235,245,255)
+    note right of BUS: SI [TX Flexcube = Exitosa y Concepto = DD]
+    FLEXCUBE-->>BUS: Respuesta exitosa
+
+    BUS->>DataPower_Int: Conexión segura - Actualizacion Estado Cobro Devolución GMF <rest>: gmf/v0/gmf/update
+    DataPower_Int->>AST: <rest>: gmf/v0/gmf/update
+
+        %% ❌ **> ⚠️ **ERROR**** AST
+        rect rgb(255,235,235)
+        note right of AST: [❌ **> ⚠️ **ERROR****]
+        AST-->>DataPower_Int: <rest>> Declinación técnica AST ❌ **> ⚠️ **ERROR**** de Negocio: Dato no encontrado, entre otros
+        DataPower_Int-->>BUS: <rest>> Declinación técnica AST ❌ **> ⚠️ **ERROR**** de Negocio: Dato no encontrado, entre otros
+        BUS->>FLEXCUBE: <<JMS>> FCUB8RTService_ReverseTransaction
+        FLEXCUBE-->>BUS: Respuesta exitosa
+        BUS-->>DataPower_Interno: Respuesta de la transacción
+        DataPower_Interno-->>SOFIA: Respuesta de la transacción
+        end
+
+        %% Flujo exitoso AST
+        rect rgb(235,245,255)
+        AST-->>BUS: Respuesta exitosa AST
+        BUS-->>DataPower_Interno: <<Response - XML SOAP>>
+        DataPower_Interno-->>SOFIA: Respuesta de la transacción
+        end
+
+    end
+
+
+```
+
+### Diagrama de Componentes
+
+```mermaid
+
+graph LR
+    SOFIA[SOFIA]
+    Server[Datapower_Interno]
+    Fcd[SrvReturnBalanceSettleAccGMFFcd]
+    Orc[SrvReturnBalanceSettleAccGMFOrch]
+    ATM[SrvReturnBalanceSettleAccGMF]
+    ATM2[SrvReturnBalanceSettleAccGMFAST]
+    ATM3[SrvReturnBalanceSettleAccGMFRev]
+    Adp[AdaptadorJMS FC]
+    FC[Flexcube]
+    AST[AST]
+    Server1[Datapower_Int]
+
+    SOFIA -->| HTTPS/Soap| Server
+    Server -->|Peticion/Respuesta | Fcd
+    Fcd -->|MQ| Orc
+    Orc -->|MQ| ATM
+    ATM -->|Peticion/Respuesta Original| Adp
+    Adp -->|Peticion/Respuesta Original| FC
+    Orc -->|MQ| ATM2
+    ATM2 -->|Peticion/Respuesta| Server1
+    Server1 -->|Peticion/Respuesta | AST
+    Orc -->|MQ| ATM3
+    ATM3 -->|Peticion/Respuesta Reverse| Adp
+    Adp -->|Peticion/Respuesta Reverse | FC
+
+    subgraph ESB
+        Fcd
+        Orc
+        ATM  
+        ATM2
+        ATM3        
+        Adp
+    end
+
+```
+
+### Descripcion del Diagrama de interaccion de Componentes
+
+
+| Tipo  | Nombre | Descripcion | 
+|---|---|---|
+| Fachada | SrvReturnBalanceSettleAccGMFFcd | Aplicación para exponer la funcionalidad  |
+| Atómico (específico) | SrvReturnBalanceSettleAccGMF | Devolución de Saldo GMF a clientes con cuentas saldadas o por saldar  |
+| Atómico (específico) | SrvReturnBalanceSettleAccGMFRev | Reverso devolución de Saldo GMF a clientes con cuentas saldadas o por saldar  |
+| Atómico (específico) | SrvReturnBalanceSettleAccGMFAST | Actualizacion de devolución de Saldo GMF |
+| Atómico (Orquestador) | SrvReturnBalanceSettleAccGMFOrch | Aplicación para orquestar la funcionalidad  |
+| Atómico (Adaptador) | AdapterJMSFC_CORE | Adaptador de conexión JMS de Flexcube  |
+
+## Especificación Detallada del Servicio
+
+### Descripción Mensaje de Entrada Header
+
+|  Xpath Campo | Tipo (Longitud)  | ✅ **OBLIGATORIO**  |  ⭕ **OPCIONAL** | Descripción  |
+|---|---|---|---|---|
+| soapenv:Envelope/soapenv:Body/v1:addRtnBcSettleAccGMFRequest/v1:RtnBcSettleAccGMFRq/ifx:RqUID | String | X |   | Identificador único de la transacción  |
+| soapenv:Envelope/soapenv:Body/v1:addRtnBcSettleAccGMFRequest/v1:RtnBcSettleAccGMFRq/ifx:MsgRqHdr/ifx:ClientApp/ifx:Org | String | X |   | Constante  Debe venir con "Bpop" |
+| soapenv:Envelope/soapenv:Body/v1:addRtnBcSettleAccGMFRequest/v1:RtnBcSettleAccGMFRq/ifx:MsgRqHdr/ifx:ClientApp/ifx:Name | String | X |   | Constante Debe venir con "Bpop"  |
+| soapenv:Envelope/soapenv:Body/v1:addRtnBcSettleAccGMFRequest/v1:RtnBcSettleAccGMFRq/ifx:MsgRqHdr/ifx:ClientApp/ifx:Version | String | X |   | Versión del aplicativo en este caso Se debe colocar "1.0"  |
+| soapenv:Envelope/soapenv:Body/v1:addRtnBcSettleAccGMFRequest/v1:RtnBcSettleAccGMFRq/ifx:MsgRqHdr/v2:Channel | String | X |   | Se debe enviar el canal consumidor |
+| soapenv:Envelope/soapenv:Body/v1:addRtnBcSettleAccGMFRequest/v1:RtnBcSettleAccGMFRq/ifx:MsgRqHdr/ifx:BankInfo/ifx:BankId | String | X |   | Codigo Banco |
+| soapenv:Envelope/soapenv:Body/v1:addRtnBcSettleAccGMFRequest/v1:RtnBcSettleAccGMFRq/ifx:MsgRqHdr/ifx:BankInfo/ifx:Name | String | X |   | Nombre Banco |
+| soapenv:Envelope/soapenv:Body/v1:addRtnBcSettleAccGMFRequest/v1:RtnBcSettleAccGMFRq/ifx:MsgRqHdr/ifx:BankInfo/ifx:BranchId | String | X |   | Codigo Oficina |
+| soapenv:Envelope/soapenv:Body/v1:addRtnBcSettleAccGMFRequest/v1:RtnBcSettleAccGMFRq/ifx:MsgRqHdr/v2:ClientDt | DateTime | X |   | Fecha en que se realiza la transacción, con formato timestamp con milisegundos |
+| soapenv:Envelope/soapenv:Body/v1:addRtnBcSettleAccGMFRequest/v1:RtnBcSettleAccGMFRq/ifx:MsgRqHdr/v2:IPAddr | String | X |   | IP de donde se consume el servicio |
+| soapenv:Envelope/soapenv:Body/v1:addRtnBcSettleAccGMFRequest/v1:RtnBcSettleAccGMFRq/ifx:MsgRqHdr/ifx:UserId/ifx:GovIssueIdent/ifx:GovIssueIdentType | String | X |   | Tipo de documento del operador que consume el servicio |
+| soapenv:Envelope/soapenv:Body/v1:addRtnBcSettleAccGMFRequest/v1:RtnBcSettleAccGMFRq/ifx:MsgRqHdr/ifx:UserId/ifx:GovIssueIdent/ifx:IdentSerialNum | String | X |   | Número de documento del operador que consume el servicio |
+| soapenv:Envelope/soapenv:Body/v1:addRtnBcSettleAccGMFRequest/v1:RtnBcSettleAccGMFRq/ifx:MsgRqHdr/v2:Reverse | Boolean | X |   | Indicador de Reverso de la transacción. Constante False |
+| soapenv:Envelope/soapenv:Body/v1:addRtnBcSettleAccGMFRequest/v1:RtnBcSettleAccGMFRq/ifx:MsgRqHdr/v2:Language | String | X |   | Constante es_CO |
+| soapenv:Envelope/soapenv:Body/v1:addRtnBcSettleAccGMFRequest/v1:RtnBcSettleAccGMFRq/ifx:MsgRqHdr/v2:NextDay | DateTime | X |   | Fecha del día siguiente en format timestamp con milisegundos  |
+| soapenv:Envelope/soapenv:Body/v1:addRtnBcSettleAccGMFRequest/v1:RtnBcSettleAccGMFRq/ifx:CustId/ifx:GovIssueIdent/ifx:GovIssueIdentType | String | X |   | Tipo de identificación del clientes  |
+| soapenv:Envelope/soapenv:Body/v1:addRtnBcSettleAccGMFRequest/v1:RtnBcSettleAccGMFRq/ifx:CustId/ifx:GovIssueIdent/ifx:IdentSerialNum | String | X |   | Tipo de identificación del clientes  |
+
+#### Descripción Mensaje De Entrada  Body
+
+|  Xpath Campo | Tipo (Longitud)  | ✅ **OBLIGATORIO**  |  ⭕ **OPCIONAL** | Descripción  |
+|---|---|---|---|---|
+| soapenv:Envelope/soapenv:Body/v1:addRtnBcSettleAccGMFRequest/v1:RtnBcSettleAccGMFRq/ifx:ProductId/ifx:Concept | String | X |   | Tipo Concepto, Se Usara solo dos valores estandar: SE: Saldo Efectivo, DD:Debito DIAN
+ |
+| soapenv:Envelope/soapenv:Body/v1:addRtnBcSettleAccGMFRequest/v1:RtnBcSettleAccGMFRq/ifx:ProductId/ifx:AccountNumber | String | X |   | Número de Cuenta |
+| soapenv:Envelope/soapenv:Body/v1:addRtnBcSettleAccGMFRequest/v1:RtnBcSettleAccGMFRq/ifx:ProductId/ifx:Amt | Decimal | X |   | Monto de la transacción |
+| soapenv:Envelope/soapenv:Body/v1:addRtnBcSettleAccGMFRequest/v1:RtnBcSettleAccGMFRq/ifx:ProductId/ifx:BranchId | String | X |   | Oficina de la cuenta principal de la transacción |
+
+
+### Ejemplo Mensaje de Entrada
+
+```xml
+
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:v1="urn://grupoaval.com/accounts/v1/" xmlns:ifx="urn://grupoaval.com/xsd/ifx/" xmlns:v2="urn://grupoaval.com/xsd/ifx/v2/">
+   <soapenv:Header/>
+   <soapenv:Body>
+      <v1:addRtnBcSettleAccGMFRequest>
+         <v1:RtnBcSettleAccGMFRq>
+           <ifx:RqUID xmlns:ifx="urn://grupoaval.com/xsd/ifx/">${=java.lang.System.currentTimeMillis()}</ifx:RqUID>
+            <ifx:MsgRqHdr xmlns:ifx="urn://grupoaval.com/xsd/ifx/">
+                <ifx:ClientApp>
+                    <ifx:Org>BPOP</ifx:Org>
+                    <ifx:Name>CANALES</ifx:Name>
+                    <ifx:Version>1</ifx:Version>
+                </ifx:ClientApp>
+                <v2:Channel xmlns:v2="urn://grupoaval.com/xsd/ifx/v2/">CANALES</v2:Channel>
+                <ifx:BankInfo>
+                    <ifx:BankId>0002</ifx:BankId>
+                    <ifx:Name>BPOP</ifx:Name>
+                    <ifx:BranchId>089</ifx:BranchId>
+                </ifx:BankInfo>
+                <v2:ClientDt xmlns:v2="urn://grupoaval.com/xsd/ifx/v2/">2024-03-08T10:00:00</v2:ClientDt>
+                <v2:IPAddr xmlns:v2="urn://grupoaval.com/xsd/ifx/v2/">1</v2:IPAddr>
+                <ifx:UserId>
+                    <ifx:GovIssueIdent>
+                        <ifx:GovIssueIdentType>CC</ifx:GovIssueIdentType>
+                        <ifx:IdentSerialNum>79641609B</ifx:IdentSerialNum>
+                    </ifx:GovIssueIdent>
+                </ifx:UserId>
+                <v2:Reverse xmlns:v2="urn://grupoaval.com/xsd/ifx/v2/">false</v2:Reverse>
+                <v2:Language xmlns:v2="urn://grupoaval.com/xsd/ifx/v2/">ES</v2:Language>
+                <v2:NextDay xmlns:v2="urn://grupoaval.com/xsd/ifx/v2/">2021-07-16T17:14:59.489-05:00</v2:NextDay>
+            </ifx:MsgRqHdr>
+            <ifx:CustId xmlns:ifx="urn://grupoaval.com/xsd/ifx/">
+                <ifx:GovIssueIdent>
+                    <ifx:GovIssueIdentType>1</ifx:GovIssueIdentType>
+                    <ifx:IdentSerialNum>79641609</ifx:IdentSerialNum>
+                </ifx:GovIssueIdent>
+            </ifx:CustId>
+            <ifx:ProductId>
+               <ifx:Concept>DD</ifx:Concept>
+               <ifx:AccountNumber>500800393227</ifx:AccountNumber>               
+               <ifx:Amt>1000</ifx:Amt>
+            </ifx:ProductId>
+         </v1:RtnBcSettleAccGMFRq>
+      </v1:addRtnBcSettleAccGMFRequest>
+   </soapenv:Body>
+</soapenv:Envelope>
+
+```
+
+### Descripción Mensaje de Salida
+
+### Descripción Mensaje De Salida  Header
+
+#### Información Estado Transacción – Inicio
+
+| XPath Campo | Tipo (Longitud) | ✅ **OBLIGATORIO** | ⭕ **OPCIONAL** | Descripción |
+|-------------|------------------|-----|-------------|-------------|
+| soapenv:Envelope/soapenv:Body/v1:addRtnBcSettleAccGMFResponse/v1:RtnBcSettleAccGMFRs/ifx:Status/ifx:StatusCode | Long | X |  |Código de respuesta de transacción. |
+| soapenv:Envelope/soapenv:Body/v1:addRtnBcSettleAccGMFResponse/v1:RtnBcSettleAccGMFRs/ifx:Status/ifx:Severity | String | X |  | Info |
+| soapenv:Envelope/soapenv:Body/v1:addRtnBcSettleAccGMFResponse/v1:RtnBcSettleAccGMFRs/ifx:Status/ifx:StatusDesc | String | X |  | Descripción del estado de la consulta, si fue exitosa o ocurrió algún ❌ **> ⚠️ **ERROR****. |
+| soapenv:Envelope/soapenv:Body/v1:addRtnBcSettleAccGMFResponse/v1:RtnBcSettleAccGMFRs/ifx:Status/ifx:StatusCode | Long | X |  | Código del estado de la consulta |
+| soapenv:Envelope/soapenv:Body/v1:addRtnBcSettleAccGMFResponse/v1:RtnBcSettleAccGMFRs/ifx:AdditionalStatus/ifx:StatusDesc | String | X | | Descripción del estado de la consulta **Mensaje cuando la transacción se realizó correctamente** |
+| soapenv:Envelope/soapenv:Body/v1:addRtnBcSettleAccGMFResponse/v1:RtnBcSettleAccGMFRs/ifx:RqUID | String | X |  | Identificador de la petición, corresponde a un eco de RqUID |
+| soapenv:Envelope/soapenv:Body/v1:addRtnBcSettleAccGMFResponse/v1:RtnBcSettleAccGMFRs/ifx:MsgRqHdr/ifx:ClientApp/ifx:Org | String | X |  | Es un eco del campo **Org** del mensaje de solicitud. |
+| soapenv:Envelope/soapenv:Body/v1:addRtnBcSettleAccGMFResponse/v1:RtnBcSettleAccGMFRs/ifx:MsgRqHdr/ifx:ClientApp/ifx:Name | String | X |  | Es un eco del campo **Name** del mensaje de solicitud. |
+| soapenv:Envelope/soapenv:Body/v1:addRtnBcSettleAccGMFResponse/v1:RtnBcSettleAccGMFRs/ifx:MsgRqHdr/ifx:ClientApp/ifx:Version | String | X |  | Es un eco del campo **Version** del mensaje de solicitud. |
+| soapenv:Envelope/soapenv:Body/v1:addRtnBcSettleAccGMFResponse/v1:RtnBcSettleAccGMFRs/ifx:MsgRqHdr/ifx:ClientApp/ifx:Channel | String | X |  | Es un eco del campo **Channel** del mensaje de solicitud. |
+| soapenv:Envelope/soapenv:Body/v1:addRtnBcSettleAccGMFResponse/v1:RtnBcSettleAccGMFRs/ifx:MsgRqHdr/ifx:BankInfo/ifx:BankId | String | X |  | Es un eco del campo **BankId** del mensaje de solicitud. |
+| soapenv:Envelope/soapenv:Body/v1:addRtnBcSettleAccGMFResponse/v1:RtnBcSettleAccGMFRs/ifx:MsgRqHdr/ifx:ClientDt | String | X |  | Fecha de la transacción |
+| soapenv:Envelope/soapenv:Body/v1:addRtnBcSettleAccGMFResponse/v1:RtnBcSettleAccGMFRs/ifx:MsgRqHdr/ifx:IPAddr | String | X |  | Es un eco del campo **IPAddr** del mensaje de solicitud. |
+| soapenv:Envelope/soapenv:Body/v1:addRtnBcSettleAccGMFResponse/v1:RtnBcSettleAccGMFRs/ifx:MsgRqHdr/ifx:SessKey | String | X |  | Es un eco del campo SessKey del mensaje de solicitud. |
+| soapenv:Envelope/soapenv:Body/v1:addRtnBcSettleAccGMFResponse/v1:RtnBcSettleAccGMFRs/ifx:MsgRqHdr/ifx:UserId/ifx:GovIssuedIdentType | String | X |  | Es un eco del campo **GovIssuedIdentType** del mensaje de solicitud. |
+| soapenv:Envelope/soapenv:Body/v1:addRtnBcSettleAccGMFResponse/v1:RtnBcSettleAccGMFRs/ifx:MsgRqHdr/ifx:UserId/ifx:IdentSerialNum | String | X |  | Es un eco del campo **IdentSerialNum** del mensaje de solicitud. |
+| soapenv:Envelope/soapenv:Body/v1:addRtnBcSettleAccGMFResponse/v1:RtnBcSettleAccGMFRs/ifx:MsgRqHdr/ifx:Reverse | Boolean | X |  | Es un eco del campo **Reverse** del mensaje de solicitud. |
+| soapenv:Envelope/soapenv:Body/v1:addRtnBcSettleAccGMFResponse/v1:RtnBcSettleAccGMFRs/ifx:MsgRqHdr/ifx:Language | String | X |  | Es un eco del campo **Language** del mensaje de solicitud. |
+| soapenv:Envelope/soapenv:Body/v1:addRtnBcSettleAccGMFResponse/v1:RtnBcSettleAccGMFRs/ifx:MsgRqHdr/ifx:NextDay | String | X |  | Es un eco del campo **NextDay** del mensaje de solicitud. |
+
+### Descripción Mensaje De Salida  Body
+
+|  Xpath Campo | Tipo (Longitud)  | ✅ **OBLIGATORIO**  |  ⭕ **OPCIONAL** | Descripción  |
+|---|---|---|---|---|
+| soapenv:Envelope/soapenv:Body/v1:addRtnBcSettleAccGMFResponse/v1:RtnBcSettleAccGMFRs/ifx:ProductId/ifx:CommisionValue | String|  | X | Valor de Comision  |
+
+### Ejemplo Mensaje de Respuesta Exitosa
+
+```xml
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+   <soapenv:Body>
+      <NS1:addRtnBcSettleAccGMFResponse xmlns:NS1="urn://grupoaval.com/accounts/v1/">
+         <v1:RtnBcSettleAccGMFRs xmlns:v1="urn://grupoaval.com/accounts/v1/" xmlns:ifx="urn://grupoaval.com/xsd/ifx/" xmlns:v2="urn://grupoaval.com/xsd/ifx/v2/">
+            <ifx:Status>
+               <ifx:StatusCode>0</ifx:StatusCode>
+               <ifx:Severity>Info</ifx:Severity>
+               <ifx:StatusDesc>Transaccion Exitosa</ifx:StatusDesc>
+               <ifx:AdditionalStatus>
+                  <ifx:StatusCode>03</ifx:StatusCode>
+                  <ifx:StatusDesc>GW-SAV-03::La transacción ha finalizado correctamente</ifx:StatusDesc>
+               </ifx:AdditionalStatus>
+            </ifx:Status>
+            <ifx:RqUID>1743196487005</ifx:RqUID>
+            <ifx:MsgRqHdr>
+               <ifx:ClientApp>
+                  <ifx:Org>BPOP</ifx:Org>
+                  <ifx:Name>CANALES</ifx:Name>
+                  <ifx:Version>1</ifx:Version>
+               </ifx:ClientApp>
+               <v2:Channel>CANALES</v2:Channel>
+               <ifx:BankInfo>
+                  <ifx:BankId>0002</ifx:BankId>
+                  <ifx:Name>BPOP</ifx:Name>
+                  <ifx:BranchId>025</ifx:BranchId>
+               </ifx:BankInfo>
+               <v2:ClientDt>2024-03-08T10:00:00</v2:ClientDt>
+               <v2:IPAddr>1</v2:IPAddr>
+               <ifx:UserId>
+                  <ifx:GovIssueIdent>
+                     <ifx:GovIssueIdentType>CC</ifx:GovIssueIdentType>
+                     <ifx:IdentSerialNum>79641609B</ifx:IdentSerialNum>
+                  </ifx:GovIssueIdent>
+               </ifx:UserId>
+               <v2:Reverse>false</v2:Reverse>
+               <v2:Language>ES</v2:Language>
+               <v2:NextDay>2025-03-28T16:14:47.483479-05:00</v2:NextDay>
+            </ifx:MsgRqHdr>
+            <ifx:MsgRsHdr>
+               <ifx:TxCostAmt>
+                  <ifx:CurAmt>
+                     <ifx:Amt>0</ifx:Amt>
+                     <ifx:CurCode>COP</ifx:CurCode>
+                  </ifx:CurAmt>
+               </ifx:TxCostAmt>
+               <ifx:EffDt>2025-03-28T16:14:47.483479-05:00</ifx:EffDt>
+               <ifx:RemainRec>false</ifx:RemainRec>
+            </ifx:MsgRsHdr>
+            <ifx:CustId>
+               <ifx:GovIssueIdent>
+                  <ifx:GovIssueIdentType>1</ifx:GovIssueIdentType>
+                  <ifx:IdentSerialNum>79641609</ifx:IdentSerialNum>
+               </ifx:GovIssueIdent>
+            </ifx:CustId>
+            <ifx:ProductId>
+               <ifx:CommisionValue>0</ifx:CommisionValue>
+            </ifx:ProductId>
+         </v1:RtnBcSettleAccGMFRs>
+      </NS1:addRtnBcSettleAccGMFResponse>
+   </soapenv:Body>
+</soapenv:Envelope>
+```
+
+### Ejemplo Mensaje de Respuesta ❌ **> ⚠️ **ERROR**** de Negocio
+
+```xml
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+   <soapenv:Body>
+      <NS1:addRtnBcSettleAccGMFResponse xmlns:NS1="urn://grupoaval.com/accounts/v1/">
+         <v1:RtnBcSettleAccGMFRs xmlns:v1="urn://grupoaval.com/accounts/v1/" xmlns:ifx="urn://grupoaval.com/xsd/ifx/" xmlns:v2="urn://grupoaval.com/xsd/ifx/v2/">
+            <ifx:Status>
+               <ifx:StatusCode>100</ifx:StatusCode>
+               <ifx:Severity>❌ **> ⚠️ **ERROR****</ifx:Severity>
+               <ifx:StatusDesc>No es posible procesar la transacción. Comuníquese con la Entidad.</ifx:StatusDesc>
+               <ifx:AdditionalStatus>
+                  <ifx:StatusCode>18</ifx:StatusCode>
+                  <ifx:StatusDesc>DE-TUD-018::La fecha de inicio de producto es posterior a la fecha de alta</ifx:StatusDesc>
+               </ifx:AdditionalStatus>
+            </ifx:Status>
+            <ifx:RqUID>1743004514758</ifx:RqUID>
+            <ifx:MsgRqHdr>
+               <ifx:ClientApp>
+                  <ifx:Org>BPOP</ifx:Org>
+                  <ifx:Name>CANALES</ifx:Name>
+                  <ifx:Version>1</ifx:Version>
+               </ifx:ClientApp>
+               <v2:Channel>CANALES</v2:Channel>
+               <ifx:BankInfo>
+                  <ifx:BankId>0002</ifx:BankId>
+                  <ifx:Name>BPOP</ifx:Name>
+                  <ifx:BranchId>089</ifx:BranchId>
+               </ifx:BankInfo>
+               <v2:ClientDt>2024-03-08T10:00:00</v2:ClientDt>
+               <v2:IPAddr>1</v2:IPAddr>
+               <ifx:UserId>
+                  <ifx:GovIssueIdent>
+                     <ifx:GovIssueIdentType>CC</ifx:GovIssueIdentType>
+                     <ifx:IdentSerialNum>79641609B</ifx:IdentSerialNum>
+                  </ifx:GovIssueIdent>
+               </ifx:UserId>
+               <v2:Reverse>false</v2:Reverse>
+               <v2:Language>ES</v2:Language>
+               <v2:NextDay>2025-03-26T10:55:15.675747-05:00</v2:NextDay>
+            </ifx:MsgRqHdr>
+            <ifx:MsgRsHdr>
+               <ifx:TxCostAmt>
+                  <ifx:CurAmt>
+                     <ifx:Amt>0</ifx:Amt>
+                     <ifx:CurCode>COP</ifx:CurCode>
+                  </ifx:CurAmt>
+               </ifx:TxCostAmt>
+               <ifx:EffDt>2025-03-26T10:55:15.675747-05:00</ifx:EffDt>
+               <ifx:RemainRec>false</ifx:RemainRec>
+            </ifx:MsgRsHdr>
+            <ifx:CustId>
+               <ifx:GovIssueIdent>
+                  <ifx:GovIssueIdentType>1</ifx:GovIssueIdentType>
+                  <ifx:IdentSerialNum>79641609</ifx:IdentSerialNum>
+               </ifx:GovIssueIdent>
+            </ifx:CustId>
+         </v1:RtnBcSettleAccGMFRs>
+      </NS1:addRtnBcSettleAccGMFResponse>
+   </soapenv:Body>
+</soapenv:Envelope>
+
+
+```
+### Códigos IFX de respuesta y ❌ **> ⚠️ **ERROR****
+| Código  | Severidad | Descripción  | 
+|:-------------:|:-------------:|-------------|
+| 0     | info     | Transacción Exitosa |
+| 100      | ❌ **> ⚠️ **ERROR****     | No es posible procesar la transacción. Comuniquese con la entidad |
+| 2323      | ❌ **> ⚠️ **ERROR****     | ❌ **> ⚠️ **ERROR**** al validar numero de cuenta. |
+
+### Códigos HTTP de respuesta
+
+| Código  | Descripción  | 
+|:-------------:|-------------|
+| 200     | Transacción Exitosa |
+| 500 	  | ❌ **> ⚠️ **ERROR**** interno en el servidor |
+```
+
+
 TITULO: int-iib-fcd-SrvReturnBalanceSettleAccGMFFcd-middleware-esql/Home.md
 
 CONTENIDO: ```text
@@ -724,431 +1149,6 @@ CONTENIDO: ```text
     </wsdl:port>
   </wsdl:service>
 </wsdl:definitions>
-```
-
-
-TITULO: int-iib-fcd-SrvReturnBalanceSettleAccGMFFcd-middleware-esql/Especificacion---AddReturnBalanceSettleAccGMF.md
-
-CONTENIDO: ```text
-# Tabla de Contenido
-
-- [Introducción](#introducción)
-  - [Información General](#información-general)
-
-- [Descripción del Servicio](#descripción-del-servicio)
-  - [Diagrama de Integración](#diagrama-de-integración)
-  - [Diagrama de Secuencia](#diagrama-de-secuencia)
-  - [Diagrama de Componentes](#diagrama-de-componentes)
-  - [Descripcion del Diagrama de interaccion de Componentes](#descripcion-del-diagrama-de-interaccion-de-componentes)
-
-- [Especificación Detallada del Servicio](#especificación-detalada-del-servicio)
-  - [Descripción Mensaje de Entrada](#descripción-mensaje-de-entrada)
-  - [Ejemplo Mensaje de Entrada](#ejemplo-mensaje-de-entrada)
-  - [Descripción Mensaje de Salida](#descripción-mensaje-de-salida)
-  - [Ejemplo Mensaje de Respuesta Exitosa](#ejemplo-mensaje-de-respuesta-exitosa)
-  - [Ejemplo Mensaje de Respuesta ❌ **> ⚠️ **ERROR**** de Negocio](#ejemplo-mensaje-de-respuesta-❌ **> ⚠️ **ERROR****-de-negocio)
-  - [Códigos IFX de respuesta y ❌ **> ⚠️ **ERROR****](#códigos-ifx-de-respuesta-y-❌ **> ⚠️ **ERROR****)
-
-
-
-## Introducción
-
-### Información General
-
-| Nombre Servicio  | ReturnBalanceSettleAccGMF  |
-|---|---|
-| Nombre Técnico | SrvReturnBalanceSettleAccGMF |
-| Operaciones del Servicio | AddReturnBalanceSettleAccGMF |
-| Contexto del Servicio | accounts/SSL/ReturnBalanceSettleAccGMF |
-| Proyecto  | GMF |
-| Consumidor (Frontend)  | SOFIA |
-| Proveedor (Backend) | Flexcube y AST |
-| Contiene Reverso Manual | No |
-| Contiene Reverso Automático | Si |
-| Contiene Orquestaciones | Si |
-| Tiene más de un componente simple | Si |
-
-## Descripción del Servicio
-
-Permite hacer la devolución de Saldo GMF a clientes con cuentas saldadas o por saldar desde el canal SOFIA a través de la convivencia de los diferentes aplicativos (FC y AST) que intervienen en estos procesos.
-
-### Diagrama de Arquitectura
-
-![Diagrama de Arquitectura.](./Recursos/DiagramaArq.png)
-
-### Diagrama de Secuencia
-
-```mermaid
-sequenceDiagram
-    %% Definición de participantes
-    participant SOFIA
-    participant DataPower_Interno
-    participant BUS
-    participant DataPower_Int
-    participant AST
-    participant FLEXCUBE
-
-    %% Inicio del flujo principal
-    SOFIA->>DataPower_Interno: Cobro de Saldo por devolución de GMF
-    DataPower_Interno->>BUS: <<Request - XML SOAP>>
-    BUS->>FLEXCUBE: <<JMS>> FCUB8RTService_CreateTransaction
-
-    %% ❌ **> ⚠️ **ERROR**** inicial Flexcube
-    rect rgb(255,235,235)
-    note right of AST: [❌ **> ⚠️ **ERROR****]
-    FLEXCUBE-->>BUS: Respuesta de la transacción 
-    BUS-->>DataPower_Interno: Declinación técnica Flexcube ❌ **> ⚠️ **ERROR**** de Negocio: Estado del productos, fondos, entre otros
-    DataPower_Interno-->>SOFIA: Respuesta de la transacción
-    end
-
-    %% Flujo exitoso Flexcube
-    rect rgb(235,245,255)
-    note right of BUS: SI [TX Flexcube = Exitosa y Concepto = DD]
-    FLEXCUBE-->>BUS: Respuesta exitosa
-
-    BUS->>DataPower_Int: Conexión segura - Actualizacion Estado Cobro Devolución GMF <rest>: gmf/v0/gmf/update
-    DataPower_Int->>AST: <rest>: gmf/v0/gmf/update
-
-        %% ❌ **> ⚠️ **ERROR**** AST
-        rect rgb(255,235,235)
-        note right of AST: [❌ **> ⚠️ **ERROR****]
-        AST-->>DataPower_Int: <rest>> Declinación técnica AST ❌ **> ⚠️ **ERROR**** de Negocio: Dato no encontrado, entre otros
-        DataPower_Int-->>BUS: <rest>> Declinación técnica AST ❌ **> ⚠️ **ERROR**** de Negocio: Dato no encontrado, entre otros
-        BUS->>FLEXCUBE: <<JMS>> FCUB8RTService_ReverseTransaction
-        FLEXCUBE-->>BUS: Respuesta exitosa
-        BUS-->>DataPower_Interno: Respuesta de la transacción
-        DataPower_Interno-->>SOFIA: Respuesta de la transacción
-        end
-
-        %% Flujo exitoso AST
-        rect rgb(235,245,255)
-        AST-->>BUS: Respuesta exitosa AST
-        BUS-->>DataPower_Interno: <<Response - XML SOAP>>
-        DataPower_Interno-->>SOFIA: Respuesta de la transacción
-        end
-
-    end
-
-
-```
-
-### Diagrama de Componentes
-
-```mermaid
-
-graph LR
-    SOFIA[SOFIA]
-    Server[Datapower_Interno]
-    Fcd[SrvReturnBalanceSettleAccGMFFcd]
-    Orc[SrvReturnBalanceSettleAccGMFOrch]
-    ATM[SrvReturnBalanceSettleAccGMF]
-    ATM2[SrvReturnBalanceSettleAccGMFAST]
-    ATM3[SrvReturnBalanceSettleAccGMFRev]
-    Adp[AdaptadorJMS FC]
-    FC[Flexcube]
-    AST[AST]
-    Server1[Datapower_Int]
-
-    SOFIA -->| HTTPS/Soap| Server
-    Server -->|Peticion/Respuesta | Fcd
-    Fcd -->|MQ| Orc
-    Orc -->|MQ| ATM
-    ATM -->|Peticion/Respuesta Original| Adp
-    Adp -->|Peticion/Respuesta Original| FC
-    Orc -->|MQ| ATM2
-    ATM2 -->|Peticion/Respuesta| Server1
-    Server1 -->|Peticion/Respuesta | AST
-    Orc -->|MQ| ATM3
-    ATM3 -->|Peticion/Respuesta Reverse| Adp
-    Adp -->|Peticion/Respuesta Reverse | FC
-
-    subgraph ESB
-        Fcd
-        Orc
-        ATM  
-        ATM2
-        ATM3        
-        Adp
-    end
-
-```
-
-### Descripcion del Diagrama de interaccion de Componentes
-
-
-| Tipo  | Nombre | Descripcion | 
-|---|---|---|
-| Fachada | SrvReturnBalanceSettleAccGMFFcd | Aplicación para exponer la funcionalidad  |
-| Atómico (específico) | SrvReturnBalanceSettleAccGMF | Devolución de Saldo GMF a clientes con cuentas saldadas o por saldar  |
-| Atómico (específico) | SrvReturnBalanceSettleAccGMFRev | Reverso devolución de Saldo GMF a clientes con cuentas saldadas o por saldar  |
-| Atómico (específico) | SrvReturnBalanceSettleAccGMFAST | Actualizacion de devolución de Saldo GMF |
-| Atómico (Orquestador) | SrvReturnBalanceSettleAccGMFOrch | Aplicación para orquestar la funcionalidad  |
-| Atómico (Adaptador) | AdapterJMSFC_CORE | Adaptador de conexión JMS de Flexcube  |
-
-## Especificación Detallada del Servicio
-
-### Descripción Mensaje de Entrada Header
-
-|  Xpath Campo | Tipo (Longitud)  | ✅ **OBLIGATORIO**  |  ⭕ **OPCIONAL** | Descripción  |
-|---|---|---|---|---|
-| soapenv:Envelope/soapenv:Body/v1:addRtnBcSettleAccGMFRequest/v1:RtnBcSettleAccGMFRq/ifx:RqUID | String | X |   | Identificador único de la transacción  |
-| soapenv:Envelope/soapenv:Body/v1:addRtnBcSettleAccGMFRequest/v1:RtnBcSettleAccGMFRq/ifx:MsgRqHdr/ifx:ClientApp/ifx:Org | String | X |   | Constante  Debe venir con "Bpop" |
-| soapenv:Envelope/soapenv:Body/v1:addRtnBcSettleAccGMFRequest/v1:RtnBcSettleAccGMFRq/ifx:MsgRqHdr/ifx:ClientApp/ifx:Name | String | X |   | Constante Debe venir con "Bpop"  |
-| soapenv:Envelope/soapenv:Body/v1:addRtnBcSettleAccGMFRequest/v1:RtnBcSettleAccGMFRq/ifx:MsgRqHdr/ifx:ClientApp/ifx:Version | String | X |   | Versión del aplicativo en este caso Se debe colocar "1.0"  |
-| soapenv:Envelope/soapenv:Body/v1:addRtnBcSettleAccGMFRequest/v1:RtnBcSettleAccGMFRq/ifx:MsgRqHdr/v2:Channel | String | X |   | Se debe enviar el canal consumidor |
-| soapenv:Envelope/soapenv:Body/v1:addRtnBcSettleAccGMFRequest/v1:RtnBcSettleAccGMFRq/ifx:MsgRqHdr/ifx:BankInfo/ifx:BankId | String | X |   | Codigo Banco |
-| soapenv:Envelope/soapenv:Body/v1:addRtnBcSettleAccGMFRequest/v1:RtnBcSettleAccGMFRq/ifx:MsgRqHdr/ifx:BankInfo/ifx:Name | String | X |   | Nombre Banco |
-| soapenv:Envelope/soapenv:Body/v1:addRtnBcSettleAccGMFRequest/v1:RtnBcSettleAccGMFRq/ifx:MsgRqHdr/ifx:BankInfo/ifx:BranchId | String | X |   | Codigo Oficina |
-| soapenv:Envelope/soapenv:Body/v1:addRtnBcSettleAccGMFRequest/v1:RtnBcSettleAccGMFRq/ifx:MsgRqHdr/v2:ClientDt | DateTime | X |   | Fecha en que se realiza la transacción, con formato timestamp con milisegundos |
-| soapenv:Envelope/soapenv:Body/v1:addRtnBcSettleAccGMFRequest/v1:RtnBcSettleAccGMFRq/ifx:MsgRqHdr/v2:IPAddr | String | X |   | IP de donde se consume el servicio |
-| soapenv:Envelope/soapenv:Body/v1:addRtnBcSettleAccGMFRequest/v1:RtnBcSettleAccGMFRq/ifx:MsgRqHdr/ifx:UserId/ifx:GovIssueIdent/ifx:GovIssueIdentType | String | X |   | Tipo de documento del operador que consume el servicio |
-| soapenv:Envelope/soapenv:Body/v1:addRtnBcSettleAccGMFRequest/v1:RtnBcSettleAccGMFRq/ifx:MsgRqHdr/ifx:UserId/ifx:GovIssueIdent/ifx:IdentSerialNum | String | X |   | Número de documento del operador que consume el servicio |
-| soapenv:Envelope/soapenv:Body/v1:addRtnBcSettleAccGMFRequest/v1:RtnBcSettleAccGMFRq/ifx:MsgRqHdr/v2:Reverse | Boolean | X |   | Indicador de Reverso de la transacción. Constante False |
-| soapenv:Envelope/soapenv:Body/v1:addRtnBcSettleAccGMFRequest/v1:RtnBcSettleAccGMFRq/ifx:MsgRqHdr/v2:Language | String | X |   | Constante es_CO |
-| soapenv:Envelope/soapenv:Body/v1:addRtnBcSettleAccGMFRequest/v1:RtnBcSettleAccGMFRq/ifx:MsgRqHdr/v2:NextDay | DateTime | X |   | Fecha del día siguiente en format timestamp con milisegundos  |
-| soapenv:Envelope/soapenv:Body/v1:addRtnBcSettleAccGMFRequest/v1:RtnBcSettleAccGMFRq/ifx:CustId/ifx:GovIssueIdent/ifx:GovIssueIdentType | String | X |   | Tipo de identificación del clientes  |
-| soapenv:Envelope/soapenv:Body/v1:addRtnBcSettleAccGMFRequest/v1:RtnBcSettleAccGMFRq/ifx:CustId/ifx:GovIssueIdent/ifx:IdentSerialNum | String | X |   | Tipo de identificación del clientes  |
-
-#### Descripción Mensaje De Entrada  Body
-
-|  Xpath Campo | Tipo (Longitud)  | ✅ **OBLIGATORIO**  |  ⭕ **OPCIONAL** | Descripción  |
-|---|---|---|---|---|
-| soapenv:Envelope/soapenv:Body/v1:addRtnBcSettleAccGMFRequest/v1:RtnBcSettleAccGMFRq/ifx:ProductId/ifx:Concept | String | X |   | Tipo Concepto, Se Usara solo dos valores estandar: SE: Saldo Efectivo, DD:Debito DIAN
- |
-| soapenv:Envelope/soapenv:Body/v1:addRtnBcSettleAccGMFRequest/v1:RtnBcSettleAccGMFRq/ifx:ProductId/ifx:AccountNumber | String | X |   | Número de Cuenta |
-| soapenv:Envelope/soapenv:Body/v1:addRtnBcSettleAccGMFRequest/v1:RtnBcSettleAccGMFRq/ifx:ProductId/ifx:Amt | Decimal | X |   | Monto de la transacción |
-| soapenv:Envelope/soapenv:Body/v1:addRtnBcSettleAccGMFRequest/v1:RtnBcSettleAccGMFRq/ifx:ProductId/ifx:BranchId | String | X |   | Oficina de la cuenta principal de la transacción |
-
-
-### Ejemplo Mensaje de Entrada
-
-```xml
-
-<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:v1="urn://grupoaval.com/accounts/v1/" xmlns:ifx="urn://grupoaval.com/xsd/ifx/" xmlns:v2="urn://grupoaval.com/xsd/ifx/v2/">
-   <soapenv:Header/>
-   <soapenv:Body>
-      <v1:addRtnBcSettleAccGMFRequest>
-         <v1:RtnBcSettleAccGMFRq>
-           <ifx:RqUID xmlns:ifx="urn://grupoaval.com/xsd/ifx/">${=java.lang.System.currentTimeMillis()}</ifx:RqUID>
-            <ifx:MsgRqHdr xmlns:ifx="urn://grupoaval.com/xsd/ifx/">
-                <ifx:ClientApp>
-                    <ifx:Org>BPOP</ifx:Org>
-                    <ifx:Name>CANALES</ifx:Name>
-                    <ifx:Version>1</ifx:Version>
-                </ifx:ClientApp>
-                <v2:Channel xmlns:v2="urn://grupoaval.com/xsd/ifx/v2/">CANALES</v2:Channel>
-                <ifx:BankInfo>
-                    <ifx:BankId>0002</ifx:BankId>
-                    <ifx:Name>BPOP</ifx:Name>
-                    <ifx:BranchId>089</ifx:BranchId>
-                </ifx:BankInfo>
-                <v2:ClientDt xmlns:v2="urn://grupoaval.com/xsd/ifx/v2/">2024-03-08T10:00:00</v2:ClientDt>
-                <v2:IPAddr xmlns:v2="urn://grupoaval.com/xsd/ifx/v2/">1</v2:IPAddr>
-                <ifx:UserId>
-                    <ifx:GovIssueIdent>
-                        <ifx:GovIssueIdentType>CC</ifx:GovIssueIdentType>
-                        <ifx:IdentSerialNum>79641609B</ifx:IdentSerialNum>
-                    </ifx:GovIssueIdent>
-                </ifx:UserId>
-                <v2:Reverse xmlns:v2="urn://grupoaval.com/xsd/ifx/v2/">false</v2:Reverse>
-                <v2:Language xmlns:v2="urn://grupoaval.com/xsd/ifx/v2/">ES</v2:Language>
-                <v2:NextDay xmlns:v2="urn://grupoaval.com/xsd/ifx/v2/">2021-07-16T17:14:59.489-05:00</v2:NextDay>
-            </ifx:MsgRqHdr>
-            <ifx:CustId xmlns:ifx="urn://grupoaval.com/xsd/ifx/">
-                <ifx:GovIssueIdent>
-                    <ifx:GovIssueIdentType>1</ifx:GovIssueIdentType>
-                    <ifx:IdentSerialNum>79641609</ifx:IdentSerialNum>
-                </ifx:GovIssueIdent>
-            </ifx:CustId>
-            <ifx:ProductId>
-               <ifx:Concept>DD</ifx:Concept>
-               <ifx:AccountNumber>500800393227</ifx:AccountNumber>               
-               <ifx:Amt>1000</ifx:Amt>
-            </ifx:ProductId>
-         </v1:RtnBcSettleAccGMFRq>
-      </v1:addRtnBcSettleAccGMFRequest>
-   </soapenv:Body>
-</soapenv:Envelope>
-
-```
-
-### Descripción Mensaje de Salida
-
-### Descripción Mensaje De Salida  Header
-
-#### Información Estado Transacción – Inicio
-
-| XPath Campo | Tipo (Longitud) | ✅ **OBLIGATORIO** | ⭕ **OPCIONAL** | Descripción |
-|-------------|------------------|-----|-------------|-------------|
-| soapenv:Envelope/soapenv:Body/v1:addRtnBcSettleAccGMFResponse/v1:RtnBcSettleAccGMFRs/ifx:Status/ifx:StatusCode | Long | X |  |Código de respuesta de transacción. |
-| soapenv:Envelope/soapenv:Body/v1:addRtnBcSettleAccGMFResponse/v1:RtnBcSettleAccGMFRs/ifx:Status/ifx:Severity | String | X |  | Info |
-| soapenv:Envelope/soapenv:Body/v1:addRtnBcSettleAccGMFResponse/v1:RtnBcSettleAccGMFRs/ifx:Status/ifx:StatusDesc | String | X |  | Descripción del estado de la consulta, si fue exitosa o ocurrió algún ❌ **> ⚠️ **ERROR****. |
-| soapenv:Envelope/soapenv:Body/v1:addRtnBcSettleAccGMFResponse/v1:RtnBcSettleAccGMFRs/ifx:Status/ifx:StatusCode | Long | X |  | Código del estado de la consulta |
-| soapenv:Envelope/soapenv:Body/v1:addRtnBcSettleAccGMFResponse/v1:RtnBcSettleAccGMFRs/ifx:AdditionalStatus/ifx:StatusDesc | String | X | | Descripción del estado de la consulta **Mensaje cuando la transacción se realizó correctamente** |
-| soapenv:Envelope/soapenv:Body/v1:addRtnBcSettleAccGMFResponse/v1:RtnBcSettleAccGMFRs/ifx:RqUID | String | X |  | Identificador de la petición, corresponde a un eco de RqUID |
-| soapenv:Envelope/soapenv:Body/v1:addRtnBcSettleAccGMFResponse/v1:RtnBcSettleAccGMFRs/ifx:MsgRqHdr/ifx:ClientApp/ifx:Org | String | X |  | Es un eco del campo **Org** del mensaje de solicitud. |
-| soapenv:Envelope/soapenv:Body/v1:addRtnBcSettleAccGMFResponse/v1:RtnBcSettleAccGMFRs/ifx:MsgRqHdr/ifx:ClientApp/ifx:Name | String | X |  | Es un eco del campo **Name** del mensaje de solicitud. |
-| soapenv:Envelope/soapenv:Body/v1:addRtnBcSettleAccGMFResponse/v1:RtnBcSettleAccGMFRs/ifx:MsgRqHdr/ifx:ClientApp/ifx:Version | String | X |  | Es un eco del campo **Version** del mensaje de solicitud. |
-| soapenv:Envelope/soapenv:Body/v1:addRtnBcSettleAccGMFResponse/v1:RtnBcSettleAccGMFRs/ifx:MsgRqHdr/ifx:ClientApp/ifx:Channel | String | X |  | Es un eco del campo **Channel** del mensaje de solicitud. |
-| soapenv:Envelope/soapenv:Body/v1:addRtnBcSettleAccGMFResponse/v1:RtnBcSettleAccGMFRs/ifx:MsgRqHdr/ifx:BankInfo/ifx:BankId | String | X |  | Es un eco del campo **BankId** del mensaje de solicitud. |
-| soapenv:Envelope/soapenv:Body/v1:addRtnBcSettleAccGMFResponse/v1:RtnBcSettleAccGMFRs/ifx:MsgRqHdr/ifx:ClientDt | String | X |  | Fecha de la transacción |
-| soapenv:Envelope/soapenv:Body/v1:addRtnBcSettleAccGMFResponse/v1:RtnBcSettleAccGMFRs/ifx:MsgRqHdr/ifx:IPAddr | String | X |  | Es un eco del campo **IPAddr** del mensaje de solicitud. |
-| soapenv:Envelope/soapenv:Body/v1:addRtnBcSettleAccGMFResponse/v1:RtnBcSettleAccGMFRs/ifx:MsgRqHdr/ifx:SessKey | String | X |  | Es un eco del campo SessKey del mensaje de solicitud. |
-| soapenv:Envelope/soapenv:Body/v1:addRtnBcSettleAccGMFResponse/v1:RtnBcSettleAccGMFRs/ifx:MsgRqHdr/ifx:UserId/ifx:GovIssuedIdentType | String | X |  | Es un eco del campo **GovIssuedIdentType** del mensaje de solicitud. |
-| soapenv:Envelope/soapenv:Body/v1:addRtnBcSettleAccGMFResponse/v1:RtnBcSettleAccGMFRs/ifx:MsgRqHdr/ifx:UserId/ifx:IdentSerialNum | String | X |  | Es un eco del campo **IdentSerialNum** del mensaje de solicitud. |
-| soapenv:Envelope/soapenv:Body/v1:addRtnBcSettleAccGMFResponse/v1:RtnBcSettleAccGMFRs/ifx:MsgRqHdr/ifx:Reverse | Boolean | X |  | Es un eco del campo **Reverse** del mensaje de solicitud. |
-| soapenv:Envelope/soapenv:Body/v1:addRtnBcSettleAccGMFResponse/v1:RtnBcSettleAccGMFRs/ifx:MsgRqHdr/ifx:Language | String | X |  | Es un eco del campo **Language** del mensaje de solicitud. |
-| soapenv:Envelope/soapenv:Body/v1:addRtnBcSettleAccGMFResponse/v1:RtnBcSettleAccGMFRs/ifx:MsgRqHdr/ifx:NextDay | String | X |  | Es un eco del campo **NextDay** del mensaje de solicitud. |
-
-### Descripción Mensaje De Salida  Body
-
-|  Xpath Campo | Tipo (Longitud)  | ✅ **OBLIGATORIO**  |  ⭕ **OPCIONAL** | Descripción  |
-|---|---|---|---|---|
-| soapenv:Envelope/soapenv:Body/v1:addRtnBcSettleAccGMFResponse/v1:RtnBcSettleAccGMFRs/ifx:ProductId/ifx:CommisionValue | String|  | X | Valor de Comision  |
-
-### Ejemplo Mensaje de Respuesta Exitosa
-
-```xml
-<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
-   <soapenv:Body>
-      <NS1:addRtnBcSettleAccGMFResponse xmlns:NS1="urn://grupoaval.com/accounts/v1/">
-         <v1:RtnBcSettleAccGMFRs xmlns:v1="urn://grupoaval.com/accounts/v1/" xmlns:ifx="urn://grupoaval.com/xsd/ifx/" xmlns:v2="urn://grupoaval.com/xsd/ifx/v2/">
-            <ifx:Status>
-               <ifx:StatusCode>0</ifx:StatusCode>
-               <ifx:Severity>Info</ifx:Severity>
-               <ifx:StatusDesc>Transaccion Exitosa</ifx:StatusDesc>
-               <ifx:AdditionalStatus>
-                  <ifx:StatusCode>03</ifx:StatusCode>
-                  <ifx:StatusDesc>GW-SAV-03::La transacción ha finalizado correctamente</ifx:StatusDesc>
-               </ifx:AdditionalStatus>
-            </ifx:Status>
-            <ifx:RqUID>1743196487005</ifx:RqUID>
-            <ifx:MsgRqHdr>
-               <ifx:ClientApp>
-                  <ifx:Org>BPOP</ifx:Org>
-                  <ifx:Name>CANALES</ifx:Name>
-                  <ifx:Version>1</ifx:Version>
-               </ifx:ClientApp>
-               <v2:Channel>CANALES</v2:Channel>
-               <ifx:BankInfo>
-                  <ifx:BankId>0002</ifx:BankId>
-                  <ifx:Name>BPOP</ifx:Name>
-                  <ifx:BranchId>025</ifx:BranchId>
-               </ifx:BankInfo>
-               <v2:ClientDt>2024-03-08T10:00:00</v2:ClientDt>
-               <v2:IPAddr>1</v2:IPAddr>
-               <ifx:UserId>
-                  <ifx:GovIssueIdent>
-                     <ifx:GovIssueIdentType>CC</ifx:GovIssueIdentType>
-                     <ifx:IdentSerialNum>79641609B</ifx:IdentSerialNum>
-                  </ifx:GovIssueIdent>
-               </ifx:UserId>
-               <v2:Reverse>false</v2:Reverse>
-               <v2:Language>ES</v2:Language>
-               <v2:NextDay>2025-03-28T16:14:47.483479-05:00</v2:NextDay>
-            </ifx:MsgRqHdr>
-            <ifx:MsgRsHdr>
-               <ifx:TxCostAmt>
-                  <ifx:CurAmt>
-                     <ifx:Amt>0</ifx:Amt>
-                     <ifx:CurCode>COP</ifx:CurCode>
-                  </ifx:CurAmt>
-               </ifx:TxCostAmt>
-               <ifx:EffDt>2025-03-28T16:14:47.483479-05:00</ifx:EffDt>
-               <ifx:RemainRec>false</ifx:RemainRec>
-            </ifx:MsgRsHdr>
-            <ifx:CustId>
-               <ifx:GovIssueIdent>
-                  <ifx:GovIssueIdentType>1</ifx:GovIssueIdentType>
-                  <ifx:IdentSerialNum>79641609</ifx:IdentSerialNum>
-               </ifx:GovIssueIdent>
-            </ifx:CustId>
-            <ifx:ProductId>
-               <ifx:CommisionValue>0</ifx:CommisionValue>
-            </ifx:ProductId>
-         </v1:RtnBcSettleAccGMFRs>
-      </NS1:addRtnBcSettleAccGMFResponse>
-   </soapenv:Body>
-</soapenv:Envelope>
-```
-
-### Ejemplo Mensaje de Respuesta ❌ **> ⚠️ **ERROR**** de Negocio
-
-```xml
-<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
-   <soapenv:Body>
-      <NS1:addRtnBcSettleAccGMFResponse xmlns:NS1="urn://grupoaval.com/accounts/v1/">
-         <v1:RtnBcSettleAccGMFRs xmlns:v1="urn://grupoaval.com/accounts/v1/" xmlns:ifx="urn://grupoaval.com/xsd/ifx/" xmlns:v2="urn://grupoaval.com/xsd/ifx/v2/">
-            <ifx:Status>
-               <ifx:StatusCode>100</ifx:StatusCode>
-               <ifx:Severity>❌ **> ⚠️ **ERROR****</ifx:Severity>
-               <ifx:StatusDesc>No es posible procesar la transacción. Comuníquese con la Entidad.</ifx:StatusDesc>
-               <ifx:AdditionalStatus>
-                  <ifx:StatusCode>18</ifx:StatusCode>
-                  <ifx:StatusDesc>DE-TUD-018::La fecha de inicio de producto es posterior a la fecha de alta</ifx:StatusDesc>
-               </ifx:AdditionalStatus>
-            </ifx:Status>
-            <ifx:RqUID>1743004514758</ifx:RqUID>
-            <ifx:MsgRqHdr>
-               <ifx:ClientApp>
-                  <ifx:Org>BPOP</ifx:Org>
-                  <ifx:Name>CANALES</ifx:Name>
-                  <ifx:Version>1</ifx:Version>
-               </ifx:ClientApp>
-               <v2:Channel>CANALES</v2:Channel>
-               <ifx:BankInfo>
-                  <ifx:BankId>0002</ifx:BankId>
-                  <ifx:Name>BPOP</ifx:Name>
-                  <ifx:BranchId>089</ifx:BranchId>
-               </ifx:BankInfo>
-               <v2:ClientDt>2024-03-08T10:00:00</v2:ClientDt>
-               <v2:IPAddr>1</v2:IPAddr>
-               <ifx:UserId>
-                  <ifx:GovIssueIdent>
-                     <ifx:GovIssueIdentType>CC</ifx:GovIssueIdentType>
-                     <ifx:IdentSerialNum>79641609B</ifx:IdentSerialNum>
-                  </ifx:GovIssueIdent>
-               </ifx:UserId>
-               <v2:Reverse>false</v2:Reverse>
-               <v2:Language>ES</v2:Language>
-               <v2:NextDay>2025-03-26T10:55:15.675747-05:00</v2:NextDay>
-            </ifx:MsgRqHdr>
-            <ifx:MsgRsHdr>
-               <ifx:TxCostAmt>
-                  <ifx:CurAmt>
-                     <ifx:Amt>0</ifx:Amt>
-                     <ifx:CurCode>COP</ifx:CurCode>
-                  </ifx:CurAmt>
-               </ifx:TxCostAmt>
-               <ifx:EffDt>2025-03-26T10:55:15.675747-05:00</ifx:EffDt>
-               <ifx:RemainRec>false</ifx:RemainRec>
-            </ifx:MsgRsHdr>
-            <ifx:CustId>
-               <ifx:GovIssueIdent>
-                  <ifx:GovIssueIdentType>1</ifx:GovIssueIdentType>
-                  <ifx:IdentSerialNum>79641609</ifx:IdentSerialNum>
-               </ifx:GovIssueIdent>
-            </ifx:CustId>
-         </v1:RtnBcSettleAccGMFRs>
-      </NS1:addRtnBcSettleAccGMFResponse>
-   </soapenv:Body>
-</soapenv:Envelope>
-
-
-```
-### Códigos IFX de respuesta y ❌ **> ⚠️ **ERROR****
-| Código  | Severidad | Descripción  | 
-|:-------------:|:-------------:|-------------|
-| 0     | info     | Transacción Exitosa |
-| 100      | ❌ **> ⚠️ **ERROR****     | No es posible procesar la transacción. Comuniquese con la entidad |
-| 2323      | ❌ **> ⚠️ **ERROR****     | ❌ **> ⚠️ **ERROR**** al validar numero de cuenta. |
-
-### Códigos HTTP de respuesta
-
-| Código  | Descripción  | 
-|:-------------:|-------------|
-| 200     | Transacción Exitosa |
-| 500 	  | ❌ **> ⚠️ **ERROR**** interno en el servidor |
 ```
 ```
 

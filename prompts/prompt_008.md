@@ -501,7 +501,7 @@ CONTENIDO: ```text
 
 ## Reglas a Validar
 ```
-📄 1.5 Para cada operación extraída del contrato (.wsdl o .yaml), verificar que existe un archivo .md que: comience con "Pruebas" (case-insensitive), contenga el nombre exacto de la operación y tenga extensión .md. Normalización para comparación: convertir a minúsculas, conservar solo letras/números/espacios, eliminar espacios múltiples. La palabra "Pruebas" en el nombre del documento es obligatoria si hay alguna variante de la misma u otra distinta el documento debe ser tomado como errado. La extensión ".md" es obligatoria si hay alguna variante o una diferente el documento debe ser tomado como errado.
+📄 1.5 Para cada operación extraída del documento .wsdl o .yaml, verifica que existe al menos un archivo .md en las estructuras de directorios el cual contiene en su nombre: la palabra "Pruebas" junto con el nombre de la operación obtenida previamente en el archivo .wsdl o .yaml, con la extensión .md. Se debe seguir el siguiente patrón Pruebas[NombreOperacion].md
 ```
 
 ## Formato de Respuesta

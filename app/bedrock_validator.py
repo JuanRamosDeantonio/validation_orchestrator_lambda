@@ -62,17 +62,17 @@ class BedrockConfig:
     aws_session_token: Optional[str] = None
     
     # Configuración de reintentos
-    max_retries: int = 3
-    retry_delay: float = 1.0
+    max_retries: int = 5
+    retry_delay: float = 2.0
     
     # Configuración de conexión
-    connect_timeout: int = 10
-    read_timeout: int = 60
+    connect_timeout: int = 30
+    read_timeout: int = 180
     max_pool_connections: int = 50
     
     # Configuración de tokens
     default_max_tokens: int = 4000
-    validation_max_tokens: int = 6000
+    validation_max_tokens: int = 8000
     execution_max_tokens: int = 8000
     
     @classmethod
@@ -425,7 +425,7 @@ class LambdaOptimizedAWSManager:
             self._initialize_clients()
         return LambdaOptimizedAWSManager._s3_client
     
-    async def call_bedrock_optimized(self, messages: List[Dict[str, str]], max_tokens: int = 4000, 
+    async def call_bedrock_optimized(self, messages: List[Dict[str, str]], max_tokens: int = 8000, 
                                    timeout_override: Optional[int] = None) -> Dict[str, Any]:
         """
         Llamada optimizada a Bedrock con manejo robusto de errores y timeouts
@@ -447,7 +447,7 @@ class LambdaOptimizedAWSManager:
             raise ValueError("Messages no puede estar vacío")
         
         # Límite más generoso para prompts grandes
-        if len(str(messages)) > 5_000_000:  # 5MB límite más generoso
+        if len(str(messages)) > 10_000_000:  # 5MB límite más generoso
             raise ValueError(f"Payload demasiado grande: {len(str(messages))} bytes")
         
         # Configurar request optimizado usando BedrockConfig
@@ -455,8 +455,8 @@ class LambdaOptimizedAWSManager:
             "anthropic_version": "bedrock-2023-05-31",
             "max_tokens": min(max_tokens, self.bedrock_config.execution_max_tokens),  # Usar límite de config
             "messages": messages,
-            "temperature": 0.1,
-            "top_p": 0.9
+            "temperature": 0.2,
+            "top_p": 1.0
         }
         
         # Verificar timeout de Lambda

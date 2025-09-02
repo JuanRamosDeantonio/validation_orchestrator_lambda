@@ -604,5 +604,6 @@ def format_incumplimiento_de_regla(all_rules: List[RuleData]) -> str:
         return header + body
     
 def escribir_markdown(contenido, nombre_archivo):
-    with open(nombre_archivo, 'w', encoding='utf-8') as archivo:
-        archivo.write(contenido)
+    if  Config.IS_PRINT:
+        with open(nombre_archivo, 'w', encoding='utf-8') as archivo:
+            archivo.write(contenido)

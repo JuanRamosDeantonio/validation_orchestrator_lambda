@@ -525,14 +525,10 @@ CONTENIDO: ```xml
 ```
 
 
-TITULO: int-iib-fcd-SrvReturnBalanceSettleAccGMFFcd-middleware-esql/Resource/MQ/MQ-SrvReturnBalanceSettleAccGMFFcd.mq
+TITULO: int-iib-fcd-SrvReturnBalanceSettleAccGMFFcd-middleware-esql/Resource/MQ/Verify_MQ-SrvReturnBalanceSettleAccGMFFcd.mq
 
 CONTENIDO: ```text
-DEFINE QLOCAL ('MQINP.RTNBALANCESETTLEACC.FCD.WS.RESP') +
-                BOQNAME('SYSTEM.DEAD.LETTER.QUEUE') +
-                BOTHRESH(1) +
-				MAXDEPTH(5000) +
-                REPLACE
+DISPLAY QLOCAL ('MQINP.RTNBALANCESETTLEACC.FCD.WS.RESP')
 ```
 
 
@@ -683,17 +679,21 @@ CONTENIDO: ```xml
 ```
 
 
+TITULO: int-iib-fcd-SrvReturnBalanceSettleAccGMFFcd-middleware-esql/Resource/MQ/MQ-SrvReturnBalanceSettleAccGMFFcd.mq
+
+CONTENIDO: ```text
+DEFINE QLOCAL ('MQINP.RTNBALANCESETTLEACC.FCD.WS.RESP') +
+                BOQNAME('SYSTEM.DEAD.LETTER.QUEUE') +
+                BOTHRESH(1) +
+				MAXDEPTH(5000) +
+                REPLACE
+```
+
+
 TITULO: int-iib-fcd-SrvReturnBalanceSettleAccGMFFcd-middleware-esql/Resource/MQ/Reverse_MQ-SrvReturnBalanceSettleAccGMFFcd.mq
 
 CONTENIDO: ```text
 DELETE QLOCAL ('MQINP.RTNBALANCESETTLEACC.FCD.WS.RESP') PURGE
-```
-
-
-TITULO: int-iib-fcd-SrvReturnBalanceSettleAccGMFFcd-middleware-esql/Resource/MQ/Verify_MQ-SrvReturnBalanceSettleAccGMFFcd.mq
-
-CONTENIDO: ```text
-DISPLAY QLOCAL ('MQINP.RTNBALANCESETTLEACC.FCD.WS.RESP')
 ```
 
 

@@ -501,7 +501,7 @@ CONTENIDO: ```text
 
 ## Reglas a Validar
 ```
-📄 1.1 Para cada operación extraída, verifica que existe al menos un archivo .md en las estructuras de directorios que contenga: la palabra "Especificacion", el nombre de la operación (contenido, no necesariamente exacto, y la extensión .md. La correspondencia es flexible: basta con que la operación esté contenida en el nombre del archivo de especificación. No evalues los caracteres extraños en el nombre del archivo de Especificacion, ignoralos. El nombre del documento debe ser "Especificacion" obligatoriamente si hay alguna otra palabra o una variante de la correcta el documento será tomado como errado, no importan los caracteres que estén después del primer termino. La extensión ".md" es obligatoria si el documento tiene otra distinta o que se le parezca será tomado como errado.
+📄 1.1 Para cada operación extraída del documento .wsdl o .yaml, verifica que existe al menos un archivo .md en las estructuras de directorios el cual contiene en su nombre: la palabra sin tildes "Especificacion" junto con el nombre de la operación obtenida previamente en el archivo .wsdl o .yaml, con la extensión .md. Se debe seguir el siguiente patrón Especificacion[NombreOperacion].md
 ```
 
 ## Formato de Respuesta
