@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import time
 from typing import List, Dict, Any, Optional
 from dataclasses import dataclass
 
@@ -86,7 +87,12 @@ class ValidationPipeline:
             escribir_markdown(prompt_results,"reporte_temporal")            
 
             #6.5. Normalizacion del reporte con IA
-            report = run_bedrock_prompt(prompt_results)
+            template_report = self.s3_reader.read_template_report().data
+            template_report =  template_report.replace("{REPORTE_PREVIO}", prompt_results)
+
+            escribir_markdown(template_report,"prompt_final.md")            
+            #Reemplaoz con el reporte
+            report = run_bedrock_prompt(template_report)
             
             # 7. Generacion del reporte
             report_to_lambda(report, self.config.repository_url)
@@ -218,24 +224,32 @@ class ValidationPipeline:
             ]),
         }
     
-    def _execute_ai_validation(self) -> Dict[str, Any]:
+    def _execute_ai_validation(self) -> str:
         """Ejecuta la validación usando IA (AWS Bedrock)"""
         logger.info("🤖 Ejecutando validación con IA")
         
         try:
             # Preparar prompts en formato requerido
             formatted_prompts = self._prepare_prompts_for_validation()
-            
+            start = time.time()
+            report = ""            
+            for prompt_results in formatted_prompts:
+                current = prompt_results.get("prompt")
+                report = report +"/n/n"+ run_bedrock_prompt(current)
+
+            duration = time.time() - start
+            logger.info(f"✅ Tiempo ejecucion del propmt: {duration}")
             # Ejecutar validación
-            if Config.TEMPORAL_BEDROCK_CONFIG:
-                result_id = validate_prompts_lambda(formatted_prompts, aws_region=self.bedrock_region,
-                                                aws_access_key=Config.BEDROCK_ACCESS_KEY_ID,
-                                                aws_secret_key=Config.BEDROCK_SECRET_ACCESS_KEY)
-            else:
-                result_id = validate_prompts_lambda(formatted_prompts, aws_region=Config.AWS_REGION)
+
+            # if Config.TEMPORAL_BEDROCK_CONFIG:
+            #     result_id = validate_prompts_lambda(formatted_prompts, aws_region=self.bedrock_region,
+            #                                     aws_access_key=Config.BEDROCK_ACCESS_KEY_ID,
+            #                                     aws_secret_key=Config.BEDROCK_SECRET_ACCESS_KEY)
+            # else:
+            #     result_id = validate_prompts_lambda(formatted_prompts, aws_region=Config.AWS_REGION)
             
-            logger.info(f"✅ Validación ejecutada - ID: {result_id.get('job_id', 'N/A')}")
-            return result_id
+            #logger.info(f"✅ Validación ejecutada - ID: {result_id.get('job_id', 'N/A')}")
+            return report
             
         except Exception as e:
             logger.error(f"❌ Error en validación IA: {str(e)}")
@@ -503,8 +517,8 @@ def lambda_handler(event, context):
         pipeline_result = pipeline.execute()
         
         # 3. Analizar resultados
-        analyzer = ValidationResultAnalyzer()
-        analysis = analyzer.analyze_results(pipeline_result['validation_result'])
+        # analyzer = ValidationResultAnalyzer()
+        # analysis = analyzer.analyze_results(pipeline_result['validation_result'])
         
         # 4. Preparar respuesta exitosa
         response_body = {
@@ -514,12 +528,9 @@ def lambda_handler(event, context):
             'pipeline_summary': {
                 'prompts_count': pipeline_result['prompts_count'],
                 'rules_count': pipeline_result['rules_count'],
-                'job_id': analysis['basic_info']['job_id'],
-                'success_rate': analysis['detailed_summary']['success_rate']
             },
             'validation_result': pipeline_result['validation_result'],
             'report': pipeline_result['report'],
-            'analysis': analysis,
             'config_used': {
                 'repository_url': config.repository_url,
                 'branch': config.branch,
@@ -530,8 +541,6 @@ def lambda_handler(event, context):
         logger.info(f"✅ Pipeline completado exitosamente:")
         logger.info(f"   - {pipeline_result['prompts_count']} prompts procesados")
         logger.info(f"   - {pipeline_result['rules_count']} reglas aplicadas")
-        logger.info(f"   - {len(analysis['ai_responses'])} respuestas de IA generadas")
-        logger.info(f"   - Tasa de éxito: {analysis['detailed_summary']['success_rate']:.1f}%")
         
         return _create_lambda_response(200, response_body)
         

@@ -14,15 +14,8 @@ def produce_report(obj_validation_result : dict[str, any]):
                     f.write("\n")
             f.write(f"Fin del informe >>>> {result['execution']['prompt_id']}\n")
 
-def gather_prompt_results(obj_validation_result : dict[str, any]) -> str :
-
-    results_gathered = ''
-
-    for result in obj_validation_result['results']:
-
-        results_gathered += result['execution']['response']
-
-    return results_gathered
+def gather_prompt_results(obj_validation_result : str) -> str :
+    return obj_validation_result
 
 def report_to_lambda(report_prompt : str, repo_url: str):
 

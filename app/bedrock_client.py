@@ -102,38 +102,23 @@ class BedrockClient(metaclass=SingletonMeta):
         Returns:
             dict: Estructura lista para serializar y enviar a Bedrock.
         """
-
         messages = [{"role": "user", "content": prompt}]
         return {
             "anthropic_version": "bedrock-2023-05-31",
-            "max_tokens": max_tokens,  # Límite de seguridad
+            "max_tokens": max_tokens,
             "messages": messages,
             "temperature": temperature,
-            "top_p": 0.2
+            "top_p": 0.95  # CAMBIADO: Menos restrictivo para mejor procesamiento
         }
-    def _format_prompt(self, raw_prompt: str) -> str:
-        """
-        Formatea el prompt según el modelo configurado.
-        Actualmente, los modelos Claude requieren que el prompt comience con 'Human:'.
-    
-        Args:
-            raw_prompt (str): Texto base sin formato.
-    
-        Returns:
-            str: Prompt con estructura adecuada para el modelo.
-        """
-        if self.model_id.startswith("anthropic"):
-            return f"\n\nHuman: {raw_prompt}\n\nAssistant:"
-        return raw_prompt
 
-    def generate_report(self, prompt: str, temperature: float = 0.2, max_tokens: int = 12000) -> Optional[str]:
+    def generate_report(self, prompt: str, temperature: float = 0, max_tokens: int = 12000) -> Optional[str]:
         """
         Envía un prompt al modelo configurado en Bedrock y retorna la respuesta generada.
 
         Args:
             prompt (str): Texto de entrada que define la estructura del informe.
-            temperature (float): Grado de variabilidad creativa. (por defecto: 0.7).
-            max_tokens (int): Límite de tokens a generar (por defecto: 2048).
+            temperature (float): Grado de variabilidad creativa. (por defecto: 0).
+            max_tokens (int): Límite de tokens a generar (por defecto: 12000).
 
         Returns:
             Optional[str]: Texto generado por el modelo, o None si ocurre un error.
@@ -144,7 +129,7 @@ class BedrockClient(metaclass=SingletonMeta):
         """
         try:
             body = self._build_payload(prompt, temperature, max_tokens)
-            logger.debug("Payload enviado a Bedrock: %s", body)
+            logger.info(f"Enviando prompt a Bedrock. Tamaño: {len(prompt)} caracteres")
 
             response = self.client.invoke_model(
                 modelId=self.model_id,
@@ -153,11 +138,34 @@ class BedrockClient(metaclass=SingletonMeta):
                 body=json.dumps(body)
             )
 
-            # Decodificación eficiente del stream de respuesta
+            # MEJORADO: Validación robusta de la respuesta
             response_body = json.load(codecs.getreader("utf-8")(response["body"]))
-            output = response_body.get("content")[0].get("text")
+            
+            # Validar estructura de respuesta
+            if "content" not in response_body or not response_body["content"]:
+                logger.error("Respuesta de Bedrock no contiene 'content'")
+                return None
+                
+            if not isinstance(response_body["content"], list) or len(response_body["content"]) == 0:
+                logger.error("Respuesta de Bedrock tiene 'content' vacío o inválido")
+                return None
+                
+            if "text" not in response_body["content"][0]:
+                logger.error("Respuesta de Bedrock no contiene 'text' en content[0]")
+                return None
 
-            logger.info("Informe generado exitosamente desde Bedrock.")
+            output = response_body["content"][0]["text"]
+            
+            # NUEVA: Validación de contenido del reporte
+            if not output or len(output.strip()) < 100:
+                logger.warning("Respuesta de Bedrock parece demasiado corta o vacía")
+                
+            logger.info(f"Informe generado exitosamente. Tamaño: {len(output)} caracteres")
+            
+            # NUEVA: Log para debugging de reglas específicas
+            if "R1.5" in prompt and "R1.5" not in output:
+                logger.warning("ALERTA: Regla R1.5 presente en prompt pero ausente en respuesta")
+                
             return output
 
         except Exception as e:
@@ -165,104 +173,35 @@ class BedrockClient(metaclass=SingletonMeta):
             return None
 
 
-def run_bedrock_prompt(prompt: str) -> Optional[str]:
+def run_bedrock_prompt(prompt: str, temperature: float = 0, max_tokens: int = 12000) -> Optional[str]:
     """
     Método de conveniencia para ejecutar un prompt en Bedrock sin crear explícitamente el cliente.
 
     Args:
         prompt (str): Instrucción o contenido a enviar al modelo.
+        temperature (float): Nivel de creatividad (por defecto: 0).
+        max_tokens (int): Límite de tokens (por defecto: 12000).
 
     Returns:
         Optional[str]: Resultado generado por el modelo, o None si ocurre un error.
     """
     # Configura aquí el modelo y entorno por defecto
     DEFAULT_MODEL_ID = os.environ.get("BEDROCK_REPORT_MODEL_ID", "")
-    DEFAULT_ENVIRONMENT = os.environ.get("EXECUTION_ENVIRONMENT", "lambda")  # usa env si está definida
+    DEFAULT_ENVIRONMENT = os.environ.get("EXECUTION_ENVIRONMENT", "lambda")
 
     try:
         client = BedrockClient(
             model_id=DEFAULT_MODEL_ID,
             environment=DEFAULT_ENVIRONMENT
         )
-
-        base_prompt = f"""
-        OBJETIVO
-        Analizar el reporte dinámico generado por IA y producir una versión limpia que refleje el estado 
-        final de cada regla, considerando todas las correcciones realizadas.
-        
-        DETECCIÓN DE AUTOCORRECCIONES
-        Buscar estos patrones que indican que la IA corrigió su evaluación inicial:
-        Indicadores Textuales de Corrección:
-        "Tras revisar...", "revisión más detallada", "CORREGIDO"
-        "SÍ SE CUMPLE", "Corrección del Análisis"
-        Títulos con "CORREGIDO" o similar
-        "En realidad sí cumple", "Error en evaluación inicial"
-        
-        Indicadores de Estado Cambiado:
-        Misma regla con diferentes estados: Primera vez incumple, luego se marca como que cumple
-        Evidencia contradictoria: Evidencia positiva pero la conclusión no concuerda 
-        Evaluación duplicada: Misma regla evaluada dos veces con resultados diferentes
-        Corrección numérica: Números que cambian entre evaluaciones (ej: 5 reglas → 3 reglas)
-        Patrones de Corrección Específicos:
-        Sección que inicia con afirmando que se incumple pero termina con que sí cumple
-        Explicación inicial de incumplimiento seguida de justificación de cumplimiento
-        Cambio en el conteo total de reglas cumplidas/incumplidas
-        
-        PROCESO DE LIMPIEZA
-        1. IDENTIFICAR CORRECCIONES por regla:
-        Buscar múltiples evaluaciones de la misma regla en el texto
-        Detectar cambios de estado: INCUMPLE a CUMPLE o CUMPLE A INCUMPLE
-        Localizar frases de corrección: "Tras revisar...", "SÍ SE CUMPLE", "CORREGIDO"
-        2. APLICAR CORRECCIONES:
-        SI hay corrección explícita: Usar el estado final corregido (ignorar evaluación inicial)
-        SI hay contradicción sin corrección explícita: Usar la última evaluación encontrada
-        SI hay evidencia de que se cumple pero conclusión de que no se cumple: Verificar si hay corrección posterior
-        SI NO hay corrección: Mantener la evaluación original
-        3. DETERMINAR ESTADO FINAL:
-        Regla CUMPLIDA tras corrección: Solo listar número (sin detalles de incumplimiento)
-        Regla INCUMPLIDA tras corrección: Incluir detalles del incumplimiento REAL
-        Regla sin cambios: Mantener estado y detalles originales
-        4. Clasificar resultado final en:
-        Reglas cumplidas: Solo número de regla
-        Reglas incumplidas: Número + detalle completo del incumplimiento
-        
-        3. Estructura de salida:
-        
-        # Reporte General
-        ## Resumen de Cumplimiento
-        **Reglas cumplidas:** [cantidad] - [lista de números]
-        **Reglas incumplidas:** [cantidad] - [lista de números]
-        ## Detalle de Incumplimientos
-        [Solo para reglas fallidas, ordenadas numéricamente de menor a mayor]
-        ### Regla X.X: [Descripción]
-        **Razón del incumplimiento:** [Explicación específica]
-        **Evidencia específica:** [Detalles concretos]
-        **Ubicación:** [Dónde se encontró el problema]
-        ## Reglas Cumplidas
-        [Lista simple sin detalles]
-        RESTRICCIONES CRÍTICAS
-        NO inventar información que no existe en el reporte original
-        NO perder ninguna regla durante el proceso
-        Mantener el título "Reporte General"
-        Considerar TODAS las correcciones para determinar el estado final
-        Ordenar reglas numéricamente (1.1, 1.2, 1.3, etc.)
-        
-        RESULTADO ESPERADO
-        Un reporte limpio que muestre:
-        Estado final CORREGIDO de cada regla (considerando TODAS las correcciones)
-        Detalles completos solo para reglas que DEFINITIVAMENTE fallan (después de correcciones)
-        Lista simple de reglas que cumplen (incluyendo las corregidas de incumplidas a cumplidas)
-        Sin mencionar las correcciones en el reporte final (solo el estado definitivo)
-        Formato consistente y profesional
-        EJEMPLO DE MANEJO DE CORRECCIÓN:
-        Texto original: "Regla 1.4 No cumple... [luego] Tras revisar, SÍ SE CUMPLE"
-        Resultado final: Incluir 1.4 en "Reglas cumplidas" (sin detalles de incumplimiento)
-
-         TEXTO A PROCESAR:
-         {prompt}"""
-
     
-        return client.generate_report(base_prompt)
+        result = client.generate_report(prompt, temperature, max_tokens)
+        
+        # NUEVA: Validación adicional para debugging
+        if result and "R1.5" in prompt and "R1.5" not in result:
+            logger.error("CRÍTICO: Regla R1.5 perdida durante procesamiento")
+            
+        return result
     
     except Exception as e:
         logger.error(f"Error ejecutando prompt directo: {e}", exc_info=True)

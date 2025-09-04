@@ -55,15 +55,15 @@ class S3JsonReader:
         return self.read_json(self.config.S3_BUCKET, self.config.RULES_S3_PATH)
     
     def read_template(self) -> str:
-        """Lee el archivo de reglas desde S3."""
+        """Lee el prompt para la ejecucion del prompt general."""
         return self.read_content(self.config.S3_BUCKET, self.config.TEMPLATE_PROMPT_S3_PATH)
     
     def read_template_structure(self) -> str:
-        """Lee el archivo de reglas desde S3."""
+        """Lee el prompt para la ejecucion del prompt de estructura."""
         return self.read_content(self.config.S3_BUCKET, self.config.TEMPLATE_PROMPT_S3_PATH_STRUCTURE)
-    
+            
     def read_template_report(self) -> str:
-        """Lee el archivo de reglas desde S3."""
+        """Lee el prompt para la creacion del reporte."""
         return self.read_content(self.config.S3_BUCKET, self.config.TEMPLATE_PROMPT_S3_PATH_REPORT)
     
     def delete_temporal_data(self) -> S3Result:
