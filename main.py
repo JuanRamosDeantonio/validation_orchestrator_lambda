@@ -23,10 +23,15 @@ def test_lambda():
     # Eventos de prueba
     events = {
         'complete': {
-            'repository_url': 'https://github.com/JuanRamosDeantonio/int-iib-fcd-SrvReturnBalanceSettleAccGMFFcd-middleware-esql',
-            'branch': 'main',
+            'repository_url': 'https://github.com/BancoPopular/iib-fcd-SrvPruebasRevCruSoap_Fcd-middleware-esql',
+            'branch': 'feature/test',
             'report_title': 'Reporte de Validación de Estructura y Contenido'
         },
+        # 'complete': {
+        #     'repository_url': 'https://github.com/JuanRamosDeantonio/int-iib-fcd-SrvReturnBalanceSettleAccGMFFcd-middleware-esql',
+        #     'branch': 'main',
+        #     'report_title': 'Reporte de Validación de Estructura y Contenido'
+        # },
         # 'minimal': {
         #     'repository_url': 'https://github.com/JuanRamosDeantonio/SrvBillAgreementStandardPaymentREST'
         # },
