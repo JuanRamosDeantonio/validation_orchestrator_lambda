@@ -33,7 +33,7 @@ Estructura de directorios
  - ReadmeDevops.,md
  - Resource
  - Config
- - addRtnBcSettleAccGMF.xmls
+ - addRtnBcSettleAccGMF.json
  - Contract
  - ReturnBalanceSettleAccGMF.wsdl
  - MQ

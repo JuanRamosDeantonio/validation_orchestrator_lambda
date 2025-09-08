@@ -33,7 +33,7 @@ Estructura de directorios
  - ReadmeDevops.,md
  - Resource
  - Config
- - addRtnBcSettleAccGMF.xmls
+ - addRtnBcSettleAccGMF.json
  - Contract
  - ReturnBalanceSettleAccGMF.wsdl
  - MQ
@@ -572,12 +572,3 @@ CONTENIDO: text
 - **Ubicación:** api-spec.yaml líneas 45-47, ausente en README.md
 
 ~~~
-
----
-
-## 🎯 Resumen de Validación
-
-**Estado General:** [Completar]
-
-**Acciones Requeridas:**
-- [Listar acciones necesarias]

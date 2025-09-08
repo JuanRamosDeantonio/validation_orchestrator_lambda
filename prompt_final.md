@@ -1,636 +1,412 @@
-OBJETIVO
-
-Analizar el reporte dinámico generado por IA y producir una versión limpia que refleje el estado final de cada regla, considerando todas las correcciones realizadas.
-
-DETECCIÓN DE AUTOCORRECCIONES
-
-Indicadores Textuales de Corrección:
-"Tras revisar...", "revisión más detallada", "CORREGIDO"
-"SÍ SE CUMPLE", "Corrección del Análisis"
-Títulos con "CORREGIDO" o similar
-"En realidad sí cumple", "Error en evaluación inicial"
-Indicadores de Estado Cambiado:
-Misma regla con diferentes estados: Primera vez incumple, luego se marca como que cumple
-Evidencia contradictoria: Evidencia positiva pero la conclusión no concuerda
-Evaluación duplicada: Misma regla evaluada dos veces con resultados diferentes
-Corrección numérica: Números que cambian entre evaluaciones (ej: 5 reglas → 3 reglas)
-Patrones de Corrección Específicos:
-Sección que inicia afirmando que se incumple pero termina con que sí cumple
-Explicación inicial de incumplimiento seguida de justificación de cumplimiento
-Cambio en el conteo total de reglas cumplidas/incumplidas
-
-JERARQUÍA DE CORRECCIONES (de mayor a menor prioridad):
-
-Corrección explícita con frase directa: "SÍ SE CUMPLE", "CORREGIDO", "Tras revisar"
-Contradicción directa: Razón de incumplimiento que describe cumplimiento
-Evaluación duplicada: Última evaluación encontrada tiene precedencia
-Evidencia contradictoria: Analizar contexto completo
-REGLA ESPECIAL - CONTEXTO CONTRADICTORIO:
-SI una regla está en sección "Detalle de Incumplimientos" PERO su texto dice que cumple:→ Es una CORRECCIÓN EXPLÍCITA → Ignorar la ubicación de la sección → Usar el contenido del texto como estado final
-PROCESO DE LIMPIEZA
-
-1. IDENTIFICAR CORRECCIONES por regla:
-
-Buscar múltiples evaluaciones de la misma regla en el texto
-Detectar cambios de estado: INCUMPLE a CUMPLE o CUMPLE A INCUMPLE
-Localizar frases de corrección: "Tras revisar...", "SÍ SE CUMPLE", "CORREGIDO"
-
-1.5. VALIDAR CORRECCIÓN REAL:
-
-ANTES de aplicar corrección, verificar que NO sea:
-Explicación detallada sin cambio de estado
-Condicional ("podría cumplir si...")
-Análisis de múltiples escenarios
-Aclaración sin corrección real
-
-2. APLICAR CORRECCIONES:
-
-SI hay corrección explícita: Usar el estado final corregido (ignorar evaluación inicial)
-SI hay contradicción sin corrección explícita: Usar la última evaluación encontrada
-SI hay evidencia de que se cumple pero conclusión de que no se cumple: Verificar si hay corrección posterior
-SI NO hay corrección: Mantener la evaluación original
-
-3. DETERMINAR ESTADO FINAL:
-
-Regla CUMPLIDA tras corrección: Solo listar número (sin detalles de incumplimiento)
-Regla INCUMPLIDA tras corrección: Incluir detalles del incumplimiento REAL
-Regla sin cambios: Mantener estado y detalles originales
-
-4. Clasificar resultado final en:
-
-Reglas cumplidas: Solo número de regla
-Reglas incumplidas: Número + detalle completo del incumplimiento
-
-5. VALIDACIÓN FINAL:
-
-Verificar que ninguna regla aparezca en ambas listas
-Confirmar que el conteo total sea consistente
-Validar que todas las correcciones detectadas se aplicaron correctamente
-
-ESTRUCTURA DE SALIDA
-
-```markdown
-# Reporte General
-## Resumen de Cumplimiento
-**Reglas cumplidas:** [cantidad] - [lista de números]
-**Reglas incumplidas:** [cantidad] - [lista de números]
-## Detalle de Incumplimientos
-
-[Solo para reglas fallidas, ordenadas numéricamente de menor a mayor]
-### Regla X.X: [Descripción]
-**Razón del incumplimiento:** [Explicación específica]
-**Evidencia específica:** [Detalles concretos]
-**Ubicación:** [Dónde se encontró el problema]
-## Reglas Cumplidas
-[Lista simple sin detalles]
-RESTRICCIONES CRÍTICAS
-NO inventar información que no existe en el reporte original
-NO perder ninguna regla durante el proceso
-Mantener el título "Reporte General"
-Considerar TODAS las correcciones para determinar el estado final
-Ordenar reglas numéricamente (1.1, 1.2, 1.3, etc.)
-EJEMPLO ESPECÍFICO DE CORRECCIÓN PROBLEMÁTICA:
-Texto problemático:
-
-### Regla R1.5: [descripción]
-
-**Razón del incumplimiento:** Tras revisar más detalladamente, la regla SÍ SE CUMPLE
-Detección: ✓ Frase "SÍ SE CUMPLE" en razón de incumplimiento = CORRECCIÓN EXPLÍCITA
-Resultado: Mover R1.5 a "Reglas cumplidas" y ELIMINAR completamente de incumplimientos
-RESULTADO ESPERADO
-Un reporte limpio que muestre:
-Estado final CORREGIDO de cada regla (considerando TODAS las correcciones)
-Detalles completos solo para reglas que DEFINITIVAMENTE fallan (después de correcciones)
-Lista simple de reglas que cumplen (incluyendo las corregidas de incumplidas a cumplidas)
-Sin mencionar las correcciones en el reporte final (solo el estado definitivo)
-Formato consistente y profesional
-CADA REGLA DEBE APARECER SOLO EN UNA LISTA (cumplidas O incumplidas, nunca en ambas)
-```
-TEXTO A PROCESAR:
-
-/n/n# Reporte de Análisis de Directorios
+OBJETIVO
+
+
+
+Analizar el reporte dinámico generado por IA y producir una versión limpia que refleje el estado final de cada regla, considerando todas las correcciones realizadas.
+
+
+
+DETECCIÓN DE AUTOCORRECCIONES (IGNORAR ICONOS DECORATIVOS)
+
+
+
+**VALIDACIÓN CONTEXTUAL OBLIGATORIA:**
+
+Antes de procesar cualquier indicador, verificar el CONTEXTO:
+
+
+
+FORMATOS CON MARKDOWN son CORRECCIONES VÁLIDAS SI:
+
+- Van precedidos de palabras de corrección: "Tras revisar...", "Inicialmente...", "Error en análisis..."
+
+- Hay contradicción clara con evaluación previa en la misma sección
+
+- Aparecen después de reconocimiento de error
+
+
+FORMATOS CON MARKDOWN NO son correcciones SI:
+
+- Son la única conclusión al final sin contexto de cambio
+
+- No hay palabras de corrección precedentes
+
+- Son análisis independientes sin referencia a evaluación previa
+
+
+
+Indicadores Textuales de Corrección PRIORITARIOS:
+
+- Frases explícitas de cambio: "SÍ SE CUMPLE", "CORREGIDO", "CUMPLIMIENTO CONFIRMADO"
+
+- Revisiones: "Tras revisar...", "revisión más detallada", "Corrección del Análisis"
+
+- Estados finales: "Estado: CUMPLE", "Estado: CUMPLIDA", "Estado: ✅ CUMPLE"
+
+- Reconocimiento de error: "En realidad sí cumple", "Error en evaluación inicial"
+
+- Títulos con "CORREGIDO" o similar
+
+
+
+CRÍTICO: Detectar contradicciones entre resumen y detalle:
+
+- Regla listada como "incumplida" en resumen PERO descrita como cumplida en el detalle
+
+- Especial atención a reglas con formato "R[número]" (ej: R1.1, R1.5, R4.5)
+
+
+
+Indicadores de Estado Cambiado:
+
+- Misma regla con diferentes estados: Primera vez incumple, luego se marca como que cumple
+
+- Evidencia contradictoria: Evidencia positiva pero la conclusión no concuerda
+
+- Evaluación duplicada: Misma regla evaluada dos veces con resultados diferentes
+
+- Corrección numérica: Números que cambian entre evaluaciones (ej: 5 reglas → 3 reglas)
+
+
+
+Patrones de Corrección Específicos:
+
+- Sección que inicia afirmando que se incumple pero termina con que sí cumple
+
+- Explicación inicial de incumplimiento seguida de justificación de cumplimiento
+
+- Cambio en el conteo total de reglas cumplidas/incumplidas
+
+
+
+JERARQUÍA DE CORRECCIONES (de mayor a menor prioridad):
+
+
+
+1. Corrección explícita con frase directa: "SÍ SE CUMPLE", "CORREGIDO", "Tras revisar", "CUMPLIMIENTO CONFIRMADO"
+
+2. Contradicción directa: Razón de incumplimiento que describe cumplimiento
+
+3. Evaluación duplicada: Última evaluación encontrada tiene precedencia
+
+4. Evidencia contradictoria: Analizar contexto completo
+
+
+
+REGLA ESPECIAL - CONTRADICCIÓN RESUMEN VS DETALLE **CON VALIDACIÓN**:
+
+
+
+SI una regla aparece en:
+
+- RESUMEN: como "incumplida" 
+
+- DETALLE: con texto que indica cumplimiento ("CUMPLE", "CUMPLIMIENTO CONFIRMADO", "Estado: CUMPLE", etc.)
+
+
+
+**ENTONCES VERIFICAR CONTEXTO:**
+
+→ SI hay análisis evaluativo que concluye en cumplimiento: Usar el estado del DETALLE como final
+
+→ SI hay palabras de corrección explícitas: Usar el estado del DETALLE como final  
+
+→ SI es solo formato aislado sin análisis previo: MANTENER estado del RESUMEN
+
+→ Aplicar especialmente a reglas "R[número]" con evidencia de evaluación completa
+
+
+
+PROCESO DE LIMPIEZA
+
+
+
+1. IDENTIFICAR CORRECCIONES por regla:
+
+
+
+- Buscar múltiples evaluaciones de la misma regla en el texto
+
+- Detectar cambios de estado: INCUMPLE a CUMPLE o CUMPLE A INCUMPLE
+
+- Localizar frases de corrección: "Tras revisar...", "SÍ SE CUMPLE", "CORREGIDO", "CUMPLIMIENTO CONFIRMADO"
+
+
+
+1.5. VALIDAR CORRECCIÓN REAL:
+
+
+
+ANTES de aplicar corrección, verificar que NO sea:
+
+- Explicación detallada sin cambio de estado
+
+- Condicional ("podría cumplir si...")
+
+- Análisis de múltiples escenarios
+
+- Aclaración sin corrección real
+
+
+
+1.7. VALIDACIÓN ESPECIAL REGLAS "R":
+
+
+
+- Buscar todas las reglas con formato "R[número]" (R1.1, R1.5, R4.5, etc.)
+
+- Verificar si hay contradicción entre su clasificación inicial y contenido del detalle
+
+- Aplicar corrección automáticamente si se detecta contradicción
+
+- Priorizar el contenido del detalle sobre el resumen inicial
+
+
+
+2. APLICAR CORRECCIONES:
+
+
+
+- SI hay corrección explícita: Usar el estado final corregido (ignorar evaluación inicial)
+
+- SI hay contradicción sin corrección explícita: Usar la última evaluación encontrada
+
+- SI hay evidencia de que se cumple pero conclusión de que no se cumple: Verificar si hay corrección posterior
+
+- SI NO hay corrección: Mantener la evaluación original
+
+
+
+3. DETERMINAR ESTADO FINAL:
+
+
+
+- Regla CUMPLIDA tras corrección: Solo listar número (sin detalles de incumplimiento)
+
+- Regla INCUMPLIDA tras corrección: Incluir detalles del incumplimiento REAL
+
+- Regla sin cambios: Mantener estado y detalles originales
+
+
+
+4. Clasificar resultado final en:
+
+
+
+- Reglas cumplidas: Solo número de regla
+
+- Reglas incumplidas: Número + detalle completo del incumplimiento
+
+
+
+5. VALIDACIÓN FINAL:
+
+
+
+- Verificar que ninguna regla aparezca en ambas listas
+
+- Confirmar que el conteo total sea consistente
+
+- Validar que todas las correcciones detectadas se aplicaron correctamente
+
+- Verificar especialmente que reglas "R[número]" estén en la lista correcta
+
+
+
+ESTRUCTURA DE SALIDA
+
+
+
+```markdown
+
+# Reporte General
+
+
 
 ## Resumen de Cumplimiento
-✅ **Reglas cumplidas:** 3 - [1.7, 1.9, 1.11]
-❌ **Reglas incumplidas:** 3 - [1.4, 1.10, 1.12]
+
+
+
+**Reglas cumplidas:** [cantidad] - [lista de números]
+
+**Reglas incumplidas:** [cantidad] - [lista de números]
+
+
 
 ## Detalle de Incumplimientos
 
-### Regla 1.4: Debe haber un documento de Guion con extensión .md
-**Razón del incumplimiento:** El archivo encontrado tiene un nombre incorrecto
-**Evidencia específica:** 
-- GGuion.md - Contiene una letra adicional "G" al inicio, no cumple con la palabra exacta "Guion"
-**Ubicación:** Raíz del proyecto (iib-fcd-SrvPruebasRevCruSoapFcd-middleware-esql)
 
-### Regla 1.10: En la ruta Resource/MQ deben incluirse exactamente tres archivos .mq con nombres que inicien con "Verify", "Reverse" y "MQ" respectivamente
-**Razón del incumplimiento:** Los archivos tienen extensión incorrecta y nombres que no cumplen exactamente con los requisitos
-**Evidencia específica:**
-- MQsSrvReturnBalanceSettleAccGMFFcd.xml - Extensión .xml en lugar de .mq, y nombre inicia con "MQs" no "MQ"
-- ReversesMQSrvReturnBalanceSettleAccGMFFcd.xml - Extensión .xml en lugar de .mq, y nombre inicia con "Reverses" no "Reverse"
-- VerifysMQSrvReturnBalanceSettleAccGMFFcd.xml - Extensión .xml en lugar de .mq, y nombre inicia with "Verifys" no "Verify"
-**Ubicación:** Resource/MQ
 
-### Regla 1.12: La ruta Resource/Test debe contener un archivo con extensiones específicas según el nombre
-**Razón del incumplimiento:** El archivo contiene "soapui" en su nombre pero tiene extensión incorrecta
-**Evidencia específica:**
-- ReturnBalanceSettleAccGMFsoapuiproject.xmls - Contiene "soapui" en el nombre pero tiene extensión ".xmls" en lugar de ".xml" obligatoria
-**Ubicación:** Resource/Test/n/n# Reporte de Análisis de Contenido de Archivos
+[Solo para reglas fallidas, ordenadas numéricamente de menor a mayor]
 
-📊 **Archivos analizados:** 4
-✅ **Reglas cumplidas:** 2 - [2.5, 2.10]
-❌ **Reglas incumplidas:** 8 - [2.4, 2.6, 2.8, 2.9, 2.11, 2.12]
 
-## Estructura de Directorios Identificada
 
-```
-iib-fcd-SrvPruebasRevCruSoapFcd-middleware-esql/
-├── .github/
-├── CODEOWNERS
-├── .gitignore
-├── Jenkinsfile
-├── Jenkinsfile.yaml
-├── README.md
-├── ReadmeDevops.md
-├── Resource/
-│   ├── Config/
-│   │   └── addRtnBcSettleAccGMF.xmls
-│   └── Contract/
-│       └── ReturnBalanceSettleAccGMF.wsdl
-├── MQ/
-│   ├── MQsSrvReturnBalanceSettleAccGMFFcd.xml
-│   ├── ReversesMQSrvReturnBalanceSettleAccGMFFcd.xml
-│   └── VerifysMQSrvReturnBalanceSettleAccGMFFcd.xml
-├── Test/
-│   └── ReturnBalanceSettleAccGMFsoapuiproject.xmls
-└── SrvReturnBalanceSettleAccGMFFcd/
-    ├── .project
-    ├── application.descriptor
-    └── co/com/bancopopular/fcd/
-        ├── ReturnBalanceSettleAccGMFFcdWSREQ.msgflow
-        └── ReturnBalanceSettleAccGMFFcdWSRESP.msgflow
-```
+### Regla X.X: [Descripción]
 
----
+
+
+**Razón del incumplimiento:** [Explicación específica]
+
+**Evidencia específica:** [Detalles concretos]
+
+**Ubicación:** [Dónde se encontró el problema]
+
+
 
 ## Reglas Cumplidas
 
-### ✅ Regla 2.5: Descripción del Servicio
-- **Cumplimiento:** Existe descripción clara del servicio
-- **Evidencia:** 
-```text
-Permite hacer la devolución de Saldo GMF a clientes con cuentas saldadas o por saldar desde el canal SOFIA a través de la convivencia de los diferentes aplicativos (FC y AST) que intervienen en estos procesos.
-```
-- **Ubicación:** Home.md y Especificaciones-AddReturnBalanceSettleAccGMF.md
 
-### ✅ Regla 2.10: Tramas de Ejemplo
-- **Cumplimiento:** Existen tramas de ejemplo exitosa y de error
-- **Evidencia:** Se incluyen ejemplos de respuesta exitosa con StatusCode 0 y de error con StatusCode 100
-- **Ubicación:** Especificaciones-AddReturnBalanceSettleAccGMF.md
 
----
+[Lista simple sin detalles]
 
-## Reglas Incumplidas
-
-### ❌ Regla 2.4: Tabla "Información General" completa y consistente
-
-- **Problema:** Falta validación de consistencia entre elementos del servicio
-- **Evidencia:** 
-
-```text
-| Contexto del Servicio | accounts/SSL/ReturnBalanceSettleAccGMF |
 ```
 
-vs.
 
-```xml
-urlSelector="/accounts/SSL/ReturnBalanceSettleAccGMF"
+
+RESTRICCIONES CRÍTICAS
+
+
+
+- NO inventar información que no existe en el reporte original
+
+- NO perder ninguna regla durante el proceso
+
+- Mantener el título "Reporte General"
+
+- Considerar TODAS las correcciones para determinar el estado final
+
+- Ordenar reglas numéricamente (1.1, 1.2, 1.3, etc.)
+
+- CADA REGLA DEBE APARECER SOLO EN UNA LISTA (cumplidas O incumplidas, nunca en ambas)
+
+
+
+EJEMPLOS ESPECÍFICOS DE CORRECCIONES PROBLEMÁTICAS:
+
+
+
+Ejemplo 1 - Texto problemático:
+
 ```
 
-- **Ubicación:** Especificaciones-AddReturnBalanceSettleAccGMF.md vs ReturnBalanceSettleAccGMFFcdWS_REQ.msgflow
-- **Recomendación:** Verificar que el dominio del servicio coincida exactamente con urlSelector del nodo ComIbmSOAPInput
+### Regla R1.5: [descripción]
 
-### ❌ Regla 2.6: Diagramas de especificación válidos
+**Razón del incumplimiento:** Tras revisar más detalladamente, la regla SÍ SE CUMPLE
 
-- **Problema:** Los diagramas de secuencia contienen caracteres especiales que impiden su renderizado
-- **Evidencia:** 
-
-```text
-rect rgb(255,235,235)
-note right of AST: [❌ **> ⚠️ **ERROR****]
 ```
 
-- **Ubicación:** Especificaciones-AddReturnBalanceSettleAccGMF.md
-- **Recomendación:** Corregir la sintaxis de los diagramas mermaid eliminando caracteres especiales como "❌ **> ⚠️ **ERROR****"
+Detección: Frase "SÍ SE CUMPLE" en razón de incumplimiento = CORRECCIÓN EXPLÍCITA
 
-### ❌ Regla 2.8: Mapeos correspondientes según contrato
+Resultado: Mover R1.5 a "Reglas cumplidas" y ELIMINAR completamente de incumplimientos
 
-- **Problema:** Inconsistencia en tipos de datos entre documentación y contrato WSDL
-- **Evidencia:** 
 
-Documentación:
-```text
-| ifx:RqUID | String | X | | Identificador único de la transacción |
+
+Ejemplo 2 - Contradicción resumen vs detalle:
+
 ```
 
-Contrato WSDL:
-```xml
-<xsd:simpleType name="UUID_Type">
-    <xsd:restriction base="xsd:string">
-        <xsd:maxLength value="36"/>
-    </xsd:restriction>
-</xsd:simpleType>
+Resumen: "Reglas incumplidas: 1 - [R1.1]"
+
+Detalle: "Estado: CUMPLE" o "CUMPLIMIENTO CONFIRMADO"
+
 ```
 
-- **Ubicación:** Especificaciones-AddReturnBalanceSettleAccGMF.md vs ReturnBalanceSettleAccGMF.wsdl
-- **Recomendación:** Actualizar la documentación para reflejar las restricciones específicas del contrato WSDL
+Resultado: R1.1 debe ir a "Reglas cumplidas" (ignorar resumen inicial)
 
-### ❌ Regla 2.9: Campos vacíos y obligatoriedad
 
-- **Problema:** Inconsistencia en la determinación de obligatoriedad basada en minOccurs
-- **Evidencia:** 
 
-```xml
-<xsd:element maxOccurs="1" minOccurs="0" ref="Q1:MsgRqHdr"/>
+Ejemplo 3 - Evaluación duplicada:
+
 ```
 
-vs. documentación que marca como obligatorio
+Primera evaluación: "Regla 2.4 no cumple porque..."
 
-- **Ubicación:** ReturnBalanceSettleAccGMF.wsdl vs Especificaciones-AddReturnBalanceSettleAccGMF.md
-- **Recomendación:** Revisar todos los campos y marcar como obligatorio solo aquellos con minOccurs="1"
+Segunda evaluación: "Tras revisar, la regla 2.4 SÍ SE CUMPLE"
 
-### ❌ Regla 2.11: Códigos de respuesta mínimos
-
-- **Problema:** Falta el código de respuesta 2323 en la tabla de códigos IFX
-- **Evidencia:** 
-
-```text
-| 2323 | ❌ **> ⚠️ **ERROR**** | ❌ **> ⚠️ **ERROR**** al validar numero de cuenta. |
 ```
 
-Pero no se explica cuándo se produce este error específico
+Resultado: Usar la segunda evaluación (corrección explícita)
 
-- **Ubicación:** Especificaciones-AddReturnBalanceSettleAccGMF.md
-- **Recomendación:** Completar la documentación de todos los códigos de error con sus condiciones de activación
 
-### ❌ Regla 2.12: Códigos HTTP para servicios SOAP
 
-- **Problema:** Códigos HTTP incompletos para servicio SOAP
-- **Evidencia:** 
+**Ejemplo 4 - FORMATO DE CONCLUSIÓN (NO ES CORRECCIÓN):**
 
-```text
-| 200 | Transacción Exitosa |
-| 500 | ❌ **> ⚠️ **ERROR**** interno en el servidor |
 ```
 
-Faltan códigos como 400, 404, 408, etc.
+### Regla R1.1: [análisis completo]
 
-- **Ubicación:** Especificaciones-AddReturnBalanceSettleAccGMF.md
-- **Recomendación:** Agregar códigos HTTP adicionales: 400 (Petición incorrecta), 404 (Recurso no existe), 408 (Timeout del backend), 412 (RqUID es requerido), 420 (Error en el backend), 501 (Operación no implementada), 503 (Servidor no disponible), 504 (Timeout)
+- **Estado:** ✅ **CUMPLE**
 
-### ❌ Problema Adicional: Caracteres especiales en WSDL
-
-- **Problema:** El contrato WSDL contiene caracteres especiales que pueden causar problemas de parsing
-- **Evidencia:** 
-
-```xml
-<xsd:enumeration value="❌ **> ⚠️ **ERROR****"/>
 ```
 
-- **Ubicación:** ReturnBalanceSettleAccGMF.wsdl línea con Severity_Type
-- **Recomendación:** Reemplazar "❌ **> ⚠️ **ERROR****" por "Error" en el contrato WSDL
+Detección: Es formato de presentación final, NO corrección = MANTENER ESTADO ORIGINAL
 
-### ❌ Problema Adicional: Inconsistencia en nombres de archivos
 
-- **Problema:** Inconsistencia en nombres de archivos entre estructura y contenido
-- **Evidencia:** 
 
-Estructura muestra: `ReturnBalanceSettleAccGMFFcdWSREQ.msgflow`
-Contenido muestra: `ReturnBalanceSettleAccGMFFcdWS_REQ.msgflow`
+RESULTADO ESPERADO
 
-- **Ubicación:** Estructura de directorios vs contenido de archivos
-- **Recomendación:** Unificar la nomenclatura de archivos
 
----
 
-## 🚀 Próximos Pasos
+Un reporte limpio que muestre:
 
-1. **Corregir diagramas mermaid** - Eliminar caracteres especiales para permitir renderizado correcto
-2. **Actualizar tabla de códigos HTTP** - Agregar códigos faltantes según estándar SOAP
-3. **Revisar obligatoriedad de campos** - Validar contra minOccurs en WSDL
-4. **Limpiar contrato WSDL** - Eliminar caracteres especiales problemáticos
-5. **Unificar nomenclatura** - Establecer convención consistente para nombres de archivos/n/n# Reporte de Análisis de Contenido de Archivos
+- Estado final CORREGIDO de cada regla (considerando TODAS las correcciones)
 
-📊 **Archivos analizados:** 2
-✅ **Reglas cumplidas:** 0
-❌ **Reglas incumplidas:** 3 - [4.1, 4.4, 4.6, 4.8]
+- Detalles completos solo para reglas que DEFINITIVAMENTE fallan (después de correcciones)
 
-## Análisis de Estructura de Directorios
+- Lista simple de reglas que cumplen (incluyendo las corregidas de incumplidas a cumplidas)
 
-### Archivos identificados en la estructura:
-- **Archivos .mq:** MQsSrvReturnBalanceSettleAccGMFFcd.xml, ReversesMQSrvReturnBalanceSettleAccGMFFcd.xml, VerifysMQSrvReturnBalanceSettleAccGMFFcd.xml
-- **Archivos .msgflow:** ReturnBalanceSettleAccGMFFcdWSREQ.msgflow, ReturnBalanceSettleAccGMFFcdWSRESP.msgflow
-- **Archivo .project:** Presente en SrvReturnBalanceSettleAccGMFFcd/
-- **Archivos de documentación:** EspecificacionesAddReturnBalanceSettleAccGMF.md, GGuion.md, Home.md, PruebaAddReturnBalanceSettleAccGMF.md
+- Sin mencionar las correcciones en el reporte final (solo el estado definitivo)
 
----
+- Formato consistente y profesional
 
-### ❌ Regla 4.1: Presencia de documentos requeridos en estructura de directorios
+- Especial cuidado con reglas formato "R[número]" para evitar pérdidas
 
-- **⚠️ Problema:** No se puede validar completamente debido a que no se proporcionó el contenido de los documentos de especificación que deberían contener las referencias a los archivos .mq, .xml y .sql requeridos
-- **Evidencia:** 
-  ```
-  Archivos .mq presentes en estructura:
-  - MQsSrvReturnBalanceSettleAccGMFFcd.xml
-  - ReversesMQSrvReturnBalanceSettleAccGMFFcd.xml  
-  - VerifysMQSrvReturnBalanceSettleAccGMFFcd.xml
-  ```
-- **Ubicación:** Directorio MQ/ en la estructura principal
-- **💡 Recomendación:** Proporcionar el contenido de los documentos de especificación para validar que todos los archivos mencionados estén presentes
 
----
 
-### ❌ Regla 4.4: Descripción detallada en sección "Descripción de Entrega o Cambio"
+TEXTO A PROCESAR:
 
-- **⚠️ Problema:** No se proporcionó el contenido de los documentos de especificación para validar la presencia y calidad de la descripción
-- **Evidencia:** 
-  ```
-  Documentos identificados pero sin contenido:
-  - EspecificacionesAddReturnBalanceSettleAccGMF.md
-  - GGuion.md
-  ```
-- **Ubicación:** Archivos de documentación en el directorio raíz del wiki
-- **💡 Recomendación:** Proporcionar el contenido de estos documentos para validar la descripción de entrega
 
----
 
-### ❌ Regla 4.6: Validación de prerrequisitos y librerías
-
-- **⚠️ Problema:** Se encontró referencia a la librería Commons en el archivo .project, pero no se puede validar completamente los prerrequisitos sin el contenido de la documentación
-- **Evidencia:** 
-  ```xml
-  <projects>
-    <project>Commons</project>
-  </projects>
-  ```
-- **Ubicación:** SrvReturnBalanceSettleAccGMFFcd/.project, líneas 8-10
-- **💡 Recomendación:** 
-  1. Verificar que en la documentación se incluyan las librerías Commons, GlobalCacheJava y GlobalCache
-  2. Confirmar que no se utilice ESB_Common_Lib_BPP_MFW
-  3. Proporcionar contenido de documentación para validación completa
-
----
-
-### ❌ Regla 4.8: Validación de objetos MQ y estructura de colas
-
-- **⚠️ Problema:** Se identificó una cola MQ en el archivo .msgflow pero no se puede validar su presencia en los archivos .mq ni la estructura correcta de los scripts
-- **Evidencia:** 
-  ```xml
-  <nodes xmi:type="ComIbmMQInput.msgnode:FCMComposite_1" 
-        queueName="MQINP.RTNBALANCESETTLEACC.FCD.WS.RESP">
-  ```
-- **Ubicación:** ReturnBalanceSettleAccGMFFcdWS_RESP.msgflow
-- **💡 Recomendación:** 
-  1. Proporcionar el contenido de los archivos .mq para validar:
-     - Presencia de la cola "MQINP.RTNBALANCESETTLEACC.FCD.WS.RESP"
-     - Longitud de nombres de colas (máximo 48 caracteres)
-     - Estructura correcta del código MQ según el esquema especificado
-  2. Validar que todos los nodos ComIbmMQInput y ComIbmMQGet tengan sus colas correspondientes definidas
-
----
-
-## 🎯 Resumen de Validación
-
-**Estado General:** INCOMPLETO - Requiere contenido adicional para validación completa
-
-**Acciones Requeridas:**
-1. Proporcionar contenido de archivos .mq para validar estructura y presencia de colas
-2. Proporcionar contenido de documentos de especificación (.md) para validar descripciones y prerrequisitos
-3. Verificar que la cola "MQINP.RTNBALANCESETTLEACC.FCD.WS.RESP" (41 caracteres) esté definida en los scripts MQ
-4. Confirmar que no se utilicen librerías prohibidas como ESB_Common_Lib_BPP_MFW
-5. Validar estructura completa de scripts MQ según el esquema DEFINE/DISPLAY/DELETE especificado/n/n# Reporte de Análisis de Directorios
-
-**✅ Reglas cumplidas:** 0 - []
-**❌ Reglas incumplidas:** 0 - []
-
-**## Análisis Completado**
-
-He examinado completamente la estructura de directorios proporcionada para el proyecto `iib-fcd-SrvPruebasRevCruSoapFcd-middleware-esql`. 
-
-**Estructura analizada:**
-- Directorio raíz con archivos de configuración (.github, .gitignore, Jenkinsfile, README.md)
-- Carpeta Resource con subcarpetas Config, Contract, MQ, Test
-- Carpeta de aplicación SrvReturnBalanceSettleAccGMFFcd con archivos .msgflow
-- Archivos de documentación (.md) en el nivel raíz
-
-**Estado:** Listo para recibir las reglas específicas de validación que debo aplicar a esta estructura.
-
-**📌 NOTA:** No se han proporcionado reglas específicas de validación para evaluar contra esta estructura. Para completar el análisis, necesito que se especifiquen los criterios de cumplimiento que debo verificar./n/n# Reporte de Análisis de Directorios
+/n/n# Reporte de Análisis de Directorios
 
 ## Resumen de Cumplimiento
+✅ **Reglas cumplidas:** 3 - [1.4, 1.9, 1.11]
+❌ **Reglas incumplidas:** 3 - [1.7, 1.10, 1.12]
 
-**Nota:** No se han proporcionado reglas específicas para evaluar en este análisis. Para realizar una validación completa, necesito que se especifiquen las reglas de cumplimiento que debo verificar contra la estructura de directorios proporcionada.
+## Detalle de Incumplimientos
 
-## Estructura Analizada
+### Regla 1.7: En Resource/Config, examinar cada archivo - La extensión debe ser exactamente ".xml"
 
-He examinado completamente la estructura proporcionada que incluye:
+**Razón del incumplimiento:** El archivo en Resource/Config no tiene la extensión .xml requerida
 
-**Directorio principal:** `iib-fcd-SrvPruebasRevCruSoapFcd-middleware-esql`
+**Evidencia específica:**
+- `addRtnBcSettleAccGMF.json` - tiene extensión .json en lugar de .xml
 
-**Elementos identificados:**
-- Archivos de configuración: `.github`, `CODEOWNERS`, `.gitignore`, `Jenkinsfile`, `Jenkinsfile.yaml`
-- Documentación: `README.md`, `ReadmeDevops.,md`
-- Carpetas principales: `Resource`, `SrvReturnBalanceSettleAccGMFFcd`
-- Subcarpetas: `Config`, `Contract`, `MQ`, `Test`, `co/com/bancopopular/fcd`
-- Archivos de configuración XML: `addRtnBcSettleAccGMF.xmls`, varios archivos MQ
-- Archivos de flujo: `ReturnBalanceSettleAccGMFFcdWSREQ.msgflow`, `ReturnBalanceSettleAccGMFFcdWSRESP.msgflow`
-- Archivos de documentación adicionales: `EspecificacionesAddReturnBalanceSettleAccGMF.md`, `GGuion.md`, `Home.md`, `PruebaAddReturnBalanceSettleAccGMF.md`
-
-## Solicitud de Reglas de Validación
-
-Para completar el análisis de cumplimiento, por favor proporcione las reglas específicas que debo evaluar, tales como:
-- Convenciones de nomenclatura
-- Estructura de carpetas requerida
-- Archivos obligatorios
-- Patrones de organización
-- Cualquier otro criterio de validación específico
-
-Una vez proporcionadas las reglas, podré generar el reporte completo de cumplimiento con el formato solicitado./n/n# Reporte de Análisis de Contenido de Archivos
-
-📊 **Archivos analizados:** 1
-✅ **Reglas cumplidas:** 0
-❌ **Reglas incumplidas:** 1 - [R1.1]
-
-## Análisis de Estructura de Directorios
-
-### Estructura Identificada:
-```
-iib-fcd-SrvPruebasRevCruSoapFcd-middleware-esql/
-├── .github/
-├── CODEOWNERS
-├── .gitignore
-├── Jenkinsfile
-├── Jenkinsfile.yaml
-├── README.md
-├── ReadmeDevops.md
-├── Resource/
-│   ├── Config/
-│   │   └── addRtnBcSettleAccGMF.xmls
-│   └── Contract/
-│       └── ReturnBalanceSettleAccGMF.wsdl
-├── MQ/
-│   ├── MQsSrvReturnBalanceSettleAccGMFFcd.xml
-│   ├── ReversesMQSrvReturnBalanceSettleAccGMFFcd.xml
-│   └── VerifysMQSrvReturnBalanceSettleAccGMFFcd.xml
-├── Test/
-│   └── ReturnBalanceSettleAccGMFsoapuiproject.xmls
-└── SrvReturnBalanceSettleAccGMFFcd/
-    ├── .project
-    ├── application.descriptor
-    └── co/com/bancopopular/fcd/
-        ├── ReturnBalanceSettleAccGMFFcdWSREQ.msgflow
-        └── ReturnBalanceSettleAccGMFFcdWSRESP.msgflow
-
-iib-fcd-SrvPruebasRevCruSoap_Fcd-middleware-esql/
-├── EspecificacionesAddReturnBalanceSettleAccGMF.md
-├── GGuion.md
-├── Home.md
-└── PruebaAddReturnBalanceSettleAccGMF.md
-```
-
-## Análisis de Operaciones WSDL
-
-### Operación Extraída del WSDL:
-Del archivo `ReturnBalanceSettleAccGMF.wsdl` se identificó la siguiente operación:
-
-```xml
-<wsdl:operation name="AddReturnBalanceSettleAccGMF">
-  <wsdl:input message="v1:addRtnBcSettleAccGMFRequest"/>
-  <wsdl:output message="v1:addRtnBcSettleAccGMFResponse"/>
-</wsdl:operation>
-```
-
-**Operación identificada:** `AddReturnBalanceSettleAccGMF`
+**Ubicación:** Resource/Config/addRtnBcSettleAccGMF.json
 
 ---
 
-### ❌ Regla 1.1: Archivo de especificación con patrón correcto
+### Regla 1.10: En Resource/MQ, examinar cada archivo - La extensión debe ser exactamente ".mq"
 
-- **⚠️ Problema:** El archivo de especificación no sigue el patrón exacto requerido `Especificacion[NombreOperacion].md`
-- **Evidencia:** 
-  
-  **Operación encontrada:** `AddReturnBalanceSettleAccGMF`
-  
-  **Patrón esperado:** `EspecificacionAddReturnBalanceSettleAccGMF.md`
-  
-  **Archivo encontrado:** `EspecificacionesAddReturnBalanceSettleAccGMF.md`
-  
-- **Ubicación:** 
-  - Operación: `ReturnBalanceSettleAccGMF.wsdl` líneas 318-321
-  - Archivo incorrecto: `iib-fcd-SrvPruebasRevCruSoap_Fcd-middleware-esql/EspecificacionesAddReturnBalanceSettleAccGMF.md`
+**Razón del incumplimiento:** Todos los archivos en Resource/MQ tienen extensión .xml en lugar de .mq
 
-- **💡 Recomendación:** Renombrar el archivo de `EspecificacionesAddReturnBalanceSettleAccGMF.md` a `EspecificacionAddReturnBalanceSettleAccGMF.md` para cumplir exactamente con el patrón requerido. La palabra debe ser "Especificacion" (singular) no "Especificaciones" (plural).
+**Evidencia específica:**
+- `MQsSrvReturnBalanceSettleAccGMFFcd.xml` - tiene extensión .xml en lugar de .mq
+- `ReversesMQSrvReturnBalanceSettleAccGMFFcd.xml` - tiene extensión .xml en lugar de .mq  
+- `VerifysMQSrvReturnBalanceSettleAccGMFFcd.xml` - tiene extensión .xml en lugar de .mq
+
+**Ubicación:** Resource/MQ/
 
 ---
 
-## 🎯 Resumen de Validación
+### Regla 1.12: En Resource/Test, examinar cada archivo - Archivos con "soapui" deben terminar en ".xml"
 
-**Estado General:** ❌ **NO CUMPLE**
+**Razón del incumplimiento:** El archivo con "soapui" tiene extensión prohibida .xmls en lugar de .xml
 
-**Acciones Requeridas:**
-- Renombrar el archivo `EspecificacionesAddReturnBalanceSettleAccGMF.md` a `EspecificacionAddReturnBalanceSettleAccGMF.md` para seguir el patrón exacto `Especificacion[NombreOperacion].md`/n/n# Reporte de Análisis de Contenido de Archivos
+**Evidencia específica:**
+- `ReturnBalanceSettleAccGMFsoapuiproject.xmls` - contiene "soapui" pero termina en .xmls (extensión prohibida)
 
-📊 **Archivos analizados:** 1
-✅ **Reglas cumplidas:** 0
-❌ **Reglas incumplidas:** 1 - [R1.5]
-
-## Análisis de Estructura de Directorios
-
-### Estructura Identificada:
-```
-iib-fcd-SrvPruebasRevCruSoapFcd-middleware-esql/
-├── .github/
-├── CODEOWNERS
-├── .gitignore
-├── Jenkinsfile
-├── Jenkinsfile.yaml
-├── README.md
-├── ReadmeDevops.md
-├── Resource/
-│   ├── Config/
-│   │   └── addRtnBcSettleAccGMF.xmls
-│   └── Contract/
-│       └── ReturnBalanceSettleAccGMF.wsdl
-├── MQ/
-│   ├── MQsSrvReturnBalanceSettleAccGMFFcd.xml
-│   ├── ReversesMQSrvReturnBalanceSettleAccGMFFcd.xml
-│   └── VerifysMQSrvReturnBalanceSettleAccGMFFcd.xml
-├── Test/
-│   └── ReturnBalanceSettleAccGMFsoapuiproject.xmls
-└── SrvReturnBalanceSettleAccGMFFcd/
-    ├── .project
-    ├── application.descriptor
-    └── co/com/bancopopular/fcd/
-        ├── ReturnBalanceSettleAccGMFFcdWSREQ.msgflow
-        └── ReturnBalanceSettleAccGMFFcdWSRESP.msgflow
-
-iib-fcd-SrvPruebasRevCruSoap_Fcd-middleware-esql/
-├── EspecificacionesAddReturnBalanceSettleAccGMF.md
-├── GGuion.md
-├── Home.md
-└── PruebaAddReturnBalanceSettleAccGMF.md
-```
-
-## Análisis del Archivo WSDL
-
-### Operaciones Extraídas:
-Del archivo `ReturnBalanceSettleAccGMF.wsdl` se identificó la siguiente operación:
-
-```xml
-<wsdl:operation name="AddReturnBalanceSettleAccGMF">
-  <wsdl:input message="v1:addRtnBcSettleAccGMFRequest"/>
-  <wsdl:output message="v1:addRtnBcSettleAccGMFResponse"/>
-</wsdl:operation>
-```
-
-**Operación identificada:** `AddReturnBalanceSettleAccGMF`
-
-## Validación de Reglas
-
-### ✅ Regla 1.5: Verificación de archivos de pruebas para operaciones WSDL
-
-- **Patrón esperado:** `Pruebas[NombreOperacion].md`
-- **Para la operación:** `AddReturnBalanceSettleAccGMF`
-- **Archivo esperado:** `PruebasAddReturnBalanceSettleAccGMF.md`
-
-**Archivos .md encontrados en la estructura:**
-- `EspecificacionesAddReturnBalanceSettleAccGMF.md`
-- `GGuion.md`
-- `Home.md`
-- `PruebaAddReturnBalanceSettleAccGMF.md` ⚠️
-
-### ❌ Regla 1.5: Archivo de pruebas no cumple el patrón exacto
-
-- **Problema:** El archivo encontrado no sigue exactamente el patrón requerido
-- **Evidencia:** 
-  ```
-  Archivo encontrado: PruebaAddReturnBalanceSettleAccGMF.md
-  Patrón requerido: PruebasAddReturnBalanceSettleAccGMF.md
-  ```
-
-- **Ubicación:** `iib-fcd-SrvPruebasRevCruSoap_Fcd-middleware-esql/PruebaAddReturnBalanceSettleAccGMF.md`
-- **Diferencia:** El archivo usa "Prueba" (singular) en lugar de "Pruebas" (plural) como especifica el patrón
-- **Recomendación:** Renombrar el archivo de `PruebaAddReturnBalanceSettleAccGMF.md` a `PruebasAddReturnBalanceSettleAccGMF.md` para cumplir con el patrón exacto `Pruebas[NombreOperacion].md`
-
----
-
-## 🎯 Resumen de Validación
-
-**Estado General:** ❌ **INCUMPLIMIENTO PARCIAL**
-
-**Acciones Requeridas:**
-- Renombrar el archivo `PruebaAddReturnBalanceSettleAccGMF.md` a `PruebasAddReturnBalanceSettleAccGMF.md` para cumplir exactamente con el patrón especificado en la regla 1.5
-
-**Nota:** Aunque existe un archivo de pruebas para la operación identificada, no cumple exactamente con la nomenclatura requerida por la regla.
+**Ubicación:** Resource/Test/ReturnBalanceSettleAccGMFsoapuiproject.xmls
 
 **Reglas incumplidas:** 11 - [4.5, 4.7, 4.10 , 4.12, 4.13, 4.15, 4.16, 6.2, 6.3, 6.4, 6.6]
 

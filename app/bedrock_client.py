@@ -108,7 +108,8 @@ class BedrockClient(metaclass=SingletonMeta):
             "max_tokens": max_tokens,
             "messages": messages,
             "temperature": temperature,
-            "top_p": 0.95  # CAMBIADO: Menos restrictivo para mejor procesamiento
+            "top_p": 0.95,  # CAMBIADO: Menos restrictivo para mejor procesamiento
+            "top_k": 50
         }
 
     def generate_report(self, prompt: str, temperature: float = 0, max_tokens: int = 12000) -> Optional[str]:

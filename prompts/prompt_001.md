@@ -12,11 +12,111 @@ METODOLOGÍA OBLIGATORIA:
 REGLA CRÍTICA: Tu evaluación debe ser correcta la primera vez. Una vez que determines el cumplimiento de una regla, esa evaluación es FINAL. No la cambies, no te corrijas, no digas "me equivoqué".
  
 📄 1.4 Debe haber un documento de Guion con extensión .md. La palabra "Guion" en el documento estar presente obligatoriamente, si hay una variante con una letra de más se debe tomar como un ❌ **> ⚠️ **ERROR****. La extensión ".md" debe estar presente obligatoriamente en el Guion, si hay otra distinta debe ser tomado como un ❌ **> ⚠️ **ERROR****.
-📄 1.7 Debe haber al menos un archivo con extension ".xml" en la ruta "Resource/Config". La extensión del archivo debe ser obligatoriamente ".xml", si es una diferente el archivo debe ser tomado como completamente errado.
+📄 1.7 En Resource/Config, examinar cada archivo: 
+
+La extensión debe ser exactamente ".xml" (4 caracteres: punto + x + m + l) 
+
+Extensiones como .xmls, .xml1, .xm, .xmll causan ❌ **FALLA** inmediata 
+
+Si el archivo no tiene extensión .xml, reportar INCUMPLIMIENTO 
+
+VERIFICACIÓN SECUNDARIA - CONTENIDO (solo si primaria ✅ **PASA**): 
+
+Debe haber un menos un archivo .xml en Resource/Config 
+
+CHECKPOINTS OBLIGATORIOS: 
+
+Checkpoint 1: ¿El archivo termina exactamente en ".xml"? 
+
+Checkpoint 2: ¿Hay un menos un archivo .xml presente? 
+
+CUALQUIER CHECKPOINT FALLIDO = REGLA INCUMPLIDA 
+
+EJEMPLOS: 
+
+Archivo válido: "[nombrearchivo].xml" 
+
+Archivo válido: "[nombrearchivo].xml" 
+
+Archivo inválido: "[nombrearchivo].xmls" (extensión con letra adicional) 
+
+Archivo inválido: "[nombrearchivo].txt" (extensión incorrecta) 
+
+Archivo inválido: "[nombrearchivo].json" (extensión incorrecta)
 📄 1.9 Dentro de la estructura de archivos y directorios debe haber un archivo .project
-📄 1.10 En la ruta Resource/MQ deben incluirse exactamente tres archivos .mq con nombres que inicien con "Verify", "Reverse" y "MQ" respectivamente. Las palabras con las que deben inciar los nombres de los archivos deben ser estrictamente esas, si hay palabras que tengan variantes así sean parecidas a las obligatorias el archivo será inválido. Concentrate solo en el primer termino del nombre para comprobar las palabras de inicio, no tengas en cuenta los caracteres que hayan después de estas palabras. Si inicia con "Verify-", "Verify_", "Reverse-", "Reverse_", "MQ-", "MQ_" deben ser tomados como válidos. 
+📄 1.10 En Resource/MQ, examinar cada archivo:
+
+- La extensión debe ser exactamente ".mq" (3 caracteres: punto + m + q)
+- Extensiones como .mqs, .mqx, .mq1 causan ❌ **FALLA** inmediata
+- Si algún archivo no tiene extensión .mq, reportar INCUMPLIMIENTO
+
+
+VERIFICACIÓN SECUNDARIA - PATRONES (solo si primaria ✅ **PASA**):
+Debe haber exactamente 3 archivos .mq siguiendo estos patrones estrictos:
+
+- "Verify[MQ][nombreservicio].mq"
+- "Reverse[MQ][nombreservicio].mq"
+- "[MQ][nombreservicio].mq"
+
+
+Donde [nombreservicio] = nombre de la carpeta al mismo nivel que Resource
+
+CHECKPOINTS OBLIGATORIOS:
+
+- Checkpoint 1: ¿Todos los archivos terminan exactamente en ".mq"?
+- Checkpoint 2: ¿Hay exactamente 3 archivos total?
+- Checkpoint 3: ¿Cada archivo sigue su patrón específico completo?
+- Checkpoint 4: ¿El [nombreservicio] coincide con la carpeta hermana de Resource?
+
+
+CUALQUIER CHECKPOINT FALLIDO = REGLA INCUMPLIDA
+
+EJEMPLOS CON EL CASO ACTUAL:
+
+- nombreservicio = "SrvReturnBalanceSettleAccGMFFcd"
+- Patrón esperado: "VerifyMQSrvReturnBalanceSettleAccGMFFcd.mq"
+- Patrón esperado: "ReverseMQSrvReturnBalanceSettleAccGMFFcd.mq"
+- Patrón esperado: "MQSrvReturnBalanceSettleAccGMFFcd.mq"
+
 📄 1.11 Debe haber al menos un archivo en la ruta Resource/Contract con la extensión .yaml o .wsdl. La extensión debe ser obligatoriamente .yaml ó .wsdl, si la extensión es distinta a las anteriomente mencionadas el archivo no es válido.
-📄 1.12 La ruta Resource/Test debe contener un archivo. Las extensiones de los archivos deben seguir estas reglas basadas en el nombre del archivo (case-insensitive): si el nombre del archivo contiene en su composición el término "soapui": extensión ".xml" obligatoria si hay una extensión distinta a esta debe ser tomado como completamente errado; si el nombre del archivo contiene en su composición el término "postman" (y no "soapui"): extensión ".json" obligatoria si hay una extensión distinta a esta debe ser tomado como completamente errado; si no contiene ninguno de los términos anteriores en la composición del nombre del archivo: extensión ".txt" obligatoria si hay una extensión distinta a esta debe ser tomado como completamente errado
+📄 1.12 En Resource/Test, examinar cada archivo:
+
+**ANÁLISIS ✅ **OBLIGATORIO**:**
+
+- **Listar archivos:** Enumerar TODOS los archivos en Resource/Test
+
+- **Validar extensiones:** Para cada archivo verificar:
+   - Contiene "soapui" → DEBE terminar en ".xml"
+   - Contiene "postman" (sin "soapui") → DEBE terminar en ".json"
+   - Sin "soapui" ni "postman" → DEBE terminar en ".txt"
+
+
+**❌ **FALLA** AUTOMÁTICA:** .xmls, .xml1, .jsons, .json1, .txts, .txt1
+
+**CHECKPOINTS OBLIGATORIOS:**
+
+- Checkpoint 1: ¿Archivos con "soapui" terminan en ".xml"? [SÍ/NO]
+- Checkpoint 2: ¿Archivos con "postman" terminan en ".json"? [SÍ/NO]
+- Checkpoint 3: ¿Archivos sin ambos terminan en ".txt"? [SÍ/NO]
+- Checkpoint 4: ¿Hay al menos un archivo presente? [SÍ/NO]
+
+
+**AUTO-VERIFICACIÓN:** Antes del resultado final, confirmar:
+
+- ¿Hay extensiones prohibidas? Si SÍ → INCUMPLE
+- ¿Todos los checkpoints son SÍ? Si NO → INCUMPLE
+
+
+**RESULTADO:** [✅ **CUMPLE**/INCUMPLE] + justificación breve
+
+CUALQUIER CHECKPOINT FALLIDO = REGLA INCUMPLIDA
+
+**EJEMPLOS:**
+
+- VÁLIDO: "test-soapui-project.xml"
+- VÁLIDO: "postmancollection.json"
+- INVÁLIDO: "test-soapui-project.xmls" (extensión prohibida)
+
 El contenido a evaluar es el siguiente:
  
 - iib-fcd-SrvPruebasRevCruSoapFcd-middleware-esql
@@ -29,7 +129,7 @@ El contenido a evaluar es el siguiente:
  - ReadmeDevops.,md
  - Resource
  - Config
- - addRtnBcSettleAccGMF.xmls
+ - addRtnBcSettleAccGMF.json
  - Contract
  - ReturnBalanceSettleAccGMF.wsdl
  - MQ

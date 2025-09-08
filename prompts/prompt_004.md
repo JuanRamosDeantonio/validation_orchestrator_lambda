@@ -24,7 +24,7 @@ El contenido a evaluar es el siguiente:
  - ReadmeDevops.,md
  - Resource
  - Config
- - addRtnBcSettleAccGMF.xmls
+ - addRtnBcSettleAccGMF.json
  - Contract
  - ReturnBalanceSettleAccGMF.wsdl
  - MQ
