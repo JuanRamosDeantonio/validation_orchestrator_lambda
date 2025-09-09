@@ -92,10 +92,10 @@ class ValidationPipeline:
 
             escribir_markdown(template_report,"prompt_final.md")            
             #Reemplaoz con el reporte
-            report = run_bedrock_prompt(template_report)
+            ##report = run_bedrock_prompt(template_report)
             
             # 7. Generacion del reporte
-            report_to_lambda(report, self.config.repository_url)
+            report_to_lambda(prompt_results, self.config.repository_url)
 
             # 8. eLIMINACION DE TEMPORALES
             delete_temporal_data = Config.DELETE_TEMPORAL_DATA_FOLDER
@@ -106,7 +106,7 @@ class ValidationPipeline:
             
             return {
                 'validation_result': validation_result,
-                'report': report,
+                'report': prompt_results,
                 'prompts_count': len(self.prompts),
                 'rules_count': len(self.rules)
             }
