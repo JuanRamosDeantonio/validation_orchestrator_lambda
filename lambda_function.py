@@ -236,7 +236,7 @@ class ValidationPipeline:
             for prompt_results in formatted_prompts:
                 current = prompt_results.get("prompt")
                 report = report +"/n/n"+ run_bedrock_prompt(current)
-                break
+                
 
             duration = time.time() - start
             logger.info(f"✅ Tiempo ejecucion del propmt: {duration}")
