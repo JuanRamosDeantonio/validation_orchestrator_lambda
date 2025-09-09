@@ -115,7 +115,7 @@ class RuleGroupingService:
         self._group_namer = group_namer
         self._memory_manager = memory_manager
     
-    def group_rules(self, rules: List['RuleData'], batch_size: int = 20) -> List[RuleGroup]:
+    def group_rules(self, rules: List['RuleData'], batch_size: int = 3) -> List[RuleGroup]:
         """Caso de uso principal: agrupar reglas según requerimientos"""
         if not rules:
             return []
@@ -854,7 +854,7 @@ Contenido mock generado automáticamente.
 
 # ===== PUBLIC API =====
 
-def group_rules(rules: List['RuleData'], batch_size: int = 20, load_file_content: bool = False, debug_structure: bool = False, enable_debug_logging: bool = True) -> List[RuleGroup]:
+def group_rules(rules: List['RuleData'], batch_size: int = 3, load_file_content: bool = False, debug_structure: bool = False, enable_debug_logging: bool = True) -> List[RuleGroup]:
     """
     🎯 API PRINCIPAL - Agrupa reglas según requerimientos
     
