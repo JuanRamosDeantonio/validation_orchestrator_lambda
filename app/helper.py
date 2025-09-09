@@ -188,12 +188,12 @@ class TextFilter:
         # Caracteres que SIEMPRE se eliminan
         self.forbidden_chars = [
             '@', '#', '$', '%', '&', '*', '(', ')', '[', ']', '{', '}', 
-            '|', '\\', '/', ':', ';', '"', "'", '<', '>', '?', '!', '¡', 
+            '|', '\\', ':', ';', '"', "'", '<', '>', '?', '!', '¡', 
             '¿', '=', '+', '^', '~'
         ]
         
         # Patrón de caracteres permitidos (sin backticks)
-        self.allowed_pattern = r'[a-zA-Z0-9áéíóúüñÁÉÍÓÚÜÑàèìòùÀÈÌÒÙâêîôûÂÊÎÔÛäëïöüÄËÏÖÜçÇ\.,\- \n]'
+        self.allowed_pattern = r'[a-zA-Z0-9áéíóúüñÁÉÍÓÚÜÑàèìòùÀÈÌÒÙâêîôûÂÊÎÔÛäëïöüÄËÏÖÜçÇ\.\-\/ \n]'
         
         # Estadísticas
         self.extensions_found = []
